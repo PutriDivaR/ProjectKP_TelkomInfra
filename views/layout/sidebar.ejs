@@ -1,7 +1,34 @@
-<div class="sidebar">
-  <h3>Menu</h3>
-  <ul>
-    <li><a href="/dashboard">Dashboard</a></li>
-    <li><a href="/#">Data Kendala STO</a></li>
+<div class="sidebar" role="navigation" aria-label="Main menu">
+  <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar">
+    <i class="fa-solid fa-bars" aria-hidden="true"></i>
+  </button>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="..." crossorigin="anonymous">
+  <div class="brand">
+    <i class="fa-solid fa-layer-group"></i>
+    <span class="brand-text">Monitoring</span>
+  </div>
+
+  <ul class="menu">
+    <li>
+      <a href="/dashboard" class="active" data-title="Dashboard">
+        <i class="fa-solid fa-gauge-high"></i>
+        <span class="label">Dashboard</span>
+      </a>
+    </li>
+
+    <li>
+      <a href="#" data-title="Kelola Kendala">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span class="label">Kelola Kendala</span>
+      </a>
+    </li>
+
+    <li>
+      <a href="/#" data-title="apa lagi">
+        <i class="fa-solid fa-chart-column"></i>
+        <span class="label">kendala hidup</span>
+      </a>
+    </li>
   </ul>
+
 </div>
