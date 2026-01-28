@@ -1,11 +1,20 @@
+
+<button id="sidebarToggle" class="sidebar-toggle-mobile" aria-label="Toggle sidebar">
+  <i class="fa-solid fa-bars"></i>
+</button>
+
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
 <div class="sidebar" role="navigation" aria-label="Main menu">
-  <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar">
-    <i class="fa-solid fa-bars" aria-hidden="true"></i>
+
+  <button id="sidebarToggleDesktop" class="sidebar-toggle-desktop" aria-label="Toggle sidebar">
+    <i class="fa-solid fa-bars"></i>
   </button>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="..." crossorigin="anonymous">
+
   <div class="brand">
     <i class="fa-solid fa-layer-group"></i>
-    <span class="brand-text">Monitoring</span>
+    <span class="brand-text">RIDAR Monitor</span>
   </div>
 
   <ul class="menu">
@@ -24,11 +33,20 @@
     </li>
 
     <li>
-      <a href="/#" data-title="apa lagi">
-        <i class="fa-solid fa-chart-column"></i>
-        <span class="label">kendala hidup</span>
+      <a href="#" data-title="Work Orders">
+        <i class="fa-solid fa-clipboard-list"></i>
+        <span class="label">Work Orders</span>
       </a>
     </li>
-  </ul>
 
+  <!-- Sidebar Footer -->
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <i class="fa-solid fa-user-circle"></i>
+      <span class="user-name">Admin User</span>
+    </div>
+  </div>
 </div>
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
