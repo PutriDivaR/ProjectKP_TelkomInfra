@@ -1,40 +1,59 @@
-/* Bot button and chat pane styles (moved from dashboard.css) */
+/* BOT BUTTON */
+
 .bot-button {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  background: #e53935;
+  background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
   color: white;
   border-radius: 50%;
-  width: 56px;
-  height: 56px;
+  width: 60px;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
-  box-shadow: 0 4px 12px rgba(229,57,53,0.3);
+  font-size: 28px;
+  box-shadow: 0 4px 20px rgba(229, 57, 53, 0.4);
   cursor: pointer;
   z-index: 1200;
-  transition: transform 0.2s;
+  transition: all 0.3s ease;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 4px 20px rgba(229, 57, 53, 0.4);
+  }
+  50% {
+    box-shadow: 0 4px 30px rgba(229, 57, 53, 0.6);
+  }
 }
 
 .bot-button:hover {
-  transform: scale(1.1);
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 6px 30px rgba(229, 57, 53, 0.6);
 }
+
+.bot-button:active {
+  transform: scale(0.95);
+}
+
+/* CHAT PANE */
 
 .chat-pane {
   position: fixed;
-  bottom: 90px;
+  bottom: 95px;
   right: 20px;
-  width: 360px;
-  max-height: 520px;
+  width: 380px;
+  max-height: 580px;
   background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  border-radius: 16px;
+  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.15);
   overflow: hidden;
-  transform: translateY(20px) scale(0.95);
+  transform: translateY(30px) scale(0.9);
   opacity: 0;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  visibility: hidden;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   z-index: 1199;
   /* INI YANG PENTING: waktu belum open, block semua klik dari chat-pane */
   pointer-events: none;
@@ -43,48 +62,241 @@
 .chat-pane.open {
   transform: translateY(0) scale(1);
   opacity: 1;
-  /* Waktu sudah open, baru boleh di-interact */
-  pointer-events: auto;
+  visibility: visible;
 }
 
+/* CHAT HEADER */
+
 .chat-header {
-  background: #1e88e5;
+  background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
   color: #fff;
-  padding: 14px 16px;
+  padding: 16px 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-weight: 600;
+  box-shadow: 0 2px 10px rgba(229, 57, 53, 0.2);
+  flex-shrink: 0;
 }
+
+/* CHAT BODY */
 
 .chat-body {
   padding: 16px;
-  height: 360px;
-  overflow: auto;
-  background: #f8f9fa;
+  height: 420px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
+  scroll-behavior: smooth;
 }
 
+
+.chat-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.chat-body::-webkit-scrollbar-thumb {
+  background: #e53935;
+  border-radius: 10px;
+}
+
+.chat-body::-webkit-scrollbar-thumb:hover {
+  background: #c62828;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+.status-complete {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #4caf50;
+}
+
+.status-progress {
+  background: #fff3e0;
+  color: #e65100;
+  border: 1px solid #ff9800;
+}
+
+.status-open {
+  background: #e3f2fd;
+  color: #1565c0;
+  border: 1px solid #2196f3;
+}
+
+.status-loker {
+  background: #f3e5f5;
+  color: #6a1b9a;
+  border: 1px solid #9c27b0;
+}
+
+.status-notfound {
+  background: #ffebee;
+  color: #c62828;
+  border: 1px solid #e53935;
+}
+
+/* COMMAND SUGGESTIONS  */
+
+.command-suggestions {
+  position: absolute;
+  bottom: 70px;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-top: 1px solid #e0e0e0;
+  max-height: 320px;
+  overflow-y: auto;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px);
+  transition: all 0.2s ease;
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.08);
+}
+
+.command-suggestions.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.command-suggestions::-webkit-scrollbar {
+  width: 6px;
+}
+
+.command-suggestions::-webkit-scrollbar-track {
+  background: #f5f5f5;
+}
+
+.command-suggestions::-webkit-scrollbar-thumb {
+  background: #e53935;
+  border-radius: 10px;
+}
+
+.command-suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.command-suggestion-item:hover {
+  background: #fff3f3;
+}
+
+.command-suggestion-item:active {
+  background: #ffebee;
+}
+
+.cmd-icon {
+  width: 36px;
+  height: 36px;
+  background: #ffebee;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.command-suggestion-item:hover .cmd-icon {
+  background: #e53935;
+  transform: scale(1.1);
+  transition: all 0.2s ease;
+}
+
+.cmd-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.cmd-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #e53935;
+  font-family: 'Courier New', monospace;
+  margin-bottom: 2px;
+}
+
+.cmd-desc {
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* CHAT INPUT */
+
 .chat-input {
-  padding: 12px;
+  padding: 14px 16px;
   border-top: 1px solid #e8eaed;
   display: flex;
-  gap: 8px;
+  gap: 10px;
   background: #fff;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.menu-button {
+  background: #ffebee;
+  border: 1px solid #e53935;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 700;
+  color: #e53935;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.menu-button:hover {
+  background: #e53935;
+  color: #fff;
+  transform: rotate(90deg);
 }
 
 .chat-input input {
   flex: 1;
-  padding: 10px 12px;
-  border-radius: 20px;
+  padding: 12px 16px;
+  border-radius: 24px;
   border: 1px solid #ddd;
   font-size: 14px;
+  outline: none;
+  transition: all 0.3s;
+  font-family: inherit;
 }
 
-.chat-input button {
-  padding: 10px 20px;
-  border-radius: 20px;
+.chat-input input:focus {
+  border-color: #e53935;
+  box-shadow: 0 0 0 3px rgba(229, 57, 53, 0.1);
+}
+
+.send-button {
+  padding: 10px 16px;
+  border-radius: 24px;
   border: none;
-  background: #1e88e5;
+  background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
   color: #fff;
   font-weight: 600;
   cursor: pointer;

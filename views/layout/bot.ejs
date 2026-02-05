@@ -1,15 +1,77 @@
-<!-- Bot partial: button + chat pane -->
 <div class="bot-button" id="botToggle" aria-label="Open chat">🤖</div>
 
 <div class="chat-pane" id="chatPane" aria-hidden="true">
   <div class="chat-header">
-    <div>Chatbot TRIDA</div>
-    <button id="closeChat" style="background:transparent;border:none;color:#fff;font-weight:700;cursor:pointer;font-size:18px">×</button>
+    <div>
+      <div style="font-weight: 600;">🤖 Tanya si TRIDIP</div>
+      <div style="font-size: 11px; opacity: 0.9;">Status Tiket Assistant</div>
+    </div>
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <button id="clearHistory" 
+              title="Hapus Riwayat Chat"
+              style="background:transparent;border:none;color:#fff;cursor:pointer;font-size:18px;padding:4px 8px;border-radius:4px;transition:background 0.2s;"
+              onmouseover="this.style.background='rgba(255,255,255,0.2)'"
+              onmouseout="this.style.background='transparent'">
+        🗑️
+      </button>
+      <button id="closeChat" 
+              title="Tutup Chat"
+              style="background:transparent;border:none;color:#fff;font-weight:700;cursor:pointer;font-size:20px;padding:4px 8px;border-radius:4px;transition:background 0.2s;"
+              onmouseover="this.style.background='rgba(255,255,255,0.2)'"
+              onmouseout="this.style.background='transparent'">
+        ×
+      </button>
+    </div>
   </div>
+  
   <div class="chat-body" id="chatBody">
   </div>
+  
+  <div class="command-suggestions" id="commandSuggestions">
+  </div>
+  
   <div class="chat-input">
-    <input type="text" id="chatInput" placeholder="Tulis pesan...">
-    <button id="sendChat">Kirim</button>
+    <button id="commandMenu"
+            title="Command Menu"
+            class="menu-button">
+      /
+    </button>
+    <input type="text" 
+           id="chatInput" 
+           placeholder="Ketik pesan atau tekan / untuk command..."
+           autocomplete="off">
+    <button id="sendChat" class="send-button" aria-label="Kirim pesan" title="Kirim">
+      <!-- Inline SVG send (paper plane) icon - uses currentColor -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
+        <path d="M22 2L11 13"></path>
+        <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Inline styles for the in-panel confirmation popup -->
+  <style>
+    /* popup sits inside the chat pane above the input */
+    #confirmPopup { position: absolute; left: 12px; right: 12px; bottom: 76px; display: none; align-items: center; justify-content: center; pointer-events: none; }
+    #confirmPopup.show { display: flex; pointer-events: auto; }
+    .confirm-box { background: #fff; color: #222; padding: 12px; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.18); width: calc(100% - 48px); max-width: 340px; font-size: 13px; }
+    .confirm-title { font-weight: 700; margin-bottom: 6px; }
+    .confirm-body { color: #444; }
+    .confirm-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+    .confirm-btn { padding: 6px 10px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; }
+    .confirm-btn.cancel { background: #f3f3f3; color: #333; }
+    .confirm-btn.delete { background: #e53935; color: #fff; }
+  </style>
+
+  <!-- In-panel confirmation popup (hidden by default) -->
+  <div id="confirmPopup" class="confirm-popup" aria-hidden="true">
+    <div class="confirm-box" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <div id="confirmTitle" class="confirm-title">Hapus Riwayat Chat</div>
+      <div class="confirm-body">Yakin ingin menghapus semua riwayat chat pada sesi lokal ini?</div>
+      <div class="confirm-actions">
+        <button id="confirmCancel" class="confirm-btn cancel">Batal</button>
+        <button id="confirmDelete" class="confirm-btn delete">Hapus</button>
+      </div>
+    </div>
   </div>
 </div>
