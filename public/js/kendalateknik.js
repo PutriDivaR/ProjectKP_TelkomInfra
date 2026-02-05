@@ -1,13 +1,22 @@
+/* ===================================================
+   KENDALA TEKNIK - CLIENT JAVASCRIPT
+   Master Activity Management
+   =================================================== */
+
 // Global variable
 let editingId = null;
 
-// Load data saat halaman dimuat
+// ──────────────────────────────────────
+// INIT - Load data saat halaman dimuat
+// ──────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
   console.log('DOM Loaded - Kendala Teknik');
   loadDataFromDatabase();
 });
 
-// Fungsi untuk load data dari API
+// ──────────────────────────────────────
+// LOAD DATA FROM API
+// ──────────────────────────────────────
 function loadDataFromDatabase() {
   console.log('Loading data from database...');
   
@@ -19,7 +28,7 @@ function loadDataFromDatabase() {
       return response.json();
     })
     .then(result => {
-      console.log('Data received:', result);
+      console.log('✅ Data received:', result);
       if (result.success) {
         displayData(result.data);
       } else {
@@ -27,17 +36,19 @@ function loadDataFromDatabase() {
       }
     })
     .catch(error => {
-      console.error('Error loading data:', error);
+      console.error('❌ Error loading data:', error);
       showError('Terjadi kesalahan saat memuat data: ' + error.message);
     });
 }
 
-// Fungsi untuk menampilkan data ke tabel
+// ──────────────────────────────────────
+// DISPLAY DATA TO TABLE
+// ──────────────────────────────────────
 function displayData(data) {
   const tableBody = document.getElementById('dataTable');
   
   if (!tableBody) {
-    console.error('Table body element not found!');
+    console.error('❌ Table body element not found!');
     return;
   }
   
@@ -45,7 +56,8 @@ function displayData(data) {
     tableBody.innerHTML = `
       <tr>
         <td colspan="6" class="loading-cell">
-          Tidak ada data tersedia. Klik tombol "+ Tambah Kendala Teknik" untuk menambah data.
+          Tidak ada data tersedia.<br>
+          <small>Klik tombol "Tambah Kendala Teknik" untuk menambah data baru.</small>
         </td>
       </tr>
     `;
@@ -58,10 +70,10 @@ function displayData(data) {
     const row = document.createElement('tr');
     row.innerHTML = `
       <td>${index + 1}</td>
-      <td>${escapeHtml(item.activity_name || '-')}</td>
+      <td style="text-align:left">${escapeHtml(item.activity_name || '-')}</td>
       <td><span class="status-badge status-${getStatusClass(item.status_default)}">${escapeHtml(item.status_default || '-')}</span></td>
       <td>${escapeHtml(item.progress_default || '-')}</td>
-      <td title="${escapeHtml(item.solusi_default || '-')}">${escapeHtml(item.solusi_default || '-')}</td>
+      <td style="text-align:left" title="${escapeHtml(item.solusi_default || '-')}">${truncateText(item.solusi_default, 60)}</td>
       <td>
         <div class="action-icons">
           <button class="action-btn" onclick="editData(${item.id})" title="Edit">✏️</button>
@@ -71,9 +83,13 @@ function displayData(data) {
     `;
     tableBody.appendChild(row);
   });
+  
+  console.log('✅ Table rendered with', data.length, 'rows');
 }
 
-// Fungsi untuk get status class (untuk badge color)
+// ──────────────────────────────────────
+// GET STATUS CLASS (for badge color)
+// ──────────────────────────────────────
 function getStatusClass(status) {
   const statusMap = {
     'COMPLETED': 'completed',
@@ -84,36 +100,62 @@ function getStatusClass(status) {
   return statusMap[status] || 'default';
 }
 
-// Fungsi untuk escape HTML (prevent XSS)
+// ──────────────────────────────────────
+// TRUNCATE TEXT
+// ──────────────────────────────────────
+function truncateText(text, maxLength) {
+  if (!text) return '-';
+  const escaped = escapeHtml(text);
+  if (escaped.length <= maxLength) return escaped;
+  return escaped.substring(0, maxLength) + '...';
+}
+
+// ──────────────────────────────────────
+// ESCAPE HTML (prevent XSS)
+// ──────────────────────────────────────
 function escapeHtml(text) {
+  if (text == null) return '-';
   const div = document.createElement('div');
-  div.textContent = text;
+  div.textContent = String(text);
   return div.innerHTML;
 }
 
-// Modal Functions
+// ──────────────────────────────────────
+// OPEN MODAL (for add new)
+// ──────────────────────────────────────
 function openModal() {
   const modalOverlay = document.getElementById('modalOverlay');
   const modalTitle = document.getElementById('modalTitle');
   const saveBtn = document.getElementById('saveBtn');
   const form = document.getElementById('activityForm');
   
-  if (!modalOverlay || !modalTitle || !form) {
-    console.error('Modal elements not found!');
+  if (!modalOverlay || !modalTitle || !saveBtn || !form) {
+    console.error('❌ Modal elements not found!');
     return;
   }
   
-  modalOverlay.classList.add('active');
-  modalTitle.textContent = 'Tambah Kendala Teknik';
-  if (saveBtn) {
-    saveBtn.textContent = 'Simpan';
-    saveBtn.disabled = false;
-  }
+  // Reset form
   form.reset();
   document.getElementById('activityId').value = '';
   editingId = null;
+  
+  // Update modal
+  modalTitle.textContent = 'Tambah Kendala Teknik';
+  saveBtn.textContent = 'Simpan';
+  saveBtn.disabled = false;
+  
+  // Show modal
+  modalOverlay.classList.add('active');
+  
+  // Focus first input
+  setTimeout(() => {
+    document.getElementById('activityName').focus();
+  }, 100);
 }
 
+// ──────────────────────────────────────
+// CLOSE MODAL
+// ──────────────────────────────────────
 function closeModal() {
   const modalOverlay = document.getElementById('modalOverlay');
   const form = document.getElementById('activityForm');
@@ -135,7 +177,9 @@ function closeModalOnOverlay(event) {
   }
 }
 
-// Fungsi untuk menyimpan data
+// ──────────────────────────────────────
+// SAVE DATA (add or update)
+// ──────────────────────────────────────
 function saveData() {
   const activityName = document.getElementById('activityName').value.trim();
   const statusDefault = document.getElementById('statusDefault').value.trim();
@@ -163,6 +207,12 @@ function saveData() {
   
   // Validasi progress maksimal 1
   const progress = parseFloat(progressDefault);
+  if (isNaN(progress)) {
+    alert('Progress harus berupa angka!');
+    document.getElementById('progressDefault').focus();
+    return;
+  }
+  
   if (progress > 1) {
     alert('Progress maksimal adalah 1!');
     document.getElementById('progressDefault').focus();
@@ -193,15 +243,13 @@ function saveData() {
   const url = editingId ? `/api/kendala-teknik/${editingId}` : '/api/kendala-teknik';
   const method = editingId ? 'PUT' : 'POST';
   
-  console.log('Saving data:', { url, method, data });
+  console.log('💾 Saving data:', { url, method, data });
   
   // Disable button to prevent double submission
   const saveBtn = document.getElementById('saveBtn');
-  const originalText = saveBtn ? saveBtn.textContent : null;
-  if (saveBtn) {
-    saveBtn.disabled = true;
-    saveBtn.textContent = 'Menyimpan...';
-  }
+  const originalText = saveBtn.textContent;
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Menyimpan...';
   
   fetch(url, {
     method: method,
@@ -217,32 +265,31 @@ function saveData() {
     return response.json();
   })
   .then(result => {
-    console.log('Save result:', result);
+    console.log('✅ Save result:', result);
     
     if (result.success) {
       alert(result.message || 'Data berhasil disimpan!');
       closeModal();
-      loadDataFromDatabase();
+      loadDataFromDatabase(); // Reload table
     } else {
       alert(result.message || 'Gagal menyimpan data');
-    }
-  })
-  .catch(error => {
-    console.error('Error saving data:', error);
-    alert('Terjadi kesalahan saat menyimpan data: ' + error.message);
-  })
-  .finally(() => {
-    // Re-enable button
-    if (saveBtn) {
       saveBtn.disabled = false;
       saveBtn.textContent = originalText;
     }
+  })
+  .catch(error => {
+    console.error('❌ Error saving data:', error);
+    alert('Terjadi kesalahan saat menyimpan data: ' + error.message);
+    saveBtn.disabled = false;
+    saveBtn.textContent = originalText;
   });
 }
 
-// Fungsi untuk edit data
+// ──────────────────────────────────────
+// EDIT DATA
+// ──────────────────────────────────────
 function editData(id) {
-  console.log('Editing data with ID:', id);
+  console.log('✏️ Editing data with ID:', id);
   
   fetch(`/api/kendala-teknik/${id}`)
     .then(response => {
@@ -252,7 +299,7 @@ function editData(id) {
       return response.json();
     })
     .then(result => {
-      console.log('Edit data received:', result);
+      console.log('✅ Edit data received:', result);
       
       if (result.success && result.data) {
         const data = result.data;
@@ -266,28 +313,34 @@ function editData(id) {
         
         // Update modal
         document.getElementById('modalTitle').textContent = 'Edit Kendala Teknik';
-        const saveBtn = document.getElementById('saveBtn');
-        if (saveBtn) saveBtn.textContent = 'Update';
+        document.getElementById('saveBtn').textContent = 'Update';
         document.getElementById('modalOverlay').classList.add('active');
         
         editingId = id;
+        
+        // Focus first input
+        setTimeout(() => {
+          document.getElementById('activityName').focus();
+        }, 100);
       } else {
         alert('Data tidak ditemukan');
       }
     })
     .catch(error => {
-      console.error('Error loading edit data:', error);
+      console.error('❌ Error loading edit data:', error);
       alert('Terjadi kesalahan saat memuat data: ' + error.message);
     });
 }
 
-// Fungsi untuk hapus data
+// ──────────────────────────────────────
+// DELETE DATA
+// ──────────────────────────────────────
 function deleteData(id) {
-  if (!confirm('Apakah Anda yakin ingin menghapus data ini?')) {
+  if (!confirm('Apakah Anda yakin ingin menghapus data ini?\n\nData yang dihapus tidak dapat dikembalikan.')) {
     return;
   }
   
-  console.log('Deleting data with ID:', id);
+  console.log('🗑️ Deleting data with ID:', id);
   
   fetch(`/api/kendala-teknik/${id}`, {
     method: 'DELETE'
@@ -299,22 +352,24 @@ function deleteData(id) {
     return response.json();
   })
   .then(result => {
-    console.log('Delete result:', result);
+    console.log('✅ Delete result:', result);
     
     if (result.success) {
       alert(result.message || 'Data berhasil dihapus!');
-      loadDataFromDatabase();
+      loadDataFromDatabase(); // Reload table
     } else {
       alert(result.message || 'Gagal menghapus data');
     }
   })
   .catch(error => {
-    console.error('Error deleting data:', error);
+    console.error('❌ Error deleting data:', error);
     alert('Terjadi kesalahan saat menghapus data: ' + error.message);
   });
 }
 
-// Fungsi untuk menampilkan error
+// ──────────────────────────────────────
+// SHOW ERROR
+// ──────────────────────────────────────
 function showError(message) {
   const tableBody = document.getElementById('dataTable');
   
@@ -324,31 +379,36 @@ function showError(message) {
         <td colspan="6" class="loading-cell" style="color: #e53935;">
           ⚠️ ${escapeHtml(message)}
           <br><br>
-          <small style="color: #666;">Pastikan server backend sudah running dan database sudah terkoneksi</small>
+          <small style="color: #666;">Pastikan server backend sudah berjalan dan database sudah terkoneksi dengan benar.</small>
         </td>
       </tr>
     `;
   }
   
-  console.error('Error:', message);
+  console.error('❌ Error:', message);
 }
 
-// Keyboard shortcuts
+// ──────────────────────────────────────
+// KEYBOARD SHORTCUTS
+// ──────────────────────────────────────
 document.addEventListener('keydown', function(e) {
+  const modalOverlay = document.getElementById('modalOverlay');
+  const isModalOpen = modalOverlay && modalOverlay.classList.contains('active');
+  
   // ESC to close modal
-  if (e.key === 'Escape') {
-    const modalOverlay = document.getElementById('modalOverlay');
-    if (modalOverlay && modalOverlay.classList.contains('active')) {
-      closeModal();
-    }
+  if (e.key === 'Escape' && isModalOpen) {
+    closeModal();
   }
   
   // Ctrl+S or Cmd+S to save (when modal is open)
-  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-    const modalOverlay = document.getElementById('modalOverlay');
-    if (modalOverlay && modalOverlay.classList.contains('active')) {
-      e.preventDefault();
-      saveData();
-    }
+  if ((e.ctrlKey || e.metaKey) && e.key === 's' && isModalOpen) {
+    e.preventDefault();
+    saveData();
+  }
+  
+  // Ctrl+N or Cmd+N to open add modal (when modal is closed)
+  if ((e.ctrlKey || e.metaKey) && e.key === 'n' && !isModalOpen) {
+    e.preventDefault();
+    openModal();
   }
 });
