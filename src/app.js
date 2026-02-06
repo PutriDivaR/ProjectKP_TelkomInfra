@@ -18,4 +18,8 @@ app.use('/', dashboardRoutes);
 const botRoutes = require('./routes/bot.routes');
 app.use('/api/bot', botRoutes);
 
+// kendala routes
+const kendalaRoutes = require('./routes/kendala.routes');
+app.use('/kendala', kendalaRoutes);
+
 module.exports = app;
