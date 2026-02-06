@@ -444,6 +444,13 @@ table tbody tr:last-child td {
   color: #1e40af;
 }
 
+/* Clickable KPI */
+.kpi-card.clickable { cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease; }
+.kpi-card.clickable:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+
+/* Status link style */
+.status-link { display:inline-block; text-decoration:none; }
+.status-link:hover { text-decoration: underline; cursor: pointer; }
 .status-on_progress,
 .status-ogp {
   background: #fef3c7;
