@@ -204,8 +204,10 @@ function renderWorkOrdersTable() {
       <td>${escapeHtml(wo.package_name)}</td>
       <td>${escapeHtml(wo.regional)}</td>
       <td>${escapeHtml(wo.sto)}</td>
-      <td>${getStatusBadge(wo.status_daily)}</td>
+      <td><span class="status-link" style="cursor:pointer" onclick="openDaily('${wo.wonum}')">${getStatusBadge(wo.status_daily)}</span></td> 
       <td>${escapeHtml(wo.odp_inputan || '-')}</td>
+      <td>${getStatusBadge(wo.status_daily)}</td>
+      <td>${escapeHtml(wo.datek_kendala || wo.odp_inputan || '-')}</td>
       <td>${formatDate(wo.created_at)}</td>
       <td>
         <button class="btn-action" onclick="viewDetail('${wo.wonum}')">
@@ -883,6 +885,15 @@ function showToast(message, type = 'info') {
 function viewDetail(wonum) {
   showToast(`Viewing details for ${wonum}`, 'info');
   // TODO: Implement detail modal
+}
+
+function openDaily(wonum) {
+  // Jika WONUM diberikan, buka detail daily untuk WO tersebut. Jika tidak, buka halaman Daily utama.
+  if (wonum) {
+    window.location.href = `/daily/${wonum}`;
+  } else {
+    window.location.href = '/daily';
+  }
 }
 
 function exportToExcel() {

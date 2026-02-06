@@ -1,0 +1,89 @@
+<%- include('../layout/header', { title: 'Detail - Daily' }) %>
+<%- include('../layout/sidebar') %>
+<link rel="stylesheet" href="/css/daily.css">
+
+<div class="main">
+  <div id="daily-detail" data-wonum="<%= data.wonum %>" class="detail-container">
+    <header class="detail-header">
+      <h2>Detail Data Kendala</h2>
+      <div class="detail-actions">
+        <a href="/daily" class="btn btn-secondary">← Kembali</a>
+        <button id="editBtn" class="btn btn-outline">✎ Edit</button>
+      </div>
+    </header>
+
+  <div class="detail-grid">
+    <div class="field-group">
+      <label>Workorder Number</label>
+      <input id="wonum" value="<%= data.wonum %>" readonly>
+    </div>
+    <div class="field-group">
+      <label>Nama Pelanggan</label>
+      <input id="nama" value="<%= data.nama || '' %>" readonly>
+    </div>
+    <div class="field-group">
+      <label>Ticket ID</label>
+      <input id="ticket_id" value="<%= data.ticket_id || '' %>" readonly>
+    </div>
+    <div class="field-group">
+      <label>STO</label>
+      <input id="sto" value="<%= data.sto || '' %>" readonly>
+    </div>
+    <div class="field-group">
+      <label>ODP Inputan</label>
+      <input id="odp_name" value="<%= data.odp_inputan || '' %>" readonly>
+    </div>
+    <div class="field-group">
+      <label>ODP Todolist</label>
+      <input id="odp_todolist" value="<%= data.odp_todolist || '' %>" readonly>
+    </div>
+    <div class="field-group">
+      <label>Regional</label>
+      <input id="regional" value="<%= data.regional || '' %>" readonly>
+    </div>
+    <div class="field-group">
+      <label>Package Name</label>
+      <input id="package_name" value="<%= data.package_name || '' %>" readonly>
+    </div>
+    <div class="field-group">
+      <label>Latitude</label>
+      <input id="lat" value="<%= data.lat || '' %>" readonly>
+    </div>
+    <div class="field-group">
+      <label>Longitude</label>
+      <input id="lang" value="<%= data.lang || '' %>" readonly>
+    </div>
+    <div class="field-group">
+      <label>Status</label>
+      <input id="status" value="<%= data.status_daily || '' %>" readonly>
+    </div>
+    <div class="field-group">
+      <label>Status Akhir</label>
+      <input id="status_akhir" value="<%= data.status_akhir || '' %>" readonly>
+    </div>
+    <div class="field-group">
+      <label>Create Date</label>
+      <input id="create_date" value="<%= data.created_at %>" readonly>
+    </div>
+    <div class="field-group">
+      <label>Update Date</label>
+      <input id="update_date" value="<%= data.updated_at %>" readonly>
+    </div>
+  </div>
+
+  <div class="detail-actions-bottom">
+    <button id="btnDone" class="btn btn-primary" style="display:none">✔ Done</button>
+  </div>
+
+  <h3>Riwayat Update</h3>
+  <ul class="log-list">
+    <% logs.forEach(l => { %>
+      <li>
+        <b><%= l.status_todolist %></b> - <%= l.solusi_progress %>
+        (<%= l.updated_at %>)
+      </li>
+    <% }) %>
+  </ul>
+</div>
+
+<script src="/js/daily-detail.js"></script>

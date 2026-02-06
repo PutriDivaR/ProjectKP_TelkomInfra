@@ -95,16 +95,26 @@ router.get('/api/dashboard/work-orders', async (req, res) => {
 
     const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
     const sql = `
-      SELECT wonum, nama, ticket_id, package_name, regional, sto, 
-             status_daily, odp_inputan, created_at 
-      FROM master_wo 
-      ${whereSql} 
-      ORDER BY created_at DESC 
+      SELECT mw.*
+      FROM master_wo mw
+      ${whereSql}
+      ORDER BY mw.created_at DESC
       LIMIT 500
     `;
 
-    const [rows] = await db.query(sql, params);
-    return res.json({ success: true, data: rows });
+    try {
+      const [rows] = await db.query(sql, params);
+      return res.json({ success: true, data: rows });
+    } catch (err) {
+      // If master_wo lacks optional columns, provide an actionable message
+      if (err && err.code === 'ER_BAD_FIELD_ERROR') {
+        const m = (err.message || '').match(/Unknown column '(.*?)'/);
+        const missing = m ? [m[1]] : [];
+        const suggestion = missing.length ? `ALTER TABLE master_wo ADD COLUMN ${missing.map(c=>`${c} VARCHAR(255)`).join(', ')};` : undefined;
+        return res.status(500).json({ success: false, message: 'Query gagal — kolom DB tidak ditemukan', missingColumns: missing, suggestion, error: err.message });
+      }
+      throw err;
+    }
   } catch (err) {
     console.error('API /work-orders error', err);
     return res.status(500).json({ success: false, message: err.message });
@@ -180,7 +190,7 @@ router.get('/api/dashboard/work-full-process', async (req, res) => {
         0 as kdl_sys,
         
         -- Status counts
-        SUM(CASE WHEN mw.status_daily = 'OPEN' THEN 1 ELSE 0 END) as pending,
+        SUM(CASE WHEN mw.status_daily = 'COMPLETE' THEN 1 ELSE 0 END) as pending,
         SUM(CASE WHEN mw.status_daily = 'ON_PROGRESS' THEN 1 ELSE 0 END) as continue_count,
         SUM(CASE WHEN mw.status_daily = 'CANCEL' THEN 1 ELSE 0 END) as cancel,
         SUM(CASE WHEN mw.status_daily = 'COMPLETE' THEN 1 ELSE 0 END) as complete,

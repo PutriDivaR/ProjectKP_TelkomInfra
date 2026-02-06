@@ -1,0 +1,659 @@
+/* ===== MODAL ===== */
+.modal {
+  background: #fff;
+  width: 480px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.modal-header {
+  background: #e53935;
+  color: #fff;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.kt-field {
+  margin-bottom: 16px;
+}
+
+.kt-field label {
+  font-size: 12px;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.kt-field input,
+.kt-field select,
+.kt-field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.kt-field textarea {
+  min-height: 80px;
+}
+
+.kt-field small {
+  font-size: 11px;
+  color: #777;
+}
+
+.modal-footer {
+  padding: 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  background: #fafafa;
+}
+
+.btn-save {
+  background: #e53935;
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-cancel {
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 10px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.aksi-cell {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.btn-edit {
+  background: #facc15;
+  border: none;
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-delete {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-edit:hover,
+.btn-delete:hover {
+  opacity: 0.85;
+}
+
+/* ===============================
+   MODAL OVERLAY
+   =============================== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+/* ===============================
+   TABLE
+   =============================== */
+.table-container {
+  position: relative;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.data-table td {
+  position: relative;
+}
+
+/* ===============================
+   MODAL BOX
+   =============================== */
+.kendala-teknik-modal {
+  width: 100%;
+  max-width: 640px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0,0,0,.2);
+  overflow: hidden;
+}
+
+/* ===============================
+   MODAL HEADER
+   =============================== */
+.kendala-teknik-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.kendala-teknik-modal .modal-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.kendala-teknik-modal .close-btn {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+/* ===============================
+   MODAL BODY
+   =============================== */
+.kendala-teknik-modal .modal-body {
+  padding: 20px;
+}
+
+.kendala-teknik-modal form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ===============================
+   FORM ROW
+   =============================== */
+.kendala-teknik-modal .form-row {
+  display: flex;
+  flex-direction: column;
+}
+
+.kendala-teknik-modal .form-row label {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.kendala-teknik-modal .form-row input,
+.kendala-teknik-modal .form-row select,
+.kendala-teknik-modal .form-row textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+.kendala-teknik-modal .form-row textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.kendala-teknik-modal .form-row small {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #777;
+}
+
+/* focus */
+.kendala-teknik-modal .form-row input:focus,
+.kendala-teknik-modal .form-row select:focus,
+.kendala-teknik-modal .form-row textarea:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 2px rgba(25,118,210,.1);
+}
+
+/* ===============================
+   MODAL FOOTER
+   =============================== */
+.kendala-teknik-modal .modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 14px 20px;
+  border-top: 1px solid #eee;
+}
+
+.kendala-teknik-modal .btn-cancel {
+  background: #f5f5f5;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.kendala-teknik-modal .btn-save {
+  background: #1976d2;
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.kendala-teknik-modal .btn-save:hover {
+  background: #155fa0;
+}
+
+
+.main {
+  margin-left: 240px;
+  padding: 0;
+  min-height: 100vh;
+  background: #f0f2f5;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  padding: 14px 28px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  border-bottom: 1px solid #eee;
+}
+
+.topbar h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.topbar-right .admin-label {
+  font-size: 13px;
+  color: #555;
+}
+
+/* ── SUB HEADER ── */
+.sub-header {
+  background: #fff;
+  padding: 12px 28px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sub-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #e53935;
+  margin: 0;
+}
+
+.btn-add {
+  background: #e53935;
+  color: #fff;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 4px rgba(229,57,53,0.25);
+}
+
+.btn-add:hover {
+  background: #d32f2f;
+  box-shadow: 0 3px 8px rgba(229,57,53,0.35);
+}
+
+/* ── TABLE CARD ── */
+.card {
+  background: #fff;
+  margin: 16px 28px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  overflow: hidden;
+  border: 1px solid #e8e8e8;
+}
+
+/* ── DATA TABLE ── */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.data-table thead {
+  background: #e53935;
+  color: #fff;
+}
+
+.data-table th {
+  font-weight: 600;
+  padding: 11px 13px;
+  text-align: center;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  border-right: 1px solid rgba(255,255,255,0.15);
+}
+
+.data-table th:last-child {
+  border-right: none;
+}
+
+.data-table td {
+  padding: 10px 13px;
+  text-align: center;
+  border-bottom: 1px solid #eeeeee;
+  color: #444;
+  vertical-align: middle;
+}
+
+.data-table tbody tr {
+  transition: background 0.15s;
+}
+
+.data-table tbody tr:hover {
+  background: #fff5f5;
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ── STATUS BADGE ── */
+.status-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 11px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+.status-completed {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-ogp {
+  background: #fff3e0;
+  color: #ef6c00;
+}
+
+.status-open {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.status-pindah {
+  background: #f3e5f5;
+  color: #6a1b9a;
+}
+
+.status-default {
+  background: #f5f5f5;
+  color: #666;
+}
+
+/* ── ACTION ICONS ── */
+.action-icons {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.action-btn:hover {
+  background: #f5f5f5;
+}
+
+/* ── LOADING ── */
+.loading-cell {
+  text-align: center !important;
+  padding: 44px 20px !important;
+  color: #999;
+  font-size: 13px;
+}
+
+.loading {
+  display: inline-block;
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ── MODAL OVERLAY ── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.48);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+/* ── MODAL ── */
+.modal {
+  background: #fff;
+  border-radius: 8px;
+  width: 92%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.28);
+  animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(28px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-header {
+  background: #e53935;
+  color: #fff;
+  padding: 13px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 24px;
+  cursor: pointer;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.2s;
+  line-height: 1;
+}
+
+.close-btn:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+/* Modal Body */
+.modal-body {
+  padding: 18px 22px 8px;
+}
+
+.form-row {
+  margin-bottom: 16px;
+}
+
+.form-row label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 5px;
+  display: block;
+}
+
+.form-row .req {
+  color: #e53935;
+}
+
+.form-row input,
+.form-row select,
+.form-row textarea {
+  width: 100%;
+  padding: 8px 11px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #333;
+  background: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.form-row textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.form-row input:focus,
+.form-row select:focus,
+.form-row textarea:focus {
+  outline: none;
+  border-color: #e53935;
+  box-shadow: 0 0 0 2.5px rgba(229,57,53,0.12);
+}
+
+.form-row small {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  color: #777;
+}
+
+/* Modal Footer */
+.modal-footer {
+  padding: 12px 22px 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #eee;
+}
+
+.btn-save {
+  background: #e53935;
+  color: #fff;
+  border: none;
+  padding: 8px 22px;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-save:hover {
+  background: #d32f2f;
+}
+
+.btn-save:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.btn-cancel {
+  background: #fff;
+  color: #666;
+  border: 1px solid #ddd;
+  padding: 8px 18px;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+  background: #f5f5f5;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .main {
+    margin-left: 0;
+  }
+  .card {
+    margin: 12px 14px;
+  }
+  .modal {
+    width: 96%;
+  }
+}
