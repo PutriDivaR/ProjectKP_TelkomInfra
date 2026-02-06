@@ -42,4 +42,8 @@ app.use('/api/bot', botRoutes);
 const kendalaRoutes = require('./routes/kendala.routes');
 app.use('/kendala', kendalaRoutes);
 
+// daily routes
+const dailyRoutes = require('./routes/daily.routes');
+app.use('/daily', dailyRoutes);
+
 module.exports = app;
