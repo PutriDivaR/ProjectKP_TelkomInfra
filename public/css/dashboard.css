@@ -11,6 +11,13 @@ body {
   color: #1e293b;
 }
 
+/* Prevent global horizontal scroll */
+html, body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 .main {
   margin-left: 240px;
   padding: 20px;
@@ -361,8 +368,24 @@ body {
 }
 
 .table-scroll {
-  overflow-x: auto;
+  overflow-x: auto;              /* native horizontal scroll inside table area */
+  overflow-y: hidden;
   scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain; /* prevent dragging the whole page */
+}
+
+/* visible horizontal scrollbar styling (optional) */
+.table-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+.table-scroll::-webkit-scrollbar-track {
+  background: #e2e8f0;
+  border-radius: 8px;
+}
+.table-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 8px;
 }
 
 table {

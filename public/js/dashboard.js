@@ -2,11 +2,18 @@
 let charts = {};
 let tableData = {
   workOrders: [],
-  kendala: [],
+  kendalaTeknisi: [],
+  kendalaPelanggan: [],
   wilayah: []
 };
-let currentPage = 1;
 const rowsPerPage = 10;
+// state halaman per-tabel
+const pages = {
+  workOrders: 1,
+  kendalaTeknisi: 1,
+  kendalaPelanggan: 1,
+  wilayah: 1
+};
 
 document.addEventListener('DOMContentLoaded', function() {
   console.log('🚀 RIDAR Dashboard Initialized');
@@ -39,12 +46,27 @@ function setupEventListeners() {
     });
   }
 
-  // Filters
-  const applyBtn = document.getElementById('applyFilter');
-  if (applyBtn) applyBtn.addEventListener('click', applyFilters);
+  // Work Orders filters
+  const applyWo = document.getElementById('applyWoFilter');
+  if (applyWo) applyWo.addEventListener('click', () => {
+    loadWorkOrders();
+  });
+  const resetWo = document.getElementById('resetWoFilter');
+  if (resetWo) resetWo.addEventListener('click', () => {
+    resetWoFilters();
+    loadWorkOrders();
+  });
 
-  const resetBtn = document.getElementById('resetFilter');
-  if (resetBtn) resetBtn.addEventListener('click', resetFilters);
+  // Kendala Teknis filters
+  const applyKt = document.getElementById('applyKtFilter');
+  if (applyKt) applyKt.addEventListener('click', () => {
+    loadKendalaTeknisi();
+  });
+  const resetKt = document.getElementById('resetKtFilter');
+  if (resetKt) resetKt.addEventListener('click', () => {
+    resetKtFilters();
+    loadKendalaTeknisi();
+  });
 
   // Export
   const exportBtn = document.getElementById('exportExcel');
@@ -56,11 +78,15 @@ function setupEventListeners() {
   if (tablePrev) tablePrev.addEventListener('click', () => scrollTable(-1));
   if (tableNext) tableNext.addEventListener('click', () => scrollTable(1));
 
-  // Pagination
-  const pagePrev = document.getElementById('pagePrev');
-  const pageNext = document.getElementById('pageNext');
-  if (pagePrev) pagePrev.addEventListener('click', () => changePage(-1));
-  if (pageNext) pageNext.addEventListener('click', () => changePage(1));
+  // Pencarian per-tabel -> reset ke halaman 1 dan render ulang
+  const searchWO = document.getElementById('searchWorkOrders');
+  if (searchWO) searchWO.addEventListener('input', () => { pages.workOrders = 1; renderWorkOrdersTable(); });
+  const searchKT = document.getElementById('searchKendalaTeknisi');
+  if (searchKT) searchKT.addEventListener('input', () => { pages.kendalaTeknisi = 1; renderKendalaTeknisiTable(); });
+  const searchKP = document.getElementById('searchKendalaPelanggan');
+  if (searchKP) searchKP.addEventListener('input', () => { pages.kendalaPelanggan = 1; renderKendalaPelangganTable(); });
+  const searchW = document.getElementById('searchWilayah');
+  if (searchW) searchW.addEventListener('input', () => { pages.wilayah = 1; loadWilayahData(); });
 }
 
 // ============ DATA LOADING ============
@@ -72,12 +98,12 @@ async function loadAllData() {
       loadSummaryData(),
       loadRegionalSummary(),
       loadWorkFullProcess(),
+      populateFilterOptionsPerTable(),
       loadWorkOrders(),
       loadKendalaTeknisi(),
       loadKendalaPelanggan(),
       loadWilayahData(),
-      loadCharts(),
-      populateFilterOptions()
+      loadCharts()
     ]);
     
     showLoading(false);
@@ -114,14 +140,15 @@ async function loadSummaryData() {
 // ============ REGIONAL SUMMARY ============
 async function loadRegionalSummary() {
   try {
-    const response = await fetch('/api/dashboard/regional-summary');
+    // STO summary (unfiltered per user request for workflow table)
+    const response = await fetch(`/api/dashboard/sto-summary`);
     const result = await response.json();
     
     if (!result.success) throw new Error(result.message);
     
     const data = result.data;
     
-    // Render regional cards dengan layout compact
+    // Render STO cards using same container
     const container = document.getElementById('regionalSummary');
     if (!container) return;
     
@@ -131,7 +158,7 @@ async function loadRegionalSummary() {
       
       return `
         <div class="kpi-card ${cardClass}">
-          <div class="kpi-label">${stats.regional}</div>
+          <div class="kpi-label">${stats.sto}</div>
           <div class="kpi-value">${stats.total}</div>
           <div class="kpi-subtitle" style="font-size:11px;line-height:1.4;">
             ✅ ${stats.complete} | ⏳ ${stats.on_progress} | 📋 ${stats.open}
@@ -143,25 +170,31 @@ async function loadRegionalSummary() {
       `;
     }).join('');
     
-    console.log('✅ Regional summary loaded');
+    console.log('✅ STO summary loaded');
   } catch (error) {
-    console.error('Error loading regional summary:', error);
+    console.error('Error loading STO summary:', error);
   }
 }
 
 // ============ WORK ORDERS ============
 async function loadWorkOrders() {
   try {
-    const filters = getCurrentFilters();
-    const queryString = new URLSearchParams(filters).toString();
-    
-    const response = await fetch(`/api/dashboard/work-orders?${queryString}`);
+    const filters = getWoFilters();
+    const qs = new URLSearchParams({
+      regional: filters.regional,
+      sto: filters.sto,
+      statusDaily: filters.status,
+      package: filters.package,
+      startDate: filters.startDate,
+      endDate: filters.endDate
+    }).toString();
+    const response = await fetch(`/api/dashboard/work-orders?${qs}`);
     const result = await response.json();
     
     if (!result.success) throw new Error(result.message);
     
-    tableData.workOrders = result.data;
-    currentPage = 1;
+  tableData.workOrders = result.data || [];
+  pages.workOrders = 1;
     renderWorkOrdersTable();
     
     console.log('✅ Work orders loaded:', result.data.length);
@@ -175,9 +208,15 @@ async function loadWorkOrders() {
 function renderWorkOrdersTable() {
   const tbody = document.getElementById('workOrdersBody');
   if (!tbody) return;
-  
-  const data = tableData.workOrders;
-  
+
+  // Filter pencarian
+  const q = document.getElementById('searchWorkOrders')?.value?.toLowerCase() || '';
+  let data = tableData.workOrders;
+  if (q) {
+    data = data.filter(wo => [wo.wonum, wo.nama, wo.ticket_id, wo.package_name, wo.sto, wo.status_daily, wo.odp_inputan]
+      .map(v => (v || '').toString().toLowerCase()).some(s => s.includes(q)));
+  }
+
   if (!data || data.length === 0) {
     tbody.innerHTML = `
       <tr>
@@ -187,43 +226,37 @@ function renderWorkOrdersTable() {
         </td>
       </tr>
     `;
-    updatePagination(0);
+    renderPagination('workOrdersPages', 0, 'workOrders', renderWorkOrdersTable);
     return;
   }
-  
+
   const totalPages = Math.ceil(data.length / rowsPerPage);
-  const start = (currentPage - 1) * rowsPerPage;
+  const start = (pages.workOrders - 1) * rowsPerPage;
   const end = start + rowsPerPage;
   const pageData = data.slice(start, end);
-  
+
   tbody.innerHTML = pageData.map(wo => `
     <tr>
       <td><strong>${escapeHtml(wo.wonum)}</strong></td>
-      <td>${escapeHtml(wo.nama)}</td>
-      <td>${escapeHtml(wo.ticket_id)}</td>
-      <td>${escapeHtml(wo.package_name)}</td>
-      <td>${escapeHtml(wo.regional)}</td>
-      <td>${escapeHtml(wo.sto)}</td>
-      <td><span class="status-link" style="cursor:pointer" onclick="openDaily('${wo.wonum}')">${getStatusBadge(wo.status_daily)}</span></td> 
+      <td>${escapeHtml(wo.nama || '-')}</td>
+      <td>${escapeHtml(wo.ticket_id || '-')}</td>
+      <td>${escapeHtml(wo.package_name || '-')}</td>
+      <td>${escapeHtml(wo.sto || '-')}</td>
+      <td>${getStatusBadge(wo.status_daily || 'OPEN')}</td>
       <td>${escapeHtml(wo.odp_inputan || '-')}</td>
-      <td>${getStatusBadge(wo.status_daily)}</td>
-      <td>${escapeHtml(wo.datek_kendala || wo.odp_inputan || '-')}</td>
       <td>${formatDate(wo.created_at)}</td>
-      <td>
-        <button class="btn-action" onclick="viewDetail('${wo.wonum}')">
-          View
-        </button>
-      </td>
+      <td><button class="btn-action" onclick="openDaily('${wo.wonum}')">Detail</button></td>
     </tr>
   `).join('');
-  
-  updatePagination(totalPages);
+
+  renderPagination('workOrdersPages', totalPages, 'workOrders', renderWorkOrdersTable);
 }
 
 // ============ WORK FULL PROCESS ============
 async function loadWorkFullProcess() {
   try {
-    const response = await fetch('/api/dashboard/work-full-process');
+    // Unfiltered per request
+    const response = await fetch(`/api/dashboard/work-full-process`);
     const result = await response.json();
     
     if (!result.success) throw new Error(result.message);
@@ -231,17 +264,17 @@ async function loadWorkFullProcess() {
     const tbody = document.getElementById('workFullProcessBody');
     if (!tbody) return;
     
-    const { regional, nasional } = result.data;
+    const { sto, nasional } = result.data;
     
-    if (!regional || regional.length === 0) {
+    if (!sto || sto.length === 0) {
       tbody.innerHTML = '<tr><td colspan="9" class="empty-state">No data available</td></tr>';
       return;
     }
     
-    // Render regional rows
-    const regionalRows = regional.map(r => `
+    // Baris per STO
+    const stoRows = sto.map(r => `
       <tr>
-        <td><strong>${escapeHtml(r.regional)}</strong></td>
+        <td><strong>${escapeHtml(r.sto)}</strong></td>
         <td>${r.kdl_plg.toLocaleString()}</td>
         <td>${r.kdl_tek.toLocaleString()}</td>
         <td>${r.kdl_sys}</td>
@@ -253,7 +286,7 @@ async function loadWorkFullProcess() {
       </tr>
     `).join('');
     
-    // Render nasional row
+    // Baris nasional
     const nasionalRow = `
       <tr style="background:#f1f5f9;font-weight:700">
         <td><strong>NASIONAL</strong></td>
@@ -268,7 +301,7 @@ async function loadWorkFullProcess() {
       </tr>
     `;
     
-    tbody.innerHTML = regionalRows + nasionalRow;
+    tbody.innerHTML = stoRows + nasionalRow;
     
     console.log('✅ Work Full Process loaded');
   } catch (error) {
@@ -281,13 +314,21 @@ async function loadWorkFullProcess() {
 // ============ KENDALA TEKNISI ============
 async function loadKendalaTeknisi() {
   try {
-    const response = await fetch('/api/dashboard/kendala-teknisi');
+    const filters = getKtFilters();
+    const qs = new URLSearchParams({
+      status: filters.status,
+      sto: filters.sto,
+      startDate: filters.startDate,
+      endDate: filters.endDate
+    }).toString();
+    const response = await fetch(`/api/dashboard/kendala-teknisi?${qs}`);
     const result = await response.json();
     
     if (!result.success) throw new Error(result.message);
     
-    tableData.kendala = result.data;
-    renderKendalaTeknisiTable();
+  tableData.kendalaTeknisi = result.data || [];
+  pages.kendalaTeknisi = 1;
+  renderKendalaTeknisiTable();
     
     console.log('✅ Kendala Teknisi loaded:', result.data.length);
   } catch (error) {
@@ -300,9 +341,14 @@ async function loadKendalaTeknisi() {
 function renderKendalaTeknisiTable() {
   const tbody = document.getElementById('kendalaTeknisiBody');
   if (!tbody) return;
-  
-  const data = tableData.kendala;
-  
+
+  const q = document.getElementById('searchKendalaTeknisi')?.value?.toLowerCase() || '';
+  let data = tableData.kendalaTeknisi;
+  if (q) {
+    data = data.filter(k => [k.wonum, k.unit_inisiator, k.activity, k.activity_teknisi, k.status_todolist, k.sto, k.segment_alpro]
+      .map(v => (v || '').toString().toLowerCase()).some(s => s.includes(q)));
+  }
+
   if (!data || data.length === 0) {
     tbody.innerHTML = `
       <tr>
@@ -314,8 +360,13 @@ function renderKendalaTeknisiTable() {
     `;
     return;
   }
-  
-  tbody.innerHTML = data.map(k => `
+
+  const totalPages = Math.ceil(data.length / rowsPerPage);
+  const start = (pages.kendalaTeknisi - 1) * rowsPerPage;
+  const end = start + rowsPerPage;
+  const pageData = data.slice(start, end);
+
+  tbody.innerHTML = pageData.map(k => `
     <tr>
       <td><strong>${escapeHtml(k.wonum)}</strong></td>
       <td>${escapeHtml(k.unit_inisiator)}</td>
@@ -328,6 +379,8 @@ function renderKendalaTeknisiTable() {
       <td>${formatDate(k.created_at)}</td>
     </tr>
   `).join('');
+
+  renderPagination('kendalaTeknisiPages', totalPages, 'kendalaTeknisi', renderKendalaTeknisiTable);
 }
 
 // ============ KENDALA PELANGGAN ============
@@ -338,7 +391,9 @@ async function loadKendalaPelanggan() {
     
     if (!result.success) throw new Error(result.message);
     
-    renderKendalaPelangganTable(result.data);
+  tableData.kendalaPelanggan = result.data || [];
+  pages.kendalaPelanggan = 1;
+  renderKendalaPelangganTable();
     
     console.log('✅ Kendala Pelanggan loaded:', result.data.length);
   } catch (error) {
@@ -348,10 +403,17 @@ async function loadKendalaPelanggan() {
   }
 }
 
-function renderKendalaPelangganTable(data) {
+function renderKendalaPelangganTable() {
   const tbody = document.getElementById('kendalaPelangganBody');
   if (!tbody) return;
-  
+
+  const q = document.getElementById('searchKendalaPelanggan')?.value?.toLowerCase() || '';
+  let data = tableData.kendalaPelanggan;
+  if (q) {
+    data = data.filter(kp => [kp.wonum, kp.customer_name, kp.sto, kp.status_hi, kp.ttic, kp.keterangan, kp.nama_teknis]
+      .map(v => (v || '').toString().toLowerCase()).some(s => s.includes(q)));
+  }
+
   if (!data || data.length === 0) {
     tbody.innerHTML = `
       <tr>
@@ -363,12 +425,16 @@ function renderKendalaPelangganTable(data) {
     `;
     return;
   }
-  
-  tbody.innerHTML = data.map(kp => `
+
+  const totalPages = Math.ceil(data.length / rowsPerPage);
+  const start = (pages.kendalaPelanggan - 1) * rowsPerPage;
+  const end = start + rowsPerPage;
+  const pageData = data.slice(start, end);
+
+  tbody.innerHTML = pageData.map(kp => `
     <tr>
       <td><strong>${escapeHtml(kp.wonum)}</strong></td>
       <td>${escapeHtml(kp.customer_name || '-')}</td>
-      <td>${escapeHtml(kp.regional || '-')}</td>
       <td>${escapeHtml(kp.sto)}</td>
       <td>${formatDate(kp.tanggal_input)}</td>
       <td>${escapeHtml(kp.ttd_kb || '-')}</td>
@@ -378,14 +444,18 @@ function renderKendalaPelangganTable(data) {
       <td>${escapeHtml(kp.nama_teknis || '-')}</td>
     </tr>
   `).join('');
+
+  renderPagination('kendalaPelangganPages', totalPages, 'kendalaPelanggan', renderKendalaPelangganTable);
 }
 
 // ============ WILAYAH DATA ============
 async function loadWilayahData() {
   try {
+    const filters = getCurrentFilters();
+    const qs = new URLSearchParams(filters).toString();
     const [wilayahRes, woRes] = await Promise.all([
       fetch('/api/dashboard/wilayah'),
-      fetch('/api/dashboard/work-orders')
+      fetch(`/api/dashboard/work-orders?${qs}`)
     ]);
     
     const wilayahResult = await wilayahRes.json();
@@ -410,8 +480,8 @@ async function loadWilayahData() {
     
     const tbody = document.getElementById('wilayahBody');
     if (!tbody) return;
-    
-    tbody.innerHTML = wilayahData.map(w => {
+
+    let rows = wilayahData.map(w => {
       const stats = stoStats[w.sto] || { total: 0, complete: 0, onProgress: 0 };
       const rate = stats.total > 0 ? ((stats.complete / stats.total) * 100).toFixed(1) : 0;
       
@@ -434,7 +504,21 @@ async function loadWilayahData() {
           </td>
         </tr>
       `;
-    }).join('');
+    });
+
+    // Pencarian wilayah sederhana (berdasarkan teks baris)
+    const q = document.getElementById('searchWilayah')?.value?.toLowerCase() || '';
+    if (q) {
+      rows = rows.filter(r => r.toLowerCase().includes(q));
+    }
+
+    const totalPages = Math.ceil(rows.length / rowsPerPage);
+    const start = (pages.wilayah - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    const pageRows = rows.slice(start, end);
+
+    tbody.innerHTML = pageRows.join('');
+    renderPagination('wilayahPages', totalPages, 'wilayah', () => loadWilayahData());
     
     console.log('✅ Wilayah loaded');
   } catch (error) {
@@ -459,7 +543,7 @@ async function loadCharts() {
 }
 
 async function createStatusChart() {
-  const response = await fetch('/api/dashboard/charts/status-distribution');
+  const response = await fetch(`/api/dashboard/charts/status-distribution`);
   const result = await response.json();
   if (!result.success) return;
   
@@ -512,7 +596,7 @@ async function createStatusChart() {
 }
 
 async function createSTOChart() {
-  const response = await fetch('/api/dashboard/charts/sto-distribution');
+  const response = await fetch(`/api/dashboard/charts/sto-distribution`);
   const result = await response.json();
   if (!result.success) return;
   
@@ -564,7 +648,7 @@ async function createSTOChart() {
 }
 
 async function createTrendChart() {
-  const response = await fetch('/api/dashboard/charts/wo-trend');
+  const response = await fetch(`/api/dashboard/charts/wo-trend`);
   const result = await response.json();
   if (!result.success) return;
   
@@ -635,7 +719,7 @@ async function createTrendChart() {
 }
 
 async function createPackageChart() {
-  const response = await fetch('/api/dashboard/charts/package-distribution');
+  const response = await fetch(`/api/dashboard/charts/package-distribution`);
   const result = await response.json();
   if (!result.success) return;
   
@@ -676,7 +760,7 @@ async function createPackageChart() {
 }
 
 async function createCompletionChart() {
-  const response = await fetch('/api/dashboard/charts/sto-distribution');
+  const response = await fetch(`/api/dashboard/charts/sto-distribution`);
   const result = await response.json();
   if (!result.success) return;
   
@@ -718,86 +802,91 @@ async function createCompletionChart() {
 }
 
 // ============ FILTER FUNCTIONS ============
-async function populateFilterOptions() {
+async function populateFilterOptionsPerTable() {
   try {
-    const [woRes, wilayahRes] = await Promise.all([
-      fetch('/api/dashboard/work-orders'),
-      fetch('/api/dashboard/wilayah')
-    ]);
-    
-    const woResult = await woRes.json();
-    const wilayahResult = await wilayahRes.json();
-    
-    if (woResult.success && wilayahResult.success) {
-      // Populate Regional
-      const regionals = [...new Set(woResult.data.map(wo => wo.regional))];
-      const regionalSelect = document.getElementById('filterRegional');
-      if (regionalSelect) {
-        regionals.forEach(r => {
-          const option = document.createElement('option');
-          option.value = r;
-          option.textContent = r;
-          regionalSelect.appendChild(option);
-        });
-      }
-      
-      // Populate STO
-      const stoSelect = document.getElementById('filterSTO');
-      if (stoSelect) {
-        wilayahResult.data.forEach(w => {
-          const option = document.createElement('option');
-          option.value = w.sto;
-          option.textContent = w.sto;
-          stoSelect.appendChild(option);
-        });
-      }
-      
-      // Populate Package
-      const packages = [...new Set(woResult.data.map(wo => wo.package_name))];
-      const packageSelect = document.getElementById('filterPackage');
-      if (packageSelect) {
-        packages.forEach(p => {
-          const option = document.createElement('option');
-          option.value = p;
-          option.textContent = p;
-          packageSelect.appendChild(option);
-        });
-      }
+    const res = await fetch('/api/dashboard/filter-options');
+    const result = await res.json();
+    if (!result.success) throw new Error(result.message);
+
+    const { regional, sto, statusTodolist, statusDaily, package: packages, dateRange } = result.data;
+
+    function refillSelect(selectId, values) {
+      const select = document.getElementById(selectId);
+      if (!select) return;
+      const defaultOption = select.querySelector('option');
+      select.innerHTML = '';
+      if (defaultOption) select.appendChild(defaultOption);
+      (values || []).filter(v => v && v !== '').forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v;
+        opt.textContent = v;
+        select.appendChild(opt);
+      });
+    }
+
+    // WO filters
+    refillSelect('woFilterRegional', regional);
+    refillSelect('woFilterSTO', sto);
+    refillSelect('woFilterStatus', statusDaily);
+    refillSelect('woFilterPackage', packages);
+    if (dateRange) {
+      const startInput = document.getElementById('woFilterStartDate');
+      const endInput = document.getElementById('woFilterEndDate');
+      if (startInput && !startInput.value && dateRange.min) startInput.value = dateRange.min;
+      if (endInput && !endInput.value && dateRange.max) endInput.value = dateRange.max;
+    }
+
+    // Kendala Teknis filters
+    refillSelect('ktFilterSTO', sto);
+    refillSelect('ktFilterStatus', statusTodolist);
+    if (dateRange) {
+      const s2 = document.getElementById('ktFilterStartDate');
+      const e2 = document.getElementById('ktFilterEndDate');
+      if (s2 && !s2.value && dateRange.min) s2.value = dateRange.min;
+      if (e2 && !e2.value && dateRange.max) e2.value = dateRange.max;
     }
   } catch (error) {
     console.error('Error populating filters:', error);
   }
 }
 
-function getCurrentFilters() {
+function getWoFilters() {
   return {
-    regional: document.getElementById('filterRegional')?.value || '',
-    sto: document.getElementById('filterSTO')?.value || '',
-    status: document.getElementById('filterStatus')?.value || '',
-    startDate: document.getElementById('filterStartDate')?.value || '',
-    endDate: document.getElementById('filterEndDate')?.value || ''
+    regional: document.getElementById('woFilterRegional')?.value || '',
+    sto: document.getElementById('woFilterSTO')?.value || '',
+    status: document.getElementById('woFilterStatus')?.value || '',
+    package: document.getElementById('woFilterPackage')?.value || '',
+    startDate: document.getElementById('woFilterStartDate')?.value || '',
+    endDate: document.getElementById('woFilterEndDate')?.value || ''
   };
 }
 
-function applyFilters() {
-  loadWorkOrders();
-  showToast('Filters applied', 'success');
+function resetWoFilters() {
+  document.getElementById('woFilterRegional').value = '';
+  document.getElementById('woFilterSTO').value = '';
+  document.getElementById('woFilterStatus').value = '';
+  document.getElementById('woFilterPackage').value = '';
+  document.getElementById('woFilterStartDate').value = '';
+  document.getElementById('woFilterEndDate').value = '';
 }
 
-function resetFilters() {
-  document.getElementById('filterRegional').value = '';
-  document.getElementById('filterSTO').value = '';
-  document.getElementById('filterStatus').value = '';
-  document.getElementById('filterPackage').value = '';
-  
-  const today = new Date();
-  const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
-  document.getElementById('filterEndDate').valueAsDate = today;
-  document.getElementById('filterStartDate').valueAsDate = thirtyDaysAgo;
-  
-  loadWorkOrders();
-  showToast('Filters reset', 'info');
+function getKtFilters() {
+  return {
+    status: document.getElementById('ktFilterStatus')?.value || '',
+    sto: document.getElementById('ktFilterSTO')?.value || '',
+    startDate: document.getElementById('ktFilterStartDate')?.value || '',
+    endDate: document.getElementById('ktFilterEndDate')?.value || ''
+  };
 }
+
+function resetKtFilters() {
+  document.getElementById('ktFilterStatus').value = '';
+  document.getElementById('ktFilterSTO').value = '';
+  document.getElementById('ktFilterStartDate').value = '';
+  document.getElementById('ktFilterEndDate').value = '';
+}
+
+// Removed global apply/reset filters — per table filters are used instead.
 
 // ============ TABLE FUNCTIONS ============
 function scrollTable(direction) {
@@ -807,24 +896,46 @@ function scrollTable(direction) {
   scroll.scrollBy({ left: direction * step, behavior: 'smooth' });
 }
 
-function changePage(direction) {
-  const totalPages = Math.ceil(tableData.workOrders.length / rowsPerPage);
-  const newPage = currentPage + direction;
-  
-  if (newPage >= 1 && newPage <= totalPages) {
-    currentPage = newPage;
-    renderWorkOrdersTable();
-  }
-}
+function renderPagination(containerId, totalPages, tableKey, renderFn) {
+  const container = document.getElementById(containerId);
+  const prevBtn = document.getElementById(`${tableKey}Prev`);
+  const nextBtn = document.getElementById(`${tableKey}Next`);
+  if (!container || !prevBtn || !nextBtn) return;
 
-function updatePagination(totalPages) {
-  const pageInfo = document.getElementById('pageInfo');
-  const prevBtn = document.getElementById('pagePrev');
-  const nextBtn = document.getElementById('pageNext');
-  
-  if (pageInfo) pageInfo.textContent = `Page ${currentPage} / ${Math.max(1, totalPages)}`;
-  if (prevBtn) prevBtn.disabled = currentPage <= 1;
-  if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+  const current = Math.max(1, Math.min(pages[tableKey], Math.max(1, totalPages)));
+  pages[tableKey] = current;
+
+  const maxVisible = 5;
+  let start = Math.max(1, current - Math.floor(maxVisible / 2));
+  let end = Math.min(totalPages, start + maxVisible - 1);
+  start = Math.max(1, end - maxVisible + 1);
+
+  const btns = [];
+  if (start > 1) {
+    btns.push(`<button class="page-btn" data-page="1">1</button>`);
+    if (start > 2) btns.push(`<span class="page-ellipsis">…</span>`);
+  }
+  for (let i = start; i <= end; i++) {
+    btns.push(`<button class="page-btn ${i === current ? 'active' : ''}" data-page="${i}">${i}</button>`);
+  }
+  if (end < totalPages) {
+    if (end < totalPages - 1) btns.push(`<span class="page-ellipsis">…</span>`);
+    btns.push(`<button class="page-btn" data-page="${totalPages}">${totalPages}</button>`);
+  }
+
+  container.innerHTML = btns.join('');
+
+  container.querySelectorAll('.page-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      pages[tableKey] = parseInt(btn.getAttribute('data-page'));
+      renderFn();
+    });
+  });
+
+  prevBtn.disabled = current <= 1;
+  nextBtn.disabled = current >= totalPages;
+  prevBtn.onclick = () => { if (pages[tableKey] > 1) { pages[tableKey]--; renderFn(); } };
+  nextBtn.onclick = () => { if (pages[tableKey] < totalPages) { pages[tableKey]++; renderFn(); } };
 }
 
 // ============ UTILITY FUNCTIONS ============
@@ -845,6 +956,7 @@ function getStatusBadge(status) {
     'OPEN': 'status-open',
     'ON_PROGRESS': 'status-on_progress',
     'OGP': 'status-ogp',
+    'PINDAH LOKER': 'status-ogp',
     'COMPLETE': 'status-complete',
     'CANCEL': 'status-cancel'
   };

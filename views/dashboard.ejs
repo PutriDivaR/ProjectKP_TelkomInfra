@@ -57,9 +57,9 @@
     </div>
   </div>
 
-  <!-- REGIONAL SUMMARY -->
+  <!-- STO SUMMARY -->
   <div class="kpi-section">
-    <h2 class="section-title">🗺️ Regional Summary</h2>
+    <h2 class="section-title">🗺️ STO Summary</h2>
     <div class="regional-grid" id="regionalSummary">
       <!-- Will be populated by JavaScript -->
     </div>
@@ -75,7 +75,7 @@
       <table class="table-work-full">
         <thead>
           <tr>
-            <th rowspan="2">Regional</th>
+            <th rowspan="2">STO</th>
             <th colspan="3">Work Fail</th>
             <th rowspan="2">Pending</th>
             <th rowspan="2">Continue</th>
@@ -96,55 +96,45 @@
     </div>
   </div>
 
-  <!-- FILTERS -->
+  <!-- FILTERS PER TABLE: WORK ORDERS -->
   <div class="filter-container">
-    <h3 class="filter-title">🔍 Filter & Search</h3>
+    <h3 class="filter-title">� Filter Work Orders</h3>
     <div class="filter-grid">
       <div class="filter-group">
         <label>Regional</label>
-        <select id="filterRegional" class="filter-select">
+        <select id="woFilterRegional" class="filter-select">
           <option value="">Semua Regional</option>
         </select>
       </div>
-
       <div class="filter-group">
         <label>STO</label>
-        <select id="filterSTO" class="filter-select">
+        <select id="woFilterSTO" class="filter-select">
           <option value="">Semua STO</option>
         </select>
       </div>
-
       <div class="filter-group">
-        <label>Status</label>
-        <select id="filterStatus" class="filter-select">
+        <label>Status (Daily)</label>
+        <select id="woFilterStatus" class="filter-select">
           <option value="">Semua Status</option>
-          <option value="OPEN">Open</option>
-          <option value="ON_PROGRESS">On Progress</option>
-          <option value="COMPLETE">Complete</option>
-          <option value="CANCEL">Cancel</option>
         </select>
       </div>
-
       <div class="filter-group">
         <label>Package</label>
-        <select id="filterPackage" class="filter-select">
+        <select id="woFilterPackage" class="filter-select">
           <option value="">Semua Package</option>
         </select>
       </div>
-
       <div class="filter-group">
         <label>Start Date</label>
-        <input type="date" id="filterStartDate" class="filter-input">
+        <input type="date" id="woFilterStartDate" class="filter-input">
       </div>
-
       <div class="filter-group">
         <label>End Date</label>
-        <input type="date" id="filterEndDate" class="filter-input">
+        <input type="date" id="woFilterEndDate" class="filter-input">
       </div>
-
       <div class="filter-actions">
-        <button class="btn-primary" id="applyFilter">Apply Filter</button>
-        <button class="btn-secondary" id="resetFilter">Reset</button>
+        <button class="btn-primary" id="applyWoFilter">Apply</button>
+        <button class="btn-secondary" id="resetWoFilter">Reset</button>
         <button class="btn-secondary" id="exportExcel">📥 Export</button>
       </div>
     </div>
@@ -212,12 +202,11 @@
   <div class="table-container">
     <div class="table-header">
       <h3 class="table-title">📋 Work Orders</h3>
-      <div class="table-scroll-btn">
-        <button id="tablePrev">←</button>
-        <button id="tableNext">→</button>
+      <div class="table-search">
+        <input type="text" id="searchWorkOrders" placeholder="Search..." class="search-input">
       </div>
     </div>
-    
+
     <div class="table-scroll">
       <table>
         <thead>
@@ -226,7 +215,6 @@
             <th>Customer</th>
             <th>Ticket ID</th>
             <th>Package</th>
-            <th>Regional</th>
             <th>STO</th>
             <th>Status</th>
             <th>ODP</th>
@@ -241,9 +229,11 @@
     </div>
 
     <div class="table-pager">
-      <button id="pagePrev">Previous</button>
-      <span class="page-info" id="pageInfo">Page 1 / 1</span>
-      <button id="pageNext">Next</button>
+      <button id="workOrdersPrev">Previous</button>
+      <div class="page-numbers" id="workOrdersPages">
+        <button class="page-btn active">1</button>
+      </div>
+      <button id="workOrdersNext">Next</button>
     </div>
   </div>
 
@@ -251,8 +241,39 @@
   <div class="table-container">
     <div class="table-header">
       <h3 class="table-title">⚠️ Kendala Teknis & Sistem</h3>
+      <div class="table-search">
+        <input type="text" id="searchKendalaTeknisi" placeholder="Search..." class="search-input">
+      </div>
     </div>
-    
+
+    <!-- FILTERS PER TABLE: KENDALA TEKNIS & SISTEM -->
+    <div class="filter-grid" style="margin-bottom:10px">
+      <div class="filter-group">
+        <label>Status (Todolist)</label>
+        <select id="ktFilterStatus" class="filter-select">
+          <option value="">Semua Status</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>STO</label>
+        <select id="ktFilterSTO" class="filter-select">
+          <option value="">Semua STO</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Start Date</label>
+        <input type="date" id="ktFilterStartDate" class="filter-input">
+      </div>
+      <div class="filter-group">
+        <label>End Date</label>
+        <input type="date" id="ktFilterEndDate" class="filter-input">
+      </div>
+      <div class="filter-actions">
+        <button class="btn-primary" id="applyKtFilter">Apply</button>
+        <button class="btn-secondary" id="resetKtFilter">Reset</button>
+      </div>
+    </div>
+
     <div class="table-scroll">
       <table>
         <thead>
@@ -273,21 +294,31 @@
         </tbody>
       </table>
     </div>
+
+    <div class="table-pager">
+      <button id="kendalaTeknisiPrev">Previous</button>
+      <div class="page-numbers" id="kendalaTeknisiPages">
+        <button class="page-btn active">1</button>
+      </div>
+      <button id="kendalaTeknisiNext">Next</button>
+    </div>
   </div>
 
   <!-- KENDALA PELANGGAN TABLE -->
   <div class="table-container">
     <div class="table-header">
       <h3 class="table-title">👥 Kendala Pelanggan</h3>
+      <div class="table-search">
+        <input type="text" id="searchKendalaPelanggan" placeholder="Search..." class="search-input">
+      </div>
     </div>
-    
+
     <div class="table-scroll">
       <table>
         <thead>
           <tr>
             <th>WO Number</th>
             <th>Customer</th>
-            <th>Regional</th>
             <th>STO</th>
             <th>Tanggal Input</th>
             <th>TTD KB</th>
@@ -302,14 +333,25 @@
         </tbody>
       </table>
     </div>
+
+    <div class="table-pager">
+      <button id="kendalaPelangganPrev">Previous</button>
+      <div class="page-numbers" id="kendalaPelangganPages">
+        <button class="page-btn active">1</button>
+      </div>
+      <button id="kendalaPelangganNext">Next</button>
+    </div>
   </div>
 
   <!-- WILAYAH TABLE -->
   <div class="table-container">
     <div class="table-header">
       <h3 class="table-title">🗺️ Wilayah RIDAR</h3>
+      <div class="table-search">
+        <input type="text" id="searchWilayah" placeholder="Search..." class="search-input">
+      </div>
     </div>
-    
+
     <div class="table-scroll">
       <table class="table-compact">
         <thead>
@@ -328,6 +370,14 @@
           <tr><td colspan="8" style="text-align:center">Loading...</td></tr>
         </tbody>
       </table>
+    </div>
+
+    <div class="table-pager">
+      <button id="wilayahPrev">Previous</button>
+      <div class="page-numbers" id="wilayahPages">
+        <button class="page-btn active">1</button>
+      </div>
+      <button id="wilayahNext">Next</button>
     </div>
   </div>
 
