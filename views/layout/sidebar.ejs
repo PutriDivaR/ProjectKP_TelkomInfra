@@ -1,8 +1,6 @@
-
 <button id="sidebarToggle" class="sidebar-toggle-mobile" aria-label="Toggle sidebar">
   <i class="fa-solid fa-bars"></i>
 </button>
-
 
 <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
@@ -19,16 +17,16 @@
 
   <ul class="menu">
     <li>
-      <a href="/dashboard" class="active" data-title="Dashboard">
+      <a href="/dashboard" data-title="Dashboard">
         <i class="fa-solid fa-gauge-high"></i>
         <span class="label">Dashboard</span>
       </a>
     </li>
 
     <li>
-      <a href="#" data-title="Kelola Kendala">
-        <i class="fa-solid fa-triangle-exclamation"></i>
-        <span class="label">Kelola Kendala</span>
+      <a href="/todolist" data-title="Kendala Teknik Sistem">
+        <i class="fa-solid fa-clipboard-list"></i>
+        <span class="label">Kendala Teknik Sistem</span>
       </a>
     </li>
 
@@ -38,6 +36,30 @@
         <span class="label">Daily Housekeeping</span>
       </a>
     </li>
+     <!-- SUMBER DATA with Submenu -->
+  <li class="has-submenu">
+    <a href="#" class="menu-toggle" data-title="Sumber Data" onclick="toggleSubmenu(event)">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span class="label">Sumber Data</span>
+      <i class="fa-solid fa-chevron-down arrow"></i>
+    </a>
+    <ul class="submenu">
+      <li>
+        <a href="/kendala-teknik" data-title="Sumber Kendala Teknik">
+          <i class="fa-solid fa-database"></i>
+          <span class="label">Sumber Kendala Teknik</span>
+        </a>
+      </li>
+      <li>
+        <a href="/wilayah-ridar" data-title="Sumber Wilayah Ridar">
+          <i class="fa-solid fa-map-location-dot"></i>
+          <span class="label">Sumber Wilayah Ridar</span>
+        </a>
+      </li>
+    </ul>
+  </li>
+
+  </ul>
 
   <!-- Sidebar Footer -->
   <div class="sidebar-footer">
@@ -46,7 +68,5 @@
       <span class="user-name">Admin User</span>
     </div>
   </div>
+
 </div>
-
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">

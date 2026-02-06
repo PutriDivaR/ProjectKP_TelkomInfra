@@ -1,0 +1,254 @@
+<%- include('layout/header') %>
+<%- include('layout/sidebar') %>
+
+<!-- ✅ Load SheetJS CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+
+</style>
+
+
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="header">
+    <h2>TODO LIST TIP TA RIDAR</h2>
+    <div class="topbar-right">
+      <span class="admin-label">Nama Admin</span>
+    </div>
+  </div>
+
+  <!-- SUB HEADER -->
+  <div class="sub-header">
+    <h3 class="sub-title">Data Kendala STO</h3>
+  </div>
+
+  <!-- ACTION BAR -->
+  <div class="action-bar">
+    <div class="action-left">
+      <button class="btn-upload" onclick="triggerUpload()">
+        <i class="fa-solid fa-upload"></i> Upload/Import
+      </button>
+      <input type="file" id="excelFileInput" accept=".xlsx,.xls" style="display:none" onchange="handleFileUpload(event)">
+      <button class="btn-export" onclick="exportExcel()">
+        <i class="fa-solid fa-file-export"></i> Export File
+      </button>
+        <button class="btn-delete-selected" id="btnDeleteSelected" onclick="deleteSelected()" disabled>
+        🗑️ Hapus Terpilih
+      </button>
+        <button class="btn-delete-all" onclick="deleteAll()">
+        ⚠️ Hapus Semua
+      </button>
+  </div>
+
+  
+    <div class="action-right">
+        <div class="search-container">
+            <input 
+            type="text" 
+            class="search-input" 
+            id="searchWonum" 
+            placeholder="Cari WO / SC ID..."
+            oninput="handleSearch()"
+            >
+            <button class="btn-clear-search" id="btnClearSearch" onclick="clearSearch()">
+            ✕
+            </button>
+        </div>
+        <label class="filter-label">Filter</label>
+        <select class="filter-select" id="filterStatus" onchange="applyFilter()">
+            <option value="">Semua Status</option>
+            <option value="OPEN">OPEN</option>
+            <option value="OGP">OGP</option>
+            <option value="PINDAH LOKER">PINDAH LOKER</option>
+            <option value="COMPLETED">COMPLETED</option>
+        </select>
+    </div>
+  </div>
+
+  <!-- SUMMARY CARDS -->
+  <div class="summary-cards">
+    <div class="summary-card card-done">
+      <div class="summary-label">Done</div>
+      <div class="summary-value" id="countDone">0</div>
+    </div>
+    <div class="summary-card card-ogp">
+      <div class="summary-label">OGP</div>
+      <div class="summary-value" id="countOGP">0</div>
+    </div>
+    <div class="summary-card card-pindah">
+      <div class="summary-label">Pindah Loker</div>
+      <div class="summary-value" id="countPindah">0</div>
+    </div>
+    <div class="summary-card card-closed">
+      <div class="summary-label">Closed</div>
+      <div class="summary-value" id="countClosed">0</div>
+    </div>
+  </div>
+
+  <!-- DATA TABLE -->
+  <div class="card">
+    <div style="overflow-x:auto">
+      <table class="data-table">
+        <thead>
+            <tr>
+                <th class="col-select">
+                <input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)">
+                </th>
+                <th class="col-no">NO</th>
+                <th class="col-wonum">WO / SC ID</th>
+                <th class="col-odp">ODP INPUTAN</th>
+                <th class="col-kendala">KENDALA PT 1</th>
+                <th class="col-activity">ACTIVITY</th>
+                <th class="col-sto-input">STO INPUT</th>
+                <th class="col-update">UPDATE STATUS</th>
+                <th class="col-status">STATUS</th>
+                <th class="col-aksi">ACTIONS</th>
+            </tr>
+        </thead>
+        <tbody id="dataTable">
+          <tr>
+            <td colspan="9" class="loading-cell">
+              <div class="loading">Loading data...</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ================================================
+     MODAL: DETAIL DATA KENDALA STO
+     ================================================ -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOnOverlay(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Detail Data Kendala STO</h3>
+      <button class="close-btn" onclick="closeModal()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <input type="hidden" id="editId">
+
+      <!-- ROW 1: WONUM | ODP INPUTAN -->
+      <div class="modal-row">
+        <div class="modal-col">
+          <label>WO / SC ID</label>
+          <input type="text" id="wonum" readonly>
+        </div>
+        <div class="modal-col">
+          <label>ODP INPUTAN</label>
+          <input type="text" id="odpInputan" readonly>
+        </div>
+      </div>
+
+      <!-- ROW 2: KENDALA PT 1 | STO INPUT (READ-ONLY) -->
+      <div class="modal-row">
+        <div class="modal-col">
+          <label>KENDALA PT 1</label>
+          <input type="text" id="activityTeknisi" readonly>
+        </div>
+        <div class="modal-col">
+          <label>STO INPUT</label>
+          <input type="text" id="stoInput" readonly style="background:#fffbe6; border-color:#ffd54f;">
+        </div>
+      </div>
+
+      <!-- ROW 3: ACTIVITY dropdown | STO dropdown -->
+      <div class="modal-row">
+        <div class="modal-col">
+          <label>ACTIVITY <span class="req">*</span></label>
+          <select id="activitySelect" onchange="onActivityChange()">
+            <option value="">-- Pilih Activity --</option>
+          </select>
+        </div>
+        <div class="modal-col">
+          <label>STO <span class="req">*</span></label>
+          <select id="stoSelect" onchange="onStoChange()">
+            <option value="">-- Pilih STO --</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- ROW 4: UIC | PIC -->
+      <div class="modal-row">
+        <div class="modal-col">
+          <label>UIC</label>
+          <input type="text" id="uicField" readonly>
+        </div>
+        <div class="modal-col">
+          <label>PIC</label>
+          <input type="text" id="picField" readonly>
+        </div>
+      </div>
+
+      <!-- ROW 5: LEADER | UPDATE STATUS DEEN -->
+      <div class="modal-row">
+        <div class="modal-col">
+          <label>LEADER</label>
+          <input type="text" id="leaderField" readonly>
+        </div>
+        <div class="modal-col">
+          <label>UPDATE STATUS DEEN</label>
+          <input type="text" id="updateStatusDeen" readonly>
+        </div>
+      </div>
+
+      <!-- ROW 6: STATUS | PROGRESS -->
+      <div class="modal-row">
+        <div class="modal-col">
+          <label>STATUS</label>
+          <input type="text" id="statusField" readonly>
+        </div>
+        <div class="modal-col">
+          <label>PROGRESS</label>
+          <input type="text" id="progressField" readonly>
+        </div>
+      </div>
+
+      <!-- ROW 7: SOLUSI PROGRESS (full width) -->
+      <div class="modal-row">
+        <div class="modal-col modal-col-full">
+          <label>SOLUSI PROGRESS</label>
+          <input type="text" id="solusiProgress" readonly>
+        </div>
+      </div>
+
+      <!-- ROW 8: BULAN | TARGET -->
+      <div class="modal-row">
+        <div class="modal-col">
+          <label>BULAN</label>
+          <input type="text" id="monthDate" readonly>
+        </div>
+        <div class="modal-col">
+          <label>TARGET</label>
+          <input type="text" id="targetField" readonly>
+        </div>
+      </div>
+
+      <!-- ROW 9: SC ORDER -->
+      <div class="modal-row">
+        <div class="modal-col modal-col-full">
+          <label>SC ORDER</label>
+          <input type="text" id="scOrder" readonly>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-done" onclick="saveDetail()">
+        <i class="fa-solid fa-check"></i> Done
+      </button>
+    </div>
+  </div>
+</div>
+
+
+
+
+<script src="/js/todolist.js"></script>
+<%- include('layout/footer') %>

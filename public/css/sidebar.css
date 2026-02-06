@@ -312,13 +312,162 @@ body.sidebar-collapsed .sidebar .menu a:hover::before {
   opacity: 1;
 }
 
-/* Toggle icon rotation when collapsed
-   Note: previously rotated an angle icon; with fa-bars keep it unchanged */
+/* Toggle icon rotation when collapsed */
 body.sidebar-collapsed .sidebar-toggle-desktop i {
   transform: none;
 }
 
-/* mobile responsesive */
+/* ====== SUBMENU STYLING - FIXED ====== */
+/* ====== SUBMENU STYLING - FIXED ====== */
+.menu li.has-submenu {
+  position: relative;
+}
+
+.menu li.has-submenu > a.menu-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.menu li.has-submenu > a.menu-toggle .arrow {
+  font-size: 10px;
+  margin-left: auto;
+  transition: transform 0.3s ease;
+  opacity: 0.6;
+  color: #6b7280;
+}
+
+.menu li.has-submenu.active > a.menu-toggle .arrow {
+  transform: rotate(180deg);
+  color: var(--accent);
+}
+
+/* Submenu container */
+.submenu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-in-out;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.menu li.has-submenu.active .submenu {
+  max-height: 300px;
+  margin-top: 6px;
+  margin-bottom: 4px;
+  padding: 4px 0;
+}
+
+/* Submenu items */
+.submenu li {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.submenu li a {
+  padding: 10px 14px 10px 46px !important;
+  font-size: 13px !important;
+  color: #4b5563 !important;
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  border-radius: 8px;
+  margin: 2px 8px !important;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  background: transparent !important;
+  font-weight: 500 !important;
+}
+
+.submenu li a i {
+  font-size: 14px !important;
+  width: 18px;
+  text-align: center;
+  color: #9ca3af !important;
+  transition: all 0.2s ease;
+}
+
+.submenu li a .label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.submenu li a:hover {
+  background: var(--accent-light) !important;
+  color: var(--accent) !important;
+  padding-left: 50px !important;
+}
+
+.submenu li a:hover i {
+  color: var(--accent) !important;
+  transform: scale(1.1);
+}
+
+.submenu li a.active {
+  background: var(--accent-light) !important;
+  color: var(--accent) !important;
+  font-weight: 600 !important;
+}
+
+.submenu li a.active i {
+  color: var(--accent) !important;
+}
+
+/* ====== COLLAPSED SIDEBAR - FIXED CENTERING ====== */
+body.sidebar-collapsed .sidebar .submenu {
+  display: none;
+}
+
+body.sidebar-collapsed .sidebar .menu li.has-submenu > a.menu-toggle .arrow {
+  display: none;
+}
+
+/* FIX: Center icon untuk menu-toggle saat collapsed */
+body.sidebar-collapsed .sidebar .menu li.has-submenu > a.menu-toggle {
+  justify-content: center;
+  padding: 12px 0;
+}
+
+body.sidebar-collapsed .sidebar .menu li.has-submenu > a.menu-toggle i:first-child {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Submenu popup saat hover (collapsed state) */
+body.sidebar-collapsed .sidebar .menu li.has-submenu:hover .submenu {
+  display: block;
+  position: absolute;
+  left: 100%;
+  top: 0;
+  min-width: 220px;
+  max-height: none;
+  background: #ffffff;
+  box-shadow: 2px 2px 16px rgba(0,0,0,0.15);
+  z-index: 1000;
+  border-radius: 10px;
+  padding: 8px 0;
+  border: 1px solid #e5e7eb;
+  margin: 0;
+}
+
+body.sidebar-collapsed .sidebar .submenu li a {
+  padding: 10px 16px !important;
+  margin: 2px 8px !important;
+}
+
+body.sidebar-collapsed .sidebar .submenu li a:hover {
+  padding-left: 20px !important;
+}
+
+/* mobile responsive */
 @media (max-width: 900px) {
   .sidebar-toggle-mobile {
     display: flex;

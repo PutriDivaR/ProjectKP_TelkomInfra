@@ -1,0 +1,121 @@
+<%- include('layout/header') %>
+<%- include('layout/sidebar') %>
+
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="header">
+    <h2>SUMBER DATA - KENDALA TEKNIK</h2>
+    <div class="topbar-right">
+      <span class="admin-label">Admin User</span>
+    </div>
+  </div>
+
+  <!-- SUB HEADER WITH ADD BUTTON -->
+  <div class="sub-header">
+    <h3 class="sub-title">Input Data Master Activity</h3>
+    <button class="btn-add" onclick="openModal()">
+      <i class="fa-solid fa-plus"></i> Tambah Kendala Teknik
+    </button>
+  </div>
+
+  <!-- DATA TABLE -->
+  <div class="card">
+    <div style="overflow-x:auto">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width:60px">NO</th>
+            <th style="min-width:200px">ACTIVITY NAME</th>
+            <th style="width:140px">STATUS</th>
+            <th style="width:120px">PROGRESS</th>
+            <th style="min-width:200px">SOLUSI / PROGRESS</th>
+            <th style="width:120px">AKSI</th>
+          </tr>
+        </thead>
+        <tbody id="dataTable">
+          <tr>
+            <td colspan="6" class="loading-cell">
+              <div class="loading">Loading data...</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ================================================
+     MODAL: FORM KENDALA TEKNIK
+     ================================================ -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOnOverlay(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Tambah Kendala Teknik</h3>
+      <button class="close-btn" onclick="closeModal()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <form id="activityForm" onsubmit="event.preventDefault(); saveData();">
+        <input type="hidden" id="activityId">
+
+        <!-- ACTIVITY NAME -->
+        <div class="form-row">
+          <label>ACTIVITY NAME <span class="req">*</span></label>
+          <input 
+            type="text" 
+            id="activityName" 
+            placeholder="Contoh: BENJAR ODP | DONE" 
+            required>
+          <small>Format: ACTIVITY | STATUS TEKNISI</small>
+        </div>
+
+        <!-- STATUS -->
+        <div class="form-row">
+          <label>STATUS <span class="req">*</span></label>
+          <select id="statusDefault" required>
+            <option value="">-- Pilih Status --</option>
+            <option value="PINDAH LOKER">PINDAH LOKER</option>
+            <option value="OGP">OGP</option>
+            <option value="OPEN">OPEN</option>
+            <option value="COMPLETED">COMPLETED</option>
+          </select>
+        </div>
+
+        <!-- PROGRESS -->
+        <div class="form-row">
+          <label>PROGRESS <span class="req">*</span></label>
+          <input 
+            type="number" 
+            step="0.1" 
+            min="0" 
+            max="1" 
+            id="progressDefault" 
+            placeholder="0 - 1"
+            required>
+          <small>Nilai 0 – 1 (contoh: 0.5 untuk 50%, 1 untuk 100%)</small>
+        </div>
+
+        <!-- SOLUSI/PROGRESS -->
+        <div class="form-row">
+          <label>SOLUSI / PROGRESS <span class="req">*</span></label>
+          <textarea 
+            id="solusiDefault" 
+            rows="3" 
+            placeholder="Masukkan solusi atau keterangan progress..."
+            required></textarea>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Batal</button>
+      <button id="saveBtn" class="btn-save" onclick="saveData()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/kendalateknik.js"></script>
+
+<%- include('layout/footer') %>

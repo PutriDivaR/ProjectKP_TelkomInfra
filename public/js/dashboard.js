@@ -206,6 +206,8 @@ function renderWorkOrdersTable() {
       <td>${escapeHtml(wo.sto)}</td>
       <td><span class="status-link" style="cursor:pointer" onclick="openDaily('${wo.wonum}')">${getStatusBadge(wo.status_daily)}</span></td> 
       <td>${escapeHtml(wo.odp_inputan || '-')}</td>
+      <td>${getStatusBadge(wo.status_daily)}</td>
+      <td>${escapeHtml(wo.datek_kendala || wo.odp_inputan || '-')}</td>
       <td>${formatDate(wo.created_at)}</td>
       <td>
         <button class="btn-action" onclick="viewDetail('${wo.wonum}')">
