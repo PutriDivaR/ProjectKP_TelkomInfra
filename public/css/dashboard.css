@@ -23,7 +23,6 @@ html, body {
 
 .main {
   max-width: 1920px;
-  margin: 0 auto;
   padding: 25px;
   /* Tambah sedikit jarak agar tidak terlalu menempel ke sidebar */
   padding-left: 32px;

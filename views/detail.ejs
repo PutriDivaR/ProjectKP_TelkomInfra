@@ -1,5 +1,5 @@
-<%- include('../layout/header', { title: 'Detail - Daily' }) %>
-<%- include('../layout/sidebar') %>
+<%- include('layout/header', { title: 'Detail - Daily' }) %>
+<%- include('layout/sidebar') %>
 <link rel="stylesheet" href="/css/daily.css">
 
 <div class="main">
@@ -7,7 +7,7 @@
     <header class="detail-header">
       <h2>Detail Data Kendala</h2>
       <div class="detail-actions">
-        <a href="/daily" class="btn btn-secondary">← Kembali</a>
+        <a href="/dailyhouse" class="btn btn-secondary">← Kembali</a>
         <button id="editBtn" class="btn btn-outline">✎ Edit</button>
       </div>
     </header>
@@ -87,3 +87,4 @@
 </div>
 
 <script src="/js/daily-detail.js"></script>
+<%- include('layout/footer') %>

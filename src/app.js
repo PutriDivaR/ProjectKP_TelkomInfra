@@ -45,7 +45,7 @@ app.use('/kendala', kendalaRoutes);
 
 // daily routes
 const dailyRoutes = require('./routes/daily.routes');
-app.use('/daily', dailyRoutes);
+app.use('/dailyhouse', dailyRoutes);
 
 // Redirect root to dashboard for convenience
 app.get('/', (req, res) => {

@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => t.remove(), 3000);
   }
 
-  // Limit change
+  // Limit change - restored
   if (limitSelect) {
     limitSelect.addEventListener('change', (e) => {
       const params = new URLSearchParams(window.location.search);
@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Date filter
+  // Date filter - restored
   if (btnApplyDate) {
     btnApplyDate.addEventListener('click', () => {
       const start = startDateInput.value;
@@ -70,43 +70,88 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (tableBody) {
-    tableBody.addEventListener('click', (e) => {
-      const btn = e.target.closest('.btn-view');
+    // Detail button click (works with both .btn-view and .btn-detail)
+  tableBody.addEventListener('click', (e) => {
+      const btn = e.target.closest('.btn-view, .btn-detail');
       if (btn) {
         const wonum = btn.dataset.wonum;
-        window.location.href = `/daily/${wonum}`;
+        window.location.href = `/dailyhouse/${wonum}`;
       }
     });
   }
 
-  // KPI click filter
-  const kpiCards = document.querySelectorAll('.kpi-card[data-values]');
-  let activeKpi = null;
-  kpiCards.forEach(card => {
+  // Summary/KPI click filter (works with both .summary-card and .kpi-card)
+  const summaryCards = document.querySelectorAll('.summary-card[data-values], .kpi-card[data-values]');
+  let activeCard = null;
+  summaryCards.forEach(card => {
     card.style.cursor = 'pointer';
     card.addEventListener('click', () => {
       const values = (card.dataset.values||'').split(',').map(s => s.trim().toUpperCase());
       // toggle
-      if (activeKpi === card) {
-        activeKpi.classList.remove('active');
-        activeKpi = null;
+      if (activeCard === card) {
+        activeCard.classList.remove('active');
+        activeCard = null;
         // reset
         Array.from(tableBody.querySelectorAll('tr')).forEach(r => r.style.display = '');
         return;
       }
-      if (activeKpi) activeKpi.classList.remove('active');
+      if (activeCard) activeCard.classList.remove('active');
       card.classList.add('active');
-      activeKpi = card;
+      activeCard = card;
 
       Array.from(tableBody.querySelectorAll('tr')).forEach(r => {
         const statusDaily = (r.dataset.statusDaily || '').toUpperCase();
         if (!statusDaily) { r.style.display = 'none'; return; }
-        // match if statusDaily equals any of values
-        if (values.includes(statusDaily)) r.style.display = '';
-        else r.style.display = 'none';
+        // match if statusDaily equals any of values (including COMPLETE/DONE match)
+        let matches = values.includes(statusDaily);
+        // Special case: COMPLETE filter should match both COMPLETE and DONE
+        if (values.includes('COMPLETE') && (statusDaily === 'COMPLETE' || statusDaily === 'DONE')) {
+          matches = true;
+        }
+        r.style.display = matches ? '' : 'none';
       });
     });
   });
+
+  // Global functions for new layout handlers
+  window.applyStatusFilter = function() {
+    const filterStatus = document.getElementById('filterStatus');
+    if (!filterStatus) return;
+    const selectedStatus = filterStatus.value.trim().toUpperCase();
+    const rows = tableBody.querySelectorAll('tr');
+    
+    if (!selectedStatus) {
+      // Show all
+      rows.forEach(r => r.style.display = '');
+      if (activeCard) {
+        activeCard.classList.remove('active');
+        activeCard = null;
+      }
+      return;
+    }
+
+    // Filter by selected status (COMPLETE includes DONE too)
+    rows.forEach(r => {
+      const statusDaily = (r.dataset.statusDaily || '').toUpperCase();
+      let matches = statusDaily === selectedStatus;
+      
+      // Special case: COMPLETE filter should match both COMPLETE and DONE
+      if (selectedStatus === 'COMPLETE') {
+        matches = statusDaily === 'COMPLETE' || statusDaily === 'DONE';
+      }
+      
+      r.style.display = matches ? '' : 'none';
+    });
+  };
+
+  window.clearSearchDaily = function() {
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+      searchInput.value = '';
+      const event = new Event('input', { bubbles: true });
+      searchInput.dispatchEvent(event);
+    }
+  };
 
   if (searchInput && tableBody) {
     searchInput.addEventListener('input', (e) => {
