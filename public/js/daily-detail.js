@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (on && status && !document.getElementById('status_select')) {
       let statusList = ['WORKFAIL', 'CANCELWORK', 'COMPLETE', 'STARTWORK'];
       try {
-        const r = await fetch('/daily/api/status');
+        const r = await fetch('/dailyhouse/api/status');
         const j = await r.json();
         if (r.ok && j.success && Array.isArray(j.data)) statusList = j.data;
       } catch (err) {
@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (on && status_akhir && !document.getElementById('status_akhir_select')) {
       let values = [];
       try {
-        const r = await fetch('/daily/api/status-akhir');
+        const r = await fetch('/dailyhouse/api/status-akhir');
         const j = await r.json();
         if (r.ok && j.success && Array.isArray(j.data) && j.data.length) values = j.data;
       } catch (err) {
@@ -172,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
       };
 
       try {
-        const res = await fetch(`/daily/update/${wonum}`, {
+        const res = await fetch(`/dailyhouse/update/${wonum}`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
         });
         const json = await res.json();

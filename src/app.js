@@ -39,6 +39,6 @@ const botRoutes = require('./routes/bot.routes');
 app.use('/api/bot', botRoutes);
 
 const dailyRoutes = require('./routes/daily.routes');
-app.use('/daily', dailyRoutes);
+app.use('/dailyhouse', dailyRoutes);
 
 module.exports = app;

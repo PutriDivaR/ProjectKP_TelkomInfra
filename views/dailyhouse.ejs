@@ -1,0 +1,160 @@
+<%- include('layout/header', { title: 'Data Kendala - Daily' }) %>
+<%- include('layout/sidebar') %>
+<link rel="stylesheet" href="/css/daily.css">
+  
+<div class="main">
+  <input type="file" id="uploadFile" accept=".csv" style="display:none" />
+  
+  <!-- TOPBAR -->
+  <div class="header">
+    <h2>DAILY MODULE</h2>
+    <div class="topbar-right">
+      <span class="admin-label">Nama Admin</span>
+    </div>
+  </div>
+
+  <!-- SUB HEADER -->
+  <div class="sub-header">
+    <h3 class="sub-title">Data Kendala Daily</h3>
+  </div>
+
+  <!-- ACTION BAR -->
+  <div class="action-bar">
+    <div class="action-left">
+      <button class="btn-upload" id="btnUpload">
+        <i class="fa-solid fa-upload"></i> Upload/Import
+      </button>
+      <button class="btn-export" id="btnExport">
+        <i class="fa-solid fa-file-export"></i> Export File
+      </button>
+    </div>
+
+    <div class="action-right">
+      <div class="search-container">
+        <input 
+          type="text" 
+          class="search-input" 
+          id="searchInput" 
+          placeholder="Cari Wonum..."
+        >
+        <button class="btn-clear-search" id="btnClearSearch" onclick="clearSearchDaily()">✕</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DATE FILTER & LIMIT BAR -->
+  <div class="action-bar">
+    <div class="date-filter-group">
+      <label class="filter-label">Filter Tanggal:</label>
+      <input type="date" id="startDate" class="filter-input" value="<%= typeof startDate !== 'undefined' ? startDate : '' %>">
+      <span style="color: #94a3b8; margin: 0 8px;">-</span>
+      <input type="date" id="endDate" class="filter-input" value="<%= typeof endDate !== 'undefined' ? endDate : '' %>">
+      <button id="btnApplyDate" class="btn">Cari</button>
+      <button id="btnResetDate" class="btn btn-secondary">Reset</button>
+    </div>
+
+    <div class="limit-group">
+      <label class="filter-label">Tampilkan:</label>
+      <select id="limitSelect" class="filter-select">
+        <option value="5" <%= typeof pagination !== 'undefined' && pagination.limit === 5 ? 'selected' : '' %>>5</option>
+        <option value="25" <%= typeof pagination !== 'undefined' && pagination.limit === 25 ? 'selected' : '' %>>25</option>
+        <option value="100" <%= typeof pagination !== 'undefined' && pagination.limit === 100 ? 'selected' : '' %>>100</option>
+        <option value="500" <%= typeof pagination !== 'undefined' && pagination.limit === 500 ? 'selected' : '' %>>500</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- SUMMARY CARDS -->
+  <div class="summary-cards">
+    <div class="summary-card card-workfail" data-values="WORKFAIL">
+      <div class="summary-label">Workfail</div>
+      <div class="summary-value"><%= counts ? counts.workfail : 0 %></div>
+    </div>
+    <div class="summary-card card-startwork" data-values="STARTWORK">
+      <div class="summary-label">Startwork</div>
+      <div class="summary-value"><%= counts ? counts.startwork : 0 %></div>
+    </div>
+    <div class="summary-card card-cancelwork" data-values="CANCELWORK">
+      <div class="summary-label">Cancelwork</div>
+      <div class="summary-value"><%= counts ? counts.cancelwork : 0 %></div>
+    </div>
+    <div class="summary-card card-complete" data-values="COMPLETE">
+      <div class="summary-label">Complete</div>
+      <div class="summary-value"><%= counts ? counts.complete : 0 %></div>
+    </div>
+  </div>
+
+  <!-- DATA TABLE -->
+  <div class="card">
+    <div style="overflow-x:auto">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="col-no">No</th>
+            <th class="col-wonum">Wonum</th>
+            <th class="col-nama">Nama</th>
+            <th class="col-sto">STO</th>
+            <th class="col-ticket">Ticket ID</th>
+            <th class="col-package">Package</th>
+            <th class="col-status">Status Akhir</th>
+            <th class="col-lat">Latitude</th>
+            <th class="col-lang">Longitude</th>
+            <th class="col-created">Created</th>
+            <th class="col-aksi">ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody id="dailyTableBody">
+          <% if (!data || data.length === 0) { %>
+            <tr><td colspan="11" class="loading-cell">Tidak ada data</td></tr>
+          <% } else { %>
+            <% data.forEach((d, i) => { %>
+              <tr data-wonum="<%= d.wonum %>" data-status-daily="<%= (d.status_daily || '').toUpperCase() %>">
+                <td><%= (typeof pagination !== 'undefined' ? (pagination.page - 1) * pagination.limit : 0) + i + 1 %></td>
+                <td><%= d.wonum %></td>
+                <td><%= d.nama || '-' %></td>
+                <td><%= d.sto || '-' %></td>
+                <td><%= d.ticket_id || '-' %></td>
+                <td><%= d.package_name || '-' %></td>
+                <td><%= d.status_akhir || '-' %></td>
+                <td><%= d.lat || '-' %></td>
+                <td><%= d.lang || '-' %></td>
+                <td><%= d.created_at %></td>
+                <td><button class="btn-detail" data-wonum="<%= d.wonum %>">DETAIL</button></td>
+              </tr>
+            <% }) %>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- PAGINATION -->
+  <div class="pagination-wrap">
+    <span class="pagination-info">Halaman <%= typeof pagination !== 'undefined' ? pagination.page : 1 %> dari <%= typeof pagination !== 'undefined' ? pagination.totalPages : 0 %> (Total: <%= typeof pagination !== 'undefined' ? pagination.total : 0 %> data)</span>
+    <div class="pagination-buttons">
+      <% if (typeof pagination !== 'undefined' && pagination.page > 1) { %>
+        <a href="?page=1" class="btn btn-small">« Awal</a>
+        <a href="?page=<%= pagination.page - 1 %>" class="btn btn-small">‹ Sebelumnya</a>
+      <% } %>
+      
+      <% 
+        const startPage = typeof pagination !== 'undefined' ? Math.max(1, pagination.page - 2) : 1;
+        const endPage = typeof pagination !== 'undefined' ? Math.min(pagination.totalPages, pagination.page + 2) : 1;
+        for (let p = startPage; p <= endPage; p++) { 
+      %>
+        <% if (typeof pagination !== 'undefined' && p === pagination.page) { %>
+          <span class="btn btn-small btn-active"><%= p %></span>
+        <% } else { %>
+          <a href="?page=<%= p %>" class="btn btn-small"><%= p %></a>
+        <% } %>
+      <% } %>
+      
+      <% if (typeof pagination !== 'undefined' && pagination.page < pagination.totalPages) { %>
+        <a href="?page=<%= pagination.page + 1 %>" class="btn btn-small">Selanjutnya ›</a>
+        <a href="?page=<%= pagination.totalPages %>" class="btn btn-small">Akhir »</a>
+      <% } %>
+    </div>
+  </div>
+
+<script src="/js/daily.js"></script>
+<%- include('layout/footer') %>

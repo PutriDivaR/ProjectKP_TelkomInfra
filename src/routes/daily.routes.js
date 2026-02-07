@@ -62,7 +62,7 @@ router.get('/', async (req, res) => {
       complete: allRows.filter(r => ['COMPLETE', 'DONE'].includes(get(r.status_daily))).length
     };
 
-    return res.render('daily/index', { 
+    return res.render('dailyhouse', { 
       data: rows, 
       counts,
       pagination: { page, limit, total, totalPages },
@@ -97,7 +97,7 @@ router.get('/:wonum', async (req, res) => {
 
     const [logs] = await db.query(logSql, [wonum]);
 
-    return res.render('daily/detail', {
+    return res.render('detail', {
       data: woRows[0],
       logs
     });
