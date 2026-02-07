@@ -1,0 +1,471 @@
+.main-content {
+  margin-left: 80px;
+  padding: 24px;
+  background: #f5f6f8;
+  min-height: 100vh;
+}
+
+.page-title {
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.card {
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.05);
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.form-row-inline {
+  flex-wrap: wrap;
+}
+
+.form-group {
+  flex: 1;
+  min-width: 140px;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group-full,
+.form-group.form-group-full {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+
+.form-group label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  font-size: 0.95rem;
+  background: #fff;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #e53935;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-action {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn-save,
+.btn-simpan {
+  background: #e53935;
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: background 0.2s;
+}
+
+.btn-save:hover,
+.btn-simpan:hover {
+  background: #c62828;
+}
+
+.btn-back,
+.btn-kembali {
+  background: #fff;
+  color: #333;
+  padding: 10px 24px;
+  border-radius: 8px;
+  text-decoration: none;
+  border: 1px solid #dee2e6;
+  font-weight: 500;
+  font-size: 0.95rem;
+  display: inline-block;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.btn-back:hover,
+.btn-kembali:hover {
+  border-color: #adb5bd;
+  background: #f8f9fa;
+  color: #333;
+}
+
+/* ========== INPUT FORM CARD ========== */
+.form-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,.06);
+}
+
+.kendala-form.input-form .form-row {
+  margin-bottom: 1.25rem;
+}
+
+/* ========== DETAIL DATA KENDALA (EDIT) ========== */
+.detail-card {
+  max-width: 900px;
+}
+
+.detail-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem 2rem;
+}
+
+@media (max-width: 768px) {
+  .detail-two-col {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detail-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.detail-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-field label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.detail-input {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  font-size: 0.95rem;
+  background: #fff;
+}
+
+.detail-input:read-only {
+  background: #f8f9fa;
+  border-color: #dee2e6;
+  color: #495057;
+}
+
+.detail-select {
+  cursor: pointer;
+  appearance: auto;
+}
+
+.detail-form .form-action.detail-action {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+}
+
+.btn-input-submit {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #e53935;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-input-submit:hover {
+  background: #c62828;
+}
+
+.btn-input-submit i {
+  font-size: 0.9rem;
+}
+
+/* ========== REKAP DATA KENDALA PELANGGAN ========== */
+.kendala-container h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+}
+
+.kendala-container .section-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #e53935;
+  margin-bottom: 1.25rem;
+}
+
+.alert {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+.alert-success {
+  background: #e8f5e9;
+  border: 1px solid #a5d6a7;
+  color: #2e7d32;
+}
+
+.alert-error {
+  background: #ffebee;
+  border: 1px solid #ef9a9a;
+  color: #c62828;
+}
+
+.alert-warning-text {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.9rem;
+  color: #f57c00;
+}
+
+.rekap-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.5rem 1.5rem 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,.06);
+}
+
+.rekap-card-header {
+  margin-bottom: 0;
+}
+
+.btn-input-data {
+  display: inline-block;
+  background: #e53935;
+  color: #fff;
+  padding: 0.5rem 1.25rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-input-data:hover {
+  background: #c62828;
+  color: #fff;
+}
+
+.rekap-divider {
+  border: none;
+  height: 1px;
+  background: #dee2e6;
+  margin: 1rem 0 1.25rem;
+}
+
+.rekap-summary {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.summary-card {
+  flex: 1;
+  min-width: 100px;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.summary-card .summary-label {
+  font-size: 0.9rem;
+  color: #495057;
+  font-weight: 500;
+}
+
+.summary-card .summary-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.summary-progress {
+  background: #fff8e1;
+}
+
+.summary-reject {
+  background: #e3f2fd;
+}
+
+.summary-closed {
+  background: #e8f5e9;
+}
+
+.rekap-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.search-form {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  color: #6c757d;
+  font-size: 0.9rem;
+  pointer-events: none;
+}
+
+.search-input {
+  padding: 0.5rem 1rem 0.5rem 2.25rem;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  background: #f8f9fa;
+  min-width: 220px;
+  font-size: 0.95rem;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #e53935;
+  background: #fff;
+}
+
+.table-wrapper {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,.06);
+}
+
+.kendala-table.rekap-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.kendala-table.rekap-table thead tr {
+  background: #e53935;
+  color: #fff;
+}
+
+.kendala-table.rekap-table thead th {
+  padding: 12px 14px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.kendala-table.rekap-table thead th:first-child {
+  border-radius: 12px 0 0 0;
+}
+
+.kendala-table.rekap-table thead th:last-child {
+  border-radius: 0 12px 0 0;
+  width: 48px;
+  text-align: center;
+}
+
+.kendala-table.rekap-table tbody tr {
+  border-bottom: 1px solid #eee;
+}
+
+.kendala-table.rekap-table tbody tr:hover {
+  background: #fafafa;
+}
+
+.kendala-table.rekap-table tbody td {
+  padding: 12px 14px;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.kendala-table.rekap-table tbody td:last-child {
+  text-align: center;
+}
+
+.kendala-table.rekap-table .empty-row {
+  text-align: center;
+  color: #6c757d;
+  padding: 2rem;
+  font-style: italic;
+}
+
+.btn-view {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  color: #e53935;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-view:hover {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.kendala-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.kendala-table th {
+  background: #e53935;
+  color: white;
+  padding: 10px;
+}
+
+.kendala-table td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.btn-edit {
+  color: #e53935;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.footer {
+  text-align: center;
+  margin-top: 30px;
+  color: #777;
+}

@@ -38,6 +38,11 @@ app.use('/', todolistRoutes); // serve /todolist and its APIs
 const botRoutes = require('./routes/bot.routes');
 app.use('/api/bot', botRoutes);
 
+// kendala routes
+const kendalaRoutes = require('./routes/kendala.routes');
+app.use('/kendala', kendalaRoutes);
+
+// daily routes
 const dailyRoutes = require('./routes/daily.routes');
 app.use('/dailyhouse', dailyRoutes);
 
