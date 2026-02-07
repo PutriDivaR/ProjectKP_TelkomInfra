@@ -30,7 +30,8 @@ const kendalaTeknikRoutes = require('./routes/kendalateknik.routes'); // ✅ Pat
 const todolistRoutes = require('./routes/todolist.routes'); // ✅ missing — mounts /todolist
 
 // Use routes
-app.use('/', dashboardRoutes);
+// Mount dashboard under /dashboard so links like /dashboard and /dashboard/api/refresh work
+app.use('/dashboard', dashboardRoutes);
 app.use('/', kendalaTeknikRoutes);
 app.use('/', todolistRoutes); // serve /todolist and its APIs
 
@@ -38,7 +39,17 @@ app.use('/', todolistRoutes); // serve /todolist and its APIs
 const botRoutes = require('./routes/bot.routes');
 app.use('/api/bot', botRoutes);
 
+// kendala routes
+const kendalaRoutes = require('./routes/kendala.routes');
+app.use('/kendala', kendalaRoutes);
+
+// daily routes
 const dailyRoutes = require('./routes/daily.routes');
 app.use('/daily', dailyRoutes);
+
+// Redirect root to dashboard for convenience
+app.get('/', (req, res) => {
+  res.redirect('/dashboard');
+});
 
 module.exports = app;
