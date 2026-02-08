@@ -10,6 +10,11 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '../views')); // ✅ Naik 1 level ke parent
 
+// middleware
+// Increase body size limits to allow large Excel->JSON imports from client
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.static(path.join(__dirname, '../public')));
 // Setup static files
 app.use(express.static(path.join(__dirname, '../public'))); // ✅ Naik 1 level ke parent
 
@@ -25,12 +30,26 @@ const kendalaTeknikRoutes = require('./routes/kendalateknik.routes'); // ✅ Pat
 const todolistRoutes = require('./routes/todolist.routes'); // ✅ missing — mounts /todolist
 
 // Use routes
-app.use('/', dashboardRoutes);
+// Mount dashboard under /dashboard so links like /dashboard and /dashboard/api/refresh work
+app.use('/dashboard', dashboardRoutes);
 app.use('/', kendalaTeknikRoutes);
 app.use('/', todolistRoutes); // serve /todolist and its APIs
 
 // bot API routes 
 const botRoutes = require('./routes/bot.routes');
 app.use('/api/bot', botRoutes);
+
+// kendala routes
+const kendalaRoutes = require('./routes/kendala.routes');
+app.use('/kendala', kendalaRoutes);
+
+// daily routes
+const dailyRoutes = require('./routes/daily.routes');
+app.use('/dailyhouse', dailyRoutes);
+
+// Redirect root to dashboard for convenience
+app.get('/', (req, res) => {
+  res.redirect('/dashboard');
+});
 
 module.exports = app;
