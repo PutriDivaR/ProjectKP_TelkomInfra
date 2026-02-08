@@ -153,6 +153,37 @@
   transition: opacity 0.2s ease;
 }
 
+/* Logout button */
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: #b91c1c;
+  background: #fff5f5;
+  border: 1px solid #fc1010;
+  transition: all 0.2s ease;
+}
+
+.logout-btn i {
+  font-size: 16px;
+  color: #b91c1c;
+}
+
+.logout-btn:hover {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.logout-btn:active {
+  transform: scale(0.98);
+}
+
 .sidebar-toggle-mobile {
   position: fixed;
   top: 20px;
@@ -232,14 +263,12 @@
   pointer-events: auto;
 }
 
-/* ===== MAIN CONTENT SHIFT ===== */
 .main {
   margin-left: 240px;
   transition: margin-left 0.3s ease;
   min-height: 100vh;
 }
 
-/* ===== COLLAPSED STATE (Desktop) ===== */
 body.sidebar-collapsed .sidebar {
   width: 70px;
   padding: 20px 8px;
@@ -276,7 +305,6 @@ body.sidebar-collapsed .sidebar .sidebar-footer {
   border-top: none;
 }
 
-/* Tooltip on hover when collapsed */
 body.sidebar-collapsed .sidebar .menu a::after {
   content: attr(data-title);
   position: absolute;
@@ -312,13 +340,10 @@ body.sidebar-collapsed .sidebar .menu a:hover::before {
   opacity: 1;
 }
 
-/* Toggle icon rotation when collapsed */
 body.sidebar-collapsed .sidebar-toggle-desktop i {
   transform: none;
 }
 
-/* ====== SUBMENU STYLING - FIXED ====== */
-/* ====== SUBMENU STYLING - FIXED ====== */
 .menu li.has-submenu {
   position: relative;
 }
@@ -421,7 +446,6 @@ body.sidebar-collapsed .sidebar-toggle-desktop i {
   color: var(--accent) !important;
 }
 
-/* ====== COLLAPSED SIDEBAR - FIXED CENTERING ====== */
 body.sidebar-collapsed .sidebar .submenu {
   display: none;
 }
@@ -430,7 +454,6 @@ body.sidebar-collapsed .sidebar .menu li.has-submenu > a.menu-toggle .arrow {
   display: none;
 }
 
-/* FIX: Center icon untuk menu-toggle saat collapsed */
 body.sidebar-collapsed .sidebar .menu li.has-submenu > a.menu-toggle {
   justify-content: center;
   padding: 12px 0;
@@ -537,4 +560,13 @@ body.sidebar-collapsed .sidebar .submenu li a:hover {
   .main {
     transition: none;
   }
+}
+
+.sidebar-footer .logout-btn span {
+  color: #dc2626 !important; 
+  font-weight: 600;
+}
+
+.sidebar-footer .logout-btn:hover span {
+  color: #ffffff !important;
 }

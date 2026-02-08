@@ -24,7 +24,6 @@ html, body {
 .main {
   max-width: 1920px;
   padding: 25px;
-  /* Tambah sedikit jarak agar tidak terlalu menempel ke sidebar */
   padding-left: 32px;
 }
 
@@ -242,7 +241,7 @@ html, body {
 
 .chart-wrapper {
   width: 100%;
-  height: 300px; /* sedikit diperkecil agar proporsional */
+  height: 300px; 
   display: flex;
   align-items: center;
   justify-content: center;
@@ -250,7 +249,7 @@ html, body {
 }
 
 .chart-wrapper.tall {
-  height: 360px; /* kurangi tinggi chart besar */
+  height: 360px; 
 }
 
 .chart-wrapper canvas {
@@ -259,7 +258,7 @@ html, body {
   display: block;
 }
 
-/* ============ TABLES ============ */
+
 .table-container {
   background: white;
   padding: 30px;
@@ -376,15 +375,14 @@ table tbody tr:last-child td {
   border-bottom: none;
 }
 
-/* Work Full Process Table */
 .table-work-full thead th {
   text-align: center;
   vertical-align: middle;
 }
 .table-work-full thead th,
 .table-work-full tbody td {
-  padding: 7px 7px; /* rapatkan */
-  font-size: 12px;    /* lebih kecil */
+  padding: 7px 7px;
+  font-size: 12px;   
 }
 
 .table-work-full tbody td:first-child {
@@ -392,16 +390,16 @@ table tbody tr:last-child td {
 }
 
 .table-work-full .progress-bar {
-  height: 8px; /* lebih tipis */
+  height: 8px; 
 }
 
 .table-work-full tbody tr:hover {
-  background: #f8fafc; /* hilangkan scale hover */
+  background: #f8fafc; 
   transform: none;
 }
 
 .table-container.compact {
-  padding: 20px; /* kurangi padding container */
+  padding: 20px; 
 }
 
 .table-work-full tbody td:first-child {
@@ -669,7 +667,7 @@ table tbody tr:last-child td {
 @media (max-width: 768px) {
   .main {
     padding: 15px;
-    padding-left: 20px; /* tetap beri jarak di mobile */
+    padding-left: 20px; 
   }
 
   .header {
