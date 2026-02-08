@@ -1,6 +1,6 @@
 /* ===================================================
-   KENDALA TEKNIK - CLIENT JAVASCRIPT (FIXED VERSION)
-   FIX: Excel date serial number conversion for BULAN column
+   KENDALA TEKNIK - CLIENT JAVASCRIPT (IMPROVED)
+   Fixed: Label "DONE" → "COMPLETE"
    =================================================== */
 
 // ──────────────────────────────────────
@@ -9,13 +9,13 @@
 let masterActivities = [];
 let masterSTO        = [];
 let allData          = [];
-let filteredData     = [];  // ✅ NEW: For filtered/searched data
+let filteredData     = [];
 let currentEditId    = null;
 let selectedIds      = new Set();
 
-// ✅ NEW: Pagination state
+// Pagination state
 let currentPage      = 1;
-let rowsPerPage      = 100;  // Default 100 rows per page
+let rowsPerPage      = 100;
 let totalPages       = 1;
 
 // ──────────────────────────────────────
@@ -55,8 +55,8 @@ async function loadTableData() {
     const json = await res.json();
     if (json.success) {
       allData = json.data;
-      filteredData = json.data;  // ✅ Initialize filtered data
-      currentPage = 1;  // ✅ Reset to page 1
+      filteredData = json.data;
+      currentPage = 1;
       renderTable(filteredData);
       updateSummaryCards(allData);
     } else {
@@ -88,7 +88,7 @@ function renderTable(data) {
     return;
   }
 
-  // ✅ Calculate pagination
+  // Calculate pagination
   totalPages = Math.ceil(data.length / rowsPerPage);
   const startIndex = (currentPage - 1) * rowsPerPage;
   const endIndex = Math.min(startIndex + rowsPerPage, data.length);
@@ -98,10 +98,10 @@ function renderTable(data) {
   pageData.forEach((row, i) => {
     const tr = document.createElement('tr');
     const isChecked = selectedIds.has(row.id) ? 'checked' : '';
-    const globalIndex = startIndex + i + 1;  // ✅ Global row number
+    const globalIndex = startIndex + i + 1;
     
     tr.innerHTML = `
-      <td class="col-checkbox">
+      <td class="col-select">
         <input type="checkbox" class="row-checkbox" data-id="${row.id}" 
                onchange="toggleRowCheckbox(this)" ${isChecked}>
       </td>
@@ -111,7 +111,7 @@ function renderTable(data) {
       <td class="td-activity">${esc(row.activity)}</td>
       <td>${esc(row.update_status_deen)}</td>
       <td>${statusBadge(row.status_todolist)}</td>
-      <td><button class="btn-detail" onclick="openDetail(${row.id})">Detail</button></td>
+      <td><button class="btn-detail" onclick="openDetail(${row.id})">DETAIL</button></td>
     `;
     tbody.appendChild(tr);
   });
@@ -276,6 +276,7 @@ function statusBadge(status) {
 
 // ──────────────────────────────────────
 // UPDATE SUMMARY CARDS
+// ✅ CHANGED: countDone → countComplete
 // ──────────────────────────────────────
 function updateSummaryCards(data) {
   let completed = 0, ogp = 0, pindahLoker = 0, open = 0;
@@ -286,10 +287,10 @@ function updateSummaryCards(data) {
     else if (s === 'PINDAH LOKER') pindahLoker++;
     else if (s === 'OPEN') open++;
   });
-  setVal('countDone',   completed);  // DONE = COMPLETED
-  setVal('countOGP',    ogp);
-  setVal('countPindah', pindahLoker);
-  setVal('countClosed', open);       // CLOSED = OPEN
+  setVal('countComplete', completed);  // ✅ CHANGED: was countDone
+  setVal('countOGP',      ogp);
+  setVal('countPindah',   pindahLoker);
+  setVal('countClosed',   open);
 }
 
 // ──────────────────────────────────────
@@ -314,8 +315,8 @@ function applyFilter() {
     });
   }
   
-  filteredData = filtered;  // ✅ Update filtered data
-  currentPage = 1;  // ✅ Reset to page 1
+  filteredData = filtered;
+  currentPage = 1;
   renderTable(filtered);
 }
 
@@ -342,8 +343,8 @@ function handleSearch() {
     });
   }
   
-  filteredData = filtered;  // ✅ Update filtered data
-  currentPage = 1;  // ✅ Reset to page 1
+  filteredData = filtered;
+  currentPage = 1;
   renderTable(filtered);
 }
 
@@ -443,7 +444,7 @@ function goToPage(page) {
 
 function changeRowsPerPage(newRowsPerPage) {
   rowsPerPage = parseInt(newRowsPerPage);
-  currentPage = 1;  // Reset to first page
+  currentPage = 1;
   renderTable(filteredData);
 }
 
@@ -603,28 +604,23 @@ function triggerUpload() {
   document.getElementById('excelFileInput').click();
 }
 
-// ✅ HELPER FUNCTION: Convert Excel serial date to month name
+// Convert Excel serial date to month name
 function convertExcelDateToMonth(value) {
   if (!value) return '';
   
-  // Jika sudah string (text), return langsung
   if (typeof value === 'string') {
-    // Cek apakah sudah format bulan yang valid
     const monthNames = ['january', 'february', 'march', 'april', 'may', 'june',
                         'july', 'august', 'september', 'october', 'november', 'december'];
     const lowerValue = value.toLowerCase().trim();
     
     if (monthNames.some(m => lowerValue.includes(m))) {
-      return value; // Sudah format bulan yang benar
+      return value;
     }
   }
   
-  // Jika number (Excel serial date), convert ke month name
   if (typeof value === 'number') {
     try {
-      // Excel serial date dimulai dari 1900-01-01
-      // Serial 1 = 1900-01-01
-      const excelEpoch = new Date(1899, 11, 30); // Excel epoch (1 hari sebelum 1900-01-01)
+      const excelEpoch = new Date(1899, 11, 30);
       const date = new Date(excelEpoch.getTime() + value * 86400000);
       
       const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
@@ -665,7 +661,6 @@ async function handleFileUpload(event) {
     const sheetName   = workbook.SheetNames[0];
     const sheet       = workbook.Sheets[sheetName];
     
-    // ✅ IMPORTANT: Read with raw values to preserve dates
     const jsonData = XLSX.utils.sheet_to_json(sheet, { raw: true });
 
     if (jsonData.length === 0) {
@@ -684,25 +679,21 @@ async function handleFileUpload(event) {
         normalizedRow[normalizedKey] = row[key];
       });
 
-      // ✅ DEBUG: Log first 3 rows to see exact headers
       if (jsonData.indexOf(row) < 3) {
         console.log(`\n📋 Row ${jsonData.indexOf(row) + 1} - Available headers:`, Object.keys(normalizedRow));
         console.log('   Raw row data:', row);
       }
 
-      // ✅ FIX: Convert Excel serial date untuk kolom BULAN
       const bulanRaw = normalizedRow['BULAN'] || normalizedRow['MONTH'] || '';
       const bulanConverted = convertExcelDateToMonth(bulanRaw);
 
-      // ✅ FIX: PRIMARY adalah KATEGORI SOLUSI (bukan KENDALA PT 1)
       const activityTeknisi = 
-        normalizedRow['KATEGORI SOLUSI'] ||    // ← Header yang BENAR dari Excel Anda
+        normalizedRow['KATEGORI SOLUSI'] ||
         normalizedRow['KENDALA PT 1'] || 
         normalizedRow['KENDALA PT1'] ||
         normalizedRow['KENDALA'] || 
         '';
 
-      // ✅ DEBUG: Log first 3 rows to see what we're getting
       if (jsonData.indexOf(row) < 3) {
         console.log('   🔍 KATEGORI SOLUSI value:', normalizedRow['KATEGORI SOLUSI']);
         console.log('   🔍 Final activity_teknisi:', activityTeknisi);
@@ -714,10 +705,9 @@ async function handleFileUpload(event) {
         odp_inputan: normalizedRow['ODP INPUTAN'] || normalizedRow['ODP'] || '',
         activity_teknisi: activityTeknisi,
         month_date: bulanConverted,
-        sto: normalizedRow['STO'] || ''  // ✅ CHANGED: sto instead of sto_inputan
+        sto: normalizedRow['STO'] || ''
       };
 
-      // ✅ DEBUG: Log final payload for first 3 rows
       if (jsonData.indexOf(row) < 3) {
         console.log('   ✅ Final payload:', result);
         console.log('---');
@@ -733,7 +723,6 @@ async function handleFileUpload(event) {
       return;
     }
 
-    // ✅ DEBUG: Log sample of final payload before sending
     console.log('\n📤 Sample payload being sent to backend (first 3):');
     console.log(payload.slice(0, 3));
 

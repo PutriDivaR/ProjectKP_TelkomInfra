@@ -4,9 +4,6 @@
 <!-- ✅ Load SheetJS CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-<!-- ✅ Load Pagination CSS -->
-<link rel="stylesheet" href="/css/pagination.css">
-
 <div class="main">
 
   <!-- TOPBAR -->
@@ -65,21 +62,22 @@
   </div>
 
   <!-- SUMMARY CARDS -->
+  <!-- ✅ CHANGED: card-done → card-complete & Done → COMPLETE -->
   <div class="summary-cards">
-    <div class="summary-card card-done">
-      <div class="summary-label">Done</div>
-      <div class="summary-value" id="countDone">0</div>
+    <div class="summary-card card-complete">
+      <div class="summary-label">COMPLETE</div>
+      <div class="summary-value" id="countComplete">0</div>
     </div>
     <div class="summary-card card-ogp">
       <div class="summary-label">OGP</div>
       <div class="summary-value" id="countOGP">0</div>
     </div>
     <div class="summary-card card-pindah">
-      <div class="summary-label">Pindah Loker</div>
+      <div class="summary-label">PINDAH LOKER</div>
       <div class="summary-value" id="countPindah">0</div>
     </div>
     <div class="summary-card card-closed">
-      <div class="summary-label">Open</div>
+      <div class="summary-label">OPEN</div>
       <div class="summary-value" id="countClosed">0</div>
     </div>
   </div>
