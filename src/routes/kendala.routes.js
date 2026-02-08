@@ -51,21 +51,15 @@ router.get('/', async (req, res) => {
 // ============================
 router.get('/input', async (req, res) => {
   const err = req.query.error;
-  let listSto = [];
-  try {
-    const [rows] = await db.query('SELECT sto FROM wilayah_ridar ORDER BY sto');
-    listSto = (rows || []).map(r => r.sto).filter(Boolean);
-  } catch (e) {
-    console.error('Load wilayah_ridar STO:', e.message);
-  }
-  if (listSto.length === 0) {
-    listSto = STO_LIST;
-  }
+  // Gunakan STO_LIST yang lengkap (tidak query dari database yang mungkin tidak lengkap)
+  const listSto = STO_LIST;
   res.render('kendala', {
     title: 'Input Kendala Pelanggan',
     mode: 'input',
     listSto,
     errorWonum: err === 'wonum_not_found',
+    errorWonumInvalid: err === 'wonum_invalid',
+    errorWonumDuplicate: err === 'wonum_duplicate',
     errorSaveFailed: err === 'save_failed',
     errorWonumKosong: err === 'wonum_kosong',
     errorMsg: req.query.msg ? decodeURIComponent(req.query.msg) : ''
@@ -77,13 +71,35 @@ router.get('/input', async (req, res) => {
 // ============================
 router.post('/input', async (req, res) => {
   try {
-    const { wonum, ticket_id, sto, tanggal_input, ttd_kb, status_hi, ttic, keterangan, nama_teknis } = req.body;
+    const { wonum, sto, tanggal_input, ttd_kb, status_hi, ttic, keterangan, nama_teknis } = req.body;
     const wonumTrim = (wonum && String(wonum).trim()) || '';
+    
+    // Validasi WONUM tidak kosong
     if (!wonumTrim) {
       return res.redirect('/kendala/input?error=wonum_kosong');
     }
 
-    const ticketIdVal = (ticket_id && String(ticket_id).trim()) ? String(ticket_id).trim() : null;
+    // Validasi format WONUM harus WOXXXXXXXXX (WO + 10 digit)
+    const wonumRegex = /^WO\d{10}$/;
+    if (!wonumRegex.test(wonumTrim)) {
+      return res.redirect('/kendala/input?error=wonum_invalid&msg=' + encodeURIComponent('Format WONUM harus WO diikuti 10 digit angka (contoh: WO0334000001)'));
+    }
+
+    // Cek duplikat WONUM di kendala_pelanggan
+    const [existingWonum] = await db.query(
+      'SELECT wonum FROM kendala_pelanggan WHERE wonum = ?',
+      [wonumTrim]
+    );
+    if (existingWonum && existingWonum.length > 0) {
+      return res.redirect('/kendala/input?error=wonum_duplicate&msg=' + encodeURIComponent('WONUM sudah terdaftar. Gunakan WONUM yang berbeda.'));
+    }
+
+    // Generate Ticket ID otomatis dengan format IDXXXXXXXXX
+    const generateTicketId = () => {
+      const randomNum = Math.floor(100000000 + Math.random() * 900000000);
+      return `ID${randomNum}`;
+    };
+    const ticketIdVal = generateTicketId();
     let stoVal = (sto && String(sto).trim()) ? String(sto).trim() : null;
 
     const [validStoRows] = await db.query('SELECT sto FROM wilayah_ridar');
@@ -151,15 +167,30 @@ router.post('/input', async (req, res) => {
           return res.redirect('/kendala/input?error=save_failed&msg=' + encodeURIComponent(err.message));
         }
       }
+    } else {
+      // Jika wo sudah ada tapi tidak punya ticket_id, update dengan ticket_id baru
+      if (!wo.ticket_id && ticketIdVal) {
+        try {
+          await db.query(
+            'UPDATE master_wo SET ticket_id = ? WHERE wonum = ?',
+            [ticketIdVal, wonumTrim]
+          );
+        } catch (err) {
+          console.error('Update master_wo ticket_id error:', err.message);
+        }
+      }
     }
 
     const stoValue = stoVal || (wo && wo.sto) || null;
 
+    // Generate ID unik untuk kendala_pelanggan
+    const uniqueId = Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 10000);
+
     await db.query(
       `INSERT INTO kendala_pelanggan
-       (wonum, tanggal_input, sto, ttd_kb, status_hi, ttic, keterangan, nama_teknis, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-      [wonumTrim, tanggal_input || null, stoValue, ttd_kb || null, status_hi || 'PROGRESS', ttic || null, keterangan || null, nama_teknis || null]
+       (id, wonum, tanggal_input, sto, ttd_kb, status_hi, ttic, keterangan, nama_teknis, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+      [uniqueId, wonumTrim, tanggal_input || null, stoValue, ttd_kb || null, status_hi || 'PROGRESS', ttic || null, keterangan || null, nama_teknis || null]
     );
 
     return res.redirect('/kendala?saved=1');
@@ -184,10 +215,14 @@ router.get('/edit/:id', async (req, res) => {
     WHERE kp.id = ?
   `, [req.params.id]);
 
+  let listSto = STO_LIST;
+  // Daftar STO sudah lengkap di hardcoded STO_LIST
+
   res.render('kendala', {
     title: 'Detail Data Kendala',
     mode: 'edit',
-    kendala: rows[0]
+    kendala: rows[0],
+    listSto
   });
 });
 
@@ -195,15 +230,50 @@ router.get('/edit/:id', async (req, res) => {
 // UPDATE DATA
 // ============================
 router.post('/edit/:id', async (req, res) => {
-  const { status_hi, ttic, keterangan, nama_teknis } = req.body;
+  const { status_hi, ttic, keterangan, nama_teknis, ttd_kb, sto } = req.body;
+
+  // fetch current row to determine if anything changed
+  const [rows] = await db.query('SELECT status_hi, ttic, keterangan, nama_teknis, ttd_kb, sto FROM kendala_pelanggan WHERE id = ?', [req.params.id]);
+  const current = rows && rows[0];
+  if (!current) {
+    return res.redirect('/kendala');
+  }
+
+  const changed = (
+    (String(current.status_hi || '') !== String(status_hi || '')) ||
+    (String(current.ttic || '') !== String(ttic || '')) ||
+    (String(current.keterangan || '') !== String(keterangan || '')) ||
+    (String(current.nama_teknis || '') !== String(nama_teknis || '')) ||
+    (String(current.ttd_kb || '') !== String(ttd_kb || '')) ||
+    (String(current.sto || '') !== String(sto || ''))
+  );
+
+  if (!changed) {
+    // nothing changed — no notification
+    return res.redirect('/kendala');
+  }
 
   await db.query(`
     UPDATE kendala_pelanggan
-    SET status_hi = ?, ttic = ?, keterangan = ?, nama_teknis = ?, updated_at = NOW()
+    SET status_hi = ?, ttic = ?, keterangan = ?, nama_teknis = ?, ttd_kb = ?, sto = ?, updated_at = NOW()
     WHERE id = ?
-  `, [status_hi, ttic, keterangan, nama_teknis, req.params.id]);
+  `, [status_hi, ttic, keterangan, nama_teknis, ttd_kb || null, sto || null, req.params.id]);
 
-  res.redirect('/kendala');
+  // redirect with saved flag so UI can show update notification
+  res.redirect('/kendala?saved=1');
+});
+
+// ============================
+// DELETE DATA (via POST)
+// ============================
+router.post('/delete/:id', async (req, res) => {
+  try {
+    await db.query('DELETE FROM kendala_pelanggan WHERE id = ?', [req.params.id]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Delete kendala error:', err.message || err);
+    res.status(500).json({ ok: false, error: err.message || 'delete_failed' });
+  }
 });
 
 module.exports = router;

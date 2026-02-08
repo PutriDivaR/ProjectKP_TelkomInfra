@@ -215,7 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
       form.append('file', f);
       showToast('Reading file...', 'info');
       try {
-        const res = await fetch('/daily/upload-preview', { method: 'POST', body: form });
+        const res = await fetch('/dailyhouse/upload-preview', { method: 'POST', body: form });
         const json = await res.json();
         if (!res.ok || !json.success) throw new Error(json.message || 'Failed to read file');
 
@@ -380,7 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
     form.append('mapping', JSON.stringify(mapping));
 
     showToast('Importing data...', 'info');
-    fetch('/daily/upload', { method: 'POST', body: form })
+    fetch('/dailyhouse/upload', { method: 'POST', body: form })
       .then(async res => {
         const ct = res.headers.get('content-type') || '';
         if (ct.includes('application/json')) return res.json();
@@ -408,7 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     showToast('Importing data...', 'info');
-    fetch('/daily/upload-json', {
+    fetch('/dailyhouse/upload-json', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ rows, mapping })
@@ -434,7 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnExport) {
     btnExport.addEventListener('click', () => {
       // trigger download
-      window.location.href = '/daily/export';
+      window.location.href = '/dailyhouse/export';
     });
   }
 });
