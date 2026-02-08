@@ -52,6 +52,7 @@ router.get('/api/wilayah-ridar', async (req, res) => {
 router.get('/api/todolist', async (req, res) => {
   try {
     console.log('🔍 Fetching todolist data...');
+    
     const [rows] = await db.query(`
       SELECT
         kt.*,
@@ -64,7 +65,8 @@ router.get('/api/todolist', async (req, res) => {
       LEFT JOIN master_activity ma ON kt.activity_id = ma.id
       LEFT JOIN wilayah_ridar wr ON kt.sto = wr.sto
       LEFT JOIN master_wo mw ON kt.wonum = mw.wonum
-      WHERE kt.wonum IS NOT NULL AND kt.wonum != ''
+      WHERE kt.wonum IS NOT NULL 
+        AND kt.wonum != ''
       ORDER BY kt.id DESC
     `);
 
@@ -133,6 +135,7 @@ router.post('/api/todolist/delete-selected', async (req, res) => {
 });
 
 // POST import - BATCH PROCESSING VERSION
+// POST import - BATCH PROCESSING WITH DUPLICATE PREVENTION
 router.post('/api/todolist/import', async (req, res) => {
   const { rows } = req.body;
 
@@ -142,11 +145,6 @@ router.post('/api/todolist/import', async (req, res) => {
   const validRows = rows.filter(r => r.wonum || r.activity_teknisi);
   if (validRows.length === 0)
     return res.status(400).json({ success: false, message: 'Semua baris kosong' });
-
-  // ✅ DEBUG: Log first 3 rows received from frontend
-  console.log('\n📥 Backend received - First 3 rows:');
-  console.log(JSON.stringify(validRows.slice(0, 3), null, 2));
-  console.log('---\n');
 
   const startTime = Date.now();
   console.log(`⚡ Starting BATCH import for ${validRows.length} rows...`);
@@ -161,7 +159,7 @@ router.post('/api/todolist/import', async (req, res) => {
     await connection.beginTransaction();
 
     // ============================================================
-    // STEP 1: BULK FETCH existing wonum
+    // STEP 1: BULK FETCH existing wonum from master_wo
     // ============================================================
     const wonumList = validRows
       .map(r => r.wonum)
@@ -174,7 +172,7 @@ router.post('/api/todolist/import', async (req, res) => {
     let wonumOdpMap = new Map();
 
     if (uniqueWonums.length > 0) {
-      console.log(`🔍 Checking ${uniqueWonums.length} unique wonum...`);
+      console.log(`🔍 Checking ${uniqueWonums.length} unique wonum in master_wo...`);
       
       const FETCH_BATCH_SIZE = 1000;
       for (let i = 0; i < uniqueWonums.length; i += FETCH_BATCH_SIZE) {
@@ -192,6 +190,31 @@ router.post('/api/todolist/import', async (req, res) => {
       }
 
       console.log(`✅ Found ${existingWonums.size} existing wonum in master_wo`);
+    }
+
+    // ============================================================
+    // STEP 1.5: CHECK existing wonum in kendala_teknisi_sistem
+    // ============================================================
+    let existingKendalaWonums = new Map(); // wonum -> id mapping
+
+    if (uniqueWonums.length > 0) {
+      console.log(`🔍 Checking existing wonum in kendala_teknisi_sistem...`);
+      
+      const FETCH_BATCH_SIZE = 1000;
+      for (let i = 0; i < uniqueWonums.length; i += FETCH_BATCH_SIZE) {
+        const batch = uniqueWonums.slice(i, i + FETCH_BATCH_SIZE);
+        const placeholders = batch.map(() => '?').join(',');
+        const [existing] = await connection.query(
+          `SELECT id, wonum FROM kendala_teknisi_sistem WHERE wonum IN (${placeholders})`,
+          batch
+        );
+
+        existing.forEach(row => {
+          existingKendalaWonums.set(row.wonum, row.id);
+        });
+      }
+
+      console.log(`✅ Found ${existingKendalaWonums.size} existing wonum in kendala_teknisi_sistem`);
     }
 
     // ============================================================
@@ -273,52 +296,95 @@ router.post('/api/todolist/import', async (req, res) => {
     }
 
     // ============================================================
-    // STEP 5: BATCH INSERT to kendala_teknisi_sistem
+    // STEP 5: BATCH INSERT/UPDATE to kendala_teknisi_sistem
     // ============================================================
-    console.log(`📥 Inserting ${validRows.length} rows to kendala_teknisi_sistem...`);
+    console.log(`📥 Processing ${validRows.length} rows to kendala_teknisi_sistem...`);
 
     const KENDALA_BATCH_SIZE = 500;
     let insertedCount = 0;
+    let updatedCount = 0;
 
-    for (let i = 0; i < validRows.length; i += KENDALA_BATCH_SIZE) {
-      const batch = validRows.slice(i, i + KENDALA_BATCH_SIZE);
+    // Separate rows into INSERT and UPDATE
+    const rowsToInsert = [];
+    const rowsToUpdate = [];
+
+    validRows.forEach(row => {
+      const wonum = row.wonum != null ? String(row.wonum).trim() : '';
       
-      const insertKendalaQuery = `
-        INSERT INTO kendala_teknisi_sistem 
-          (wonum, activity_teknisi, month_date, sto, created_at, updated_at) 
-        VALUES ?
-      `;
+      if (!wonum) return;
 
-      const kendalaValues = batch.map(row => {
-        const wonum = row.wonum != null ? String(row.wonum).trim() : '';
-        const activityTeknisi = row.activity_teknisi != null ? String(row.activity_teknisi).trim() : '';
-        const monthDate = row.month_date != null ? String(row.month_date).trim() : '';
-        const sto = row.sto != null ? String(row.sto).trim() : '';  // ✅ CHANGED: sto instead of sto_inputan
+      if (existingKendalaWonums.has(wonum)) {
+        // UPDATE existing record
+        rowsToUpdate.push({
+          id: existingKendalaWonums.get(wonum),
+          wonum,
+          activity_teknisi: row.activity_teknisi != null ? String(row.activity_teknisi).trim() : '',
+          month_date: row.month_date != null ? String(row.month_date).trim() : '',
+          sto: row.sto != null ? String(row.sto).trim() : ''
+        });
+      } else {
+        // INSERT new record
+        rowsToInsert.push({
+          wonum,
+          activity_teknisi: row.activity_teknisi != null ? String(row.activity_teknisi).trim() : '',
+          month_date: row.month_date != null ? String(row.month_date).trim() : '',
+          sto: row.sto != null ? String(row.sto).trim() : ''
+        });
+      }
+    });
 
-        // ✅ DEBUG: Log first row of each batch
-        if (i === 0 && batch.indexOf(row) === 0) {
-          console.log('\n📝 Sample INSERT values (first row):');
-          console.log({
-            wonum,
-            activityTeknisi,
-            monthDate,
-            sto  // ✅ CHANGED: showing sto
-          });
-          console.log('---\n');
-        }
-
-        return [wonum, activityTeknisi, monthDate, sto, new Date(), new Date()];
-      });
-
-      await connection.query(insertKendalaQuery, [kendalaValues]);
+    // BATCH INSERT
+    if (rowsToInsert.length > 0) {
+      console.log(`📥 Inserting ${rowsToInsert.length} NEW rows...`);
       
-      insertedCount += batch.length;
-      console.log(`  ✓ Progress: ${insertedCount}/${validRows.length} rows inserted`);
+      for (let i = 0; i < rowsToInsert.length; i += KENDALA_BATCH_SIZE) {
+        const batch = rowsToInsert.slice(i, i + KENDALA_BATCH_SIZE);
+        
+        const insertKendalaQuery = `
+          INSERT INTO kendala_teknisi_sistem 
+            (wonum, activity_teknisi, month_date, sto, created_at, updated_at) 
+          VALUES ?
+        `;
+
+        const kendalaValues = batch.map(row => [
+          row.wonum,
+          row.activity_teknisi,
+          row.month_date,
+          row.sto,
+          new Date(),
+          new Date()
+        ]);
+
+        await connection.query(insertKendalaQuery, [kendalaValues]);
+        
+        insertedCount += batch.length;
+        console.log(`  ✓ Progress: ${insertedCount}/${rowsToInsert.length} rows inserted`);
+      }
     }
 
-    console.log(`✅ Bulk inserted ${validRows.length} rows to kendala_teknisi_sistem`);
+    // BATCH UPDATE
+    if (rowsToUpdate.length > 0) {
+      console.log(`🔄 Updating ${rowsToUpdate.length} EXISTING rows...`);
+      
+      const UPDATE_BATCH_SIZE = 100;
+      for (let i = 0; i < rowsToUpdate.length; i += UPDATE_BATCH_SIZE) {
+        const batch = rowsToUpdate.slice(i, i + UPDATE_BATCH_SIZE);
+        
+        for (const row of batch) {
+          await connection.query(`
+            UPDATE kendala_teknisi_sistem 
+            SET activity_teknisi = ?, month_date = ?, sto = ?, updated_at = NOW()
+            WHERE id = ?
+          `, [row.activity_teknisi, row.month_date, row.sto, row.id]);
+        }
+        
+        updatedCount += batch.length;
+        console.log(`  ✓ Progress: ${updatedCount}/${rowsToUpdate.length} rows updated`);
+      }
+    }
 
-    // Commit transaction
+    console.log(`✅ Total: ${insertedCount} inserted, ${updatedCount} updated`);
+
     await connection.commit();
 
     const duration = Date.now() - startTime;
@@ -326,8 +392,10 @@ router.post('/api/todolist/import', async (req, res) => {
 
     res.json({ 
       success: true, 
-      message: `Import berhasil: ${validRows.length} baris dalam ${(duration/1000).toFixed(2)} detik`, 
+      message: `Import berhasil: ${insertedCount} baris baru, ${updatedCount} baris di-update dalam ${(duration/1000).toFixed(2)} detik`, 
       count: validRows.length,
+      inserted: insertedCount,
+      updated: updatedCount,
       insertedToMasterWo: toInsertMasterWo.length,
       updatedMasterWo: toUpdateMasterWo.length,
       duration: `${(duration/1000).toFixed(2)}s`

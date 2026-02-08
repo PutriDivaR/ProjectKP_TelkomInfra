@@ -131,14 +131,21 @@ router.post('/update/:wonum', async (req, res) => {
       WHERE wonum=?
     `;
 
-    const insertLog = `
-      INSERT INTO kendala_teknisi_sistem
-      (wonum, activity, activity_teknisi, status_todolist, solusi_progress, created_at, updated_at)
-      VALUES (?, 'Daily Housekeeping', 'Update Daily', ?, ?, NOW(), NOW())
-    `;
-
     await db.query(updateWO, [lat, lang, package_name, status, status_akhir, stoVal, odp_todolist, wonum]);
-    try { await db.query(insertLog, [wonum, status_akhir || status, solusi_progress]); } catch (e) { console.warn('log insert failed:', e.message); }
+
+    // ✅ ONLY create log if solusi_progress is provided (manual edit from detail page)
+    if (solusi_progress && solusi_progress.trim()) {
+      const insertLog = `
+        INSERT INTO kendala_teknisi_sistem
+        (wonum, activity, activity_teknisi, status_todolist, solusi_progress, created_at, updated_at)
+        VALUES (?, 'Daily Housekeeping', 'Manual Update', ?, ?, NOW(), NOW())
+      `;
+      try { 
+        await db.query(insertLog, [wonum, status_akhir || status, solusi_progress]); 
+      } catch (e) { 
+        console.warn('log insert failed:', e.message); 
+      }
+    }
 
     return res.json({ success: true });
   } catch (err) {
@@ -438,7 +445,7 @@ router.get('/api/status-akhir', async (req, res) => {
 
 /**
  * UPLOAD PREVIEW - Read CSV headers and return them for column mapping
- * POST /daily/upload-preview
+ * POST /dailyhouse/upload-preview
  * Accepts: multipart/form-data with 'file' field
  * Returns: { success: true, columns: ['wonum', 'nama', ...], preview: [...rows] }
  */
@@ -478,7 +485,7 @@ router.post('/upload-preview', upload.single('file'), async (req, res) => {
 
 /**
  * UPLOAD CSV with column mapping
- * POST /daily/upload
+ * POST /dailyhouse/upload
  * Body: multipart with 'file' and 'mapping' fields
  * mapping = JSON string like { "wonum": "WO_ID", "lat": "Latitude", "lang": "Longitude", ... }
  */
@@ -537,48 +544,23 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         // Check if wonum already exists
         const [check] = await db.query('SELECT wonum FROM master_wo WHERE wonum = ?', [wonum]);
         if (check && check.length > 0) {
-          // Update existing row
-          const [updateRes] = await db.query(
+          // ✅ UPDATE: Hanya update master_wo, JANGAN buat log ke kendala_teknisi_sistem
+          await db.query(
             'UPDATE master_wo SET nama=?, ticket_id=?, sto=?, regional=?, lat=?, lang=?, package_name=?, status_daily=?, status_akhir=?, odp_inputan=?, odp_todolist=?, updated_at=NOW() WHERE wonum=?',
             [nama, ticket_id, sto, regional, lat, lang, package_name, status, status_akhir, odp_inputan, odp_todolist, wonum]
           );
-          if (updateRes && updateRes.affectedRows > 0) {
-            importedCount.success++;
-            try {
-              await db.query(
-                'INSERT INTO kendala_teknisi_sistem (wonum, activity, activity_teknisi, status_todolist, solusi_progress, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())',
-                [wonum, 'Upload CSV', 'Update', status_akhir || 'UPDATED', '']
-              );
-            } catch (e) {
-              console.warn('Log insert failed:', e.message);
-            }
-          } else {
-            importedCount.failed++;
-            console.debug(`Row failed: update returned no affected rows for wonum ${wonum}`);
-          }
+          importedCount.success++;
+          // ❌ REMOVED: Log insert untuk upload CSV
           continue;
         }
 
-        // Insert new row
-        const [insertRes] = await db.query(
+        // ✅ INSERT: Hanya insert ke master_wo, JANGAN buat log ke kendala_teknisi_sistem
+        await db.query(
           'INSERT INTO master_wo (wonum, nama, ticket_id, sto, regional, lat, lang, package_name, status_daily, status_akhir, odp_inputan, odp_todolist, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())',
           [wonum, nama, ticket_id, sto, regional, lat, lang, package_name, status, status_akhir, odp_inputan, odp_todolist]
         );
-
-        if (insertRes && insertRes.affectedRows > 0) {
-          importedCount.success++;
-          try {
-            await db.query(
-              'INSERT INTO kendala_teknisi_sistem (wonum, activity, activity_teknisi, status_todolist, solusi_progress, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())',
-              [wonum, 'Upload CSV', 'Import', status_akhir || 'STARTWORK', '']
-            );
-          } catch (e) {
-            console.warn('Log insert failed:', e.message);
-          }
-        } else {
-          importedCount.failed++;
-          console.debug(`Row failed: insert returned no affected rows for wonum ${wonum}`);
-        }
+        importedCount.success++;
+        // ❌ REMOVED: Log insert untuk upload CSV
       } catch (rowErr) {
         console.warn('Row import failed:', rowErr.message);
         importedCount.failed++;
@@ -616,7 +598,11 @@ router.get('/export', async (req, res) => {
   }
 });
 
-// Accept JSON rows for import (used by client-side Excel parsing)
+/**
+ * UPLOAD JSON (used by client-side Excel parsing)
+ * POST /dailyhouse/upload-json
+ * Body: JSON with { rows: [...], mapping: {...} }
+ */
 router.post('/upload-json', async (req, res) => {
   try {
     const rows = req.body.rows || [];
@@ -628,7 +614,11 @@ router.post('/upload-json', async (req, res) => {
     for (const row of rows) {
       try {
         const wonum = (row[mapping.wonum || 'wonum'] || '').toString().trim();
-        if (!wonum) { importedCount.failed++; console.debug('Row skipped: no wonum'); continue; }
+        if (!wonum) { 
+          importedCount.failed++; 
+          console.debug('Row skipped: no wonum'); 
+          continue; 
+        }
 
         const nama = row[mapping.nama || 'nama'] || '';
         const ticket_id = row[mapping.ticket_id || 'ticket_id'] || '';
@@ -653,48 +643,34 @@ router.post('/upload-json', async (req, res) => {
 
         const [check] = await db.query('SELECT wonum FROM master_wo WHERE wonum = ?', [wonum]);
         if (check && check.length > 0) {
-          // Update existing row
-          const [updateRes] = await db.query(
+          // ✅ UPDATE: Hanya update master_wo, JANGAN buat log
+          await db.query(
             'UPDATE master_wo SET nama=?, ticket_id=?, sto=?, regional=?, lat=?, lang=?, package_name=?, status_daily=?, status_akhir=?, odp_inputan=?, odp_todolist=?, updated_at=NOW() WHERE wonum=?',
             [nama, ticket_id, sto, regional, lat, lang, package_name, status, status_akhir, odp_inputan, odp_todolist, wonum]
           );
-          if (updateRes && updateRes.affectedRows > 0) {
-            importedCount.success++;
-            try {
-              await db.query(
-                'INSERT INTO kendala_teknisi_sistem (wonum, activity, activity_teknisi, status_todolist, solusi_progress, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())',
-                [wonum, 'Upload Excel', 'Update', status_akhir || 'UPDATED', '']
-              );
-            } catch (e) { console.warn('Log insert failed:', e.message); }
-          } else {
-            importedCount.failed++; console.debug(`Row failed: update no affected rows for ${wonum}`);
-          }
+          importedCount.success++;
+          // ❌ REMOVED: Log insert untuk upload Excel
           continue;
         }
 
-        const [insertRes] = await db.query(
+        // ✅ INSERT: Hanya insert ke master_wo, JANGAN buat log
+        await db.query(
           'INSERT INTO master_wo (wonum, nama, ticket_id, sto, regional, lat, lang, package_name, status_daily, status_akhir, odp_inputan, odp_todolist, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())',
           [wonum, nama, ticket_id, sto, regional, lat, lang, package_name, status, status_akhir, odp_inputan, odp_todolist]
         );
-
-        if (insertRes && insertRes.affectedRows > 0) {
-          importedCount.success++;
-          try {
-            await db.query(
-              'INSERT INTO kendala_teknisi_sistem (wonum, activity, activity_teknisi, status_todolist, solusi_progress, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())',
-              [wonum, 'Upload Excel', 'Import', status_akhir || 'STARTWORK', '']
-            );
-          } catch (e) { console.warn('Log insert failed:', e.message); }
-        } else {
-          importedCount.failed++; console.debug(`Row failed: insert no affected rows for ${wonum}`);
-        }
+        importedCount.success++;
+        // ❌ REMOVED: Log insert untuk upload Excel
       } catch (e) {
         console.warn('Row import failed:', e.message);
         importedCount.failed++;
       }
     }
 
-    return res.json({ success: true, message: `Imported ${importedCount.success} rows, ${importedCount.failed} failed`, ...importedCount });
+    return res.json({ 
+      success: true, 
+      message: `Imported ${importedCount.success} rows, ${importedCount.failed} failed`, 
+      ...importedCount 
+    });
   } catch (err) {
     console.error('Upload JSON error', err);
     return res.status(500).json({ success: false, message: err.message });
