@@ -114,3 +114,74 @@ if (searchInput) {
     }
   });
 }
+
+// ============================
+// TTD KB FORMAT VALIDATION
+// ============================
+// Format function: convert input to "X Hari" format
+function formatTtdKbValue(input) {
+  if (!input) return null;
+  
+  var trimmed = String(input).trim();
+  if (!trimmed) return null;
+  
+  // Match: angka (1-5 digit) optional whitespace optional "hari" (case-insensitive)
+  var match = trimmed.match(/^(\d+)\s*(hari)?$/i);
+  if (!match) {
+    return null; // Invalid format
+  }
+  
+  var days = match[1];
+  return days + ' Hari';
+}
+
+// Attach validators and auto-format to TTD KB inputs
+document.addEventListener('DOMContentLoaded', function () {
+  var ttdKbInputs = document.querySelectorAll('input[name="ttd_kb"]');
+  
+  ttdKbInputs.forEach(function (input) {
+    // Create error message element if not exists
+    var errorMsg = input.nextElementSibling;
+    if (!errorMsg || !errorMsg.classList.contains('ttd-kb-error')) {
+      errorMsg = document.createElement('small');
+      errorMsg.className = 'ttd-kb-error';
+      errorMsg.style.color = '#e74c3c';
+      errorMsg.style.marginTop = '4px';
+      errorMsg.style.display = 'none';
+      input.parentNode.appendChild(errorMsg);
+    }
+    
+    // Validate and format on blur
+    input.addEventListener('blur', function () {
+      if (!this.value.trim()) {
+        errorMsg.style.display = 'none';
+        return;
+      }
+      
+      var formatted = formatTtdKbValue(this.value);
+      if (formatted) {
+        this.value = formatted;
+        errorMsg.style.display = 'none';
+      } else {
+        errorMsg.textContent = 'Format tidak valid. Gunakan angka atau \"angka hari\" (contoh: 90 atau 90 hari)';
+        errorMsg.style.display = 'block';
+      }
+    });
+    
+    // Real-time preview on input
+    input.addEventListener('input', function () {
+      if (!this.value.trim()) {
+        errorMsg.style.display = 'none';
+        return;
+      }
+      
+      var formatted = formatTtdKbValue(this.value);
+      if (formatted) {
+        errorMsg.style.display = 'none';
+      } else {
+        errorMsg.textContent = 'Format tidak valid. Gunakan angka atau \"angka hari\" (contoh: 90 atau 90 hari)';
+        errorMsg.style.display = 'block';
+      }
+    });
+  });
+});

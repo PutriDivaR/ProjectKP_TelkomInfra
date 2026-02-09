@@ -10,6 +10,28 @@ const STO_LIST = [
 ];
 
 // ============================
+// FORMAT TTD KB
+// ============================
+// Format: convert input to "X Hari" format
+// Accepted: "5", "5 hari", "5 Hari"
+// Returns null if invalid
+const formatTtdKb = (input) => {
+  if (!input) return null;
+  
+  const trimmed = String(input).trim();
+  if (!trimmed) return null;
+  
+  // Match: angka (1-5 digit) optional whitespace optional "hari" (case-insensitive)
+  const match = trimmed.match(/^(\d+)\s*(hari)?$/i);
+  if (!match) {
+    return null; // Invalid format
+  }
+  
+  const days = match[1];
+  return `${days} Hari`;
+};
+
+// ============================
 // REKAP DATA
 // ============================
 router.get('/', async (req, res) => {
@@ -183,6 +205,12 @@ router.post('/input', async (req, res) => {
 
     const stoValue = stoVal || (wo && wo.sto) || null;
 
+    // Format TTD KB
+    const ttdKbFormatted = ttd_kb ? formatTtdKb(ttd_kb) : null;
+    if (ttd_kb && !ttdKbFormatted) {
+      return res.redirect('/kendala/input?error=save_failed&msg=' + encodeURIComponent('Format TTD KB tidak valid. Gunakan angka atau "angka hari" (contoh: 90 atau 90 hari)'));
+    }
+
     // Generate ID unik untuk kendala_pelanggan
     const uniqueId = Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 10000);
 
@@ -190,7 +218,7 @@ router.post('/input', async (req, res) => {
       `INSERT INTO kendala_pelanggan
        (id, wonum, tanggal_input, sto, ttd_kb, status_hi, ttic, keterangan, nama_teknis, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-      [uniqueId, wonumTrim, tanggal_input || null, stoValue, ttd_kb || null, status_hi || 'PROGRESS', ttic || null, keterangan || null, nama_teknis || null]
+      [uniqueId, wonumTrim, tanggal_input || null, stoValue, ttdKbFormatted || null, status_hi || 'PROGRESS', ttic || null, keterangan || null, nama_teknis || null]
     );
 
     return res.redirect('/kendala?saved=1');
@@ -222,7 +250,8 @@ router.get('/edit/:id', async (req, res) => {
     title: 'Detail Data Kendala',
     mode: 'edit',
     kendala: rows[0],
-    listSto
+    listSto,
+    errorMsg: req.query.msg ? decodeURIComponent(req.query.msg) : ''
   });
 });
 
@@ -231,6 +260,12 @@ router.get('/edit/:id', async (req, res) => {
 // ============================
 router.post('/edit/:id', async (req, res) => {
   const { status_hi, ttic, keterangan, nama_teknis, ttd_kb, sto } = req.body;
+
+  // Format TTD KB
+  const ttdKbFormatted = ttd_kb ? formatTtdKb(ttd_kb) : null;
+  if (ttd_kb && !ttdKbFormatted) {
+    return res.redirect('/kendala/edit/' + req.params.id + '?error=ttd_invalid&msg=' + encodeURIComponent('Format TTD KB tidak valid. Gunakan angka atau "angka hari" (contoh: 90 atau 90 hari)'));
+  }
 
   // fetch current row to determine if anything changed
   const [rows] = await db.query('SELECT status_hi, ttic, keterangan, nama_teknis, ttd_kb, sto FROM kendala_pelanggan WHERE id = ?', [req.params.id]);
@@ -244,7 +279,7 @@ router.post('/edit/:id', async (req, res) => {
     (String(current.ttic || '') !== String(ttic || '')) ||
     (String(current.keterangan || '') !== String(keterangan || '')) ||
     (String(current.nama_teknis || '') !== String(nama_teknis || '')) ||
-    (String(current.ttd_kb || '') !== String(ttd_kb || '')) ||
+    (String(current.ttd_kb || '') !== String(ttdKbFormatted || '')) ||
     (String(current.sto || '') !== String(sto || ''))
   );
 
@@ -257,7 +292,7 @@ router.post('/edit/:id', async (req, res) => {
     UPDATE kendala_pelanggan
     SET status_hi = ?, ttic = ?, keterangan = ?, nama_teknis = ?, ttd_kb = ?, sto = ?, updated_at = NOW()
     WHERE id = ?
-  `, [status_hi, ttic, keterangan, nama_teknis, ttd_kb || null, sto || null, req.params.id]);
+  `, [status_hi, ttic, keterangan, nama_teknis, ttdKbFormatted || null, sto || null, req.params.id]);
 
   // redirect with saved flag so UI can show update notification
   res.redirect('/kendala?saved=1');

@@ -9,7 +9,7 @@
   <div class="header">
     <h2>KENDALA PELANGGAN</h2>
     <div class="topbar-right">
-      <span class="admin-label">Nama Admin</span>
+      <span class="admin-label"><%= user && user.username ? user.username : 'Nama Admin' %></span>
     </div>
   </div>
 
@@ -199,6 +199,11 @@
 
   <% if (mode === 'edit') { %>
   <h3 class="section-title">Detail Data Kendala</h3>
+  <% if (typeof errorMsg !== 'undefined' && errorMsg) { %>
+  <div class="alert alert-error">
+    <%= errorMsg %>
+  </div>
+  <% } %>
   <div class="form-card detail-card">
     <form method="POST" action="/kendala/edit/<%= kendala.id %>" class="kendala-form detail-form">
       <div class="detail-two-col">
