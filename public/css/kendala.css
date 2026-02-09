@@ -426,16 +426,38 @@
 }
 
 .kendala-table.rekap-table thead tr {
-  background: #e53935;
+  background: transparent;
   color: #fff;
 }
 
 .kendala-table.rekap-table thead th {
   padding: 12px 14px;
   text-align: left;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.875rem;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
+
+
+/* Per-column gradient headers (all red tones to match other pages) */
+.kendala-table.rekap-table thead th:nth-child(1)  { background: linear-gradient(90deg,#b91c1c 0%,#dc2626 50%,#ef4444 100%); }
+.kendala-table.rekap-table thead th:nth-child(2)  { background: linear-gradient(90deg,#b91c1c 0%,#dc2626 50%,#ef4444 100%); }
+.kendala-table.rekap-table thead th:nth-child(3)  { background: linear-gradient(90deg,#b91c1c 0%,#dc2626 50%,#ef4444 100%); }
+.kendala-table.rekap-table thead th:nth-child(4)  { background: linear-gradient(90deg,#b91c1c 0%,#dc2626 50%,#ef4444 100%); }
+.kendala-table.rekap-table thead th:nth-child(5)  { background: linear-gradient(90deg,#b91c1c 0%,#dc2626 50%,#ef4444 100%); }
+.kendala-table.rekap-table thead th:nth-child(6)  { background: linear-gradient(90deg,#b91c1c 0%,#dc2626 50%,#ef4444 100%); }
+.kendala-table.rekap-table thead th:nth-child(7)  { background: linear-gradient(90deg,#b91c1c 0%,#dc2626 50%,#ef4444 100%); }
+.kendala-table.rekap-table thead th:nth-child(8)  { background: linear-gradient(90deg,#b91c1c 0%,#dc2626 50%,#ef4444 100%); }
+.kendala-table.rekap-table thead th:nth-child(9)  { background: linear-gradient(90deg,#b91c1c 0%,#dc2626 50%,#ef4444 100%); }
+.kendala-table.rekap-table thead th:nth-child(10) { background: linear-gradient(90deg,#b91c1c 0%,#dc2626 50%,#ef4444 100%); }
+.kendala-table.rekap-table thead th:nth-child(11) { background: linear-gradient(90deg,#b91c1c 0%,#dc2626 50%,#ef4444 100%); }
+
+/* Ensure header text stays visible and padding remains consistent */
+.kendala-table.rekap-table thead th { color: #fff; padding: 12px 14px; }
+
 
 .kendala-table.rekap-table thead th:first-child {
   border-radius: 12px 0 0 0;
@@ -526,7 +548,7 @@
 }
 
 .kendala-table th {
-  background: #e53935;
+  background: transparent;
   color: white;
   padding: 10px;
 }
