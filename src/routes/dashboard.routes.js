@@ -3,58 +3,124 @@ const router = express.Router();
 const path = require('path');
 const db = require(path.resolve(__dirname, '../config/db'));
 
-// Dashboard Route
+// Dashboard Route with Filters
 router.get('/', async (req, res) => {
   try {
-    // use pooled db from config
-    
-    // 1. KPI METRICS - Total WO
-    const [totalWO] = await db.query('SELECT COUNT(*) as total FROM master_wo');
-    
-    // 2. Status Daily Distribution
+    // Get filter parameters
+    const {
+      sto_filter,
+      regional_filter,
+      status_filter,
+      date_from,
+      date_to,
+      search
+    } = req.query;
+
+    // Build WHERE clause dynamically
+    let whereConditions = [];
+    let queryParams = [];
+
+    if (sto_filter) {
+      whereConditions.push('mw.sto = ?');
+      queryParams.push(sto_filter);
+    }
+
+    if (regional_filter) {
+      whereConditions.push('mw.regional = ?');
+      queryParams.push(regional_filter);
+    }
+
+    if (status_filter) {
+      whereConditions.push('mw.status_daily = ?');
+      queryParams.push(status_filter);
+    }
+
+    if (date_from) {
+      whereConditions.push('DATE(mw.created_at) >= ?');
+      queryParams.push(date_from);
+    }
+
+    if (date_to) {
+      whereConditions.push('DATE(mw.created_at) <= ?');
+      queryParams.push(date_to);
+    }
+
+    if (search) {
+      whereConditions.push('(mw.wonum LIKE ? OR mw.nama LIKE ?)');
+      queryParams.push(`%${search}%`, `%${search}%`);
+    }
+
+    const whereClause = whereConditions.length > 0 
+      ? 'WHERE ' + whereConditions.join(' AND ')
+      : '';
+
+    // 1. KPI METRICS - Total WO (with filters)
+    const [totalWO] = await db.query(
+      `SELECT COUNT(*) as total FROM master_wo mw ${whereClause}`,
+      queryParams
+    );
+
+    // 2. Status Daily Distribution (with filters)
     const [statusDaily] = await db.query(`
       SELECT status_daily, COUNT(*) as count 
-      FROM master_wo 
-      WHERE status_daily IS NOT NULL
+      FROM master_wo mw
+      ${whereClause}
+      ${whereConditions.length > 0 ? 'AND' : 'WHERE'} status_daily IS NOT NULL
       GROUP BY status_daily
-    `);
-    
-    // 3. Status Todolist Distribution (from kendala_teknisi_sistem)
+    `, queryParams);
+
+    // 3. Status Todolist Distribution
     const [statusTodolist] = await db.query(`
       SELECT status_todolist, COUNT(*) as count 
       FROM kendala_teknisi_sistem 
       WHERE status_todolist IS NOT NULL
       GROUP BY status_todolist
     `);
-    
-    // 4. Status HI Distribution (from kendala_pelanggan)
+
+    // 4. Status HI Distribution
     const [statusHI] = await db.query(`
       SELECT status_hi, COUNT(*) as count 
       FROM kendala_pelanggan 
       WHERE status_hi IS NOT NULL
       GROUP BY status_hi
     `);
-    
-    // 5. Top STO by WO Count
+
+    // 5. Top STO by WO Count (with filters)
     const [topSTO] = await db.query(`
       SELECT sto, COUNT(*) as total 
-      FROM master_wo 
-      WHERE sto IS NOT NULL
+      FROM master_wo mw
+      ${whereClause}
+      ${whereConditions.length > 0 ? 'AND' : 'WHERE'} sto IS NOT NULL
       GROUP BY sto 
       ORDER BY total DESC 
       LIMIT 10
-    `);
-    
-    // 6. Daily WO Trend (last 30 days)
+    `, queryParams);
+
+    // 6. Daily WO Trend (last 30 days) - with filters
     const [dailyTrend] = await db.query(`
       SELECT DATE(created_at) as date, COUNT(*) as count 
-      FROM master_wo 
+      FROM master_wo mw
       WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+      ${whereConditions.length > 0 ? 'AND ' + whereConditions.join(' AND ') : ''}
       GROUP BY DATE(created_at) 
       ORDER BY date ASC
-    `);
-    
-    // 7. Activity Teknisi Distribution
+    `, queryParams);
+
+    // 7. Completion Rate Trend (NEW - 30 days)
+    const [completionTrend] = await db.query(`
+      SELECT 
+        DATE(created_at) as date,
+        COUNT(*) as total,
+        SUM(CASE WHEN status_daily = 'Complete' THEN 1 ELSE 0 END) as completed,
+        ROUND(SUM(CASE WHEN status_daily = 'Complete' THEN 1 ELSE 0 END) / COUNT(*) * 100, 1) as rate
+      FROM master_wo mw
+      WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+      ${whereConditions.length > 0 ? 'AND ' + whereConditions.join(' AND ') : ''}
+      GROUP BY DATE(created_at)
+      ORDER BY date ASC
+    `, queryParams);
+
+    // 8. Activity Teknisi Distribution
     const [activityTech] = await db.query(`
       SELECT activity_teknisi, COUNT(*) as count 
       FROM kendala_teknisi_sistem 
@@ -63,8 +129,8 @@ router.get('/', async (req, res) => {
       ORDER BY count DESC
       LIMIT 10
     `);
-    
-    // 8. Workfall Table - Status Daily per STO
+
+    // 9. Workfall Table - Status Daily per STO (with filters)
     const [workfallData] = await db.query(`
       SELECT 
         sto,
@@ -72,14 +138,15 @@ router.get('/', async (req, res) => {
         SUM(CASE WHEN status_daily = 'Complete' THEN 1 ELSE 0 END) as complete,
         SUM(CASE WHEN status_daily = 'Workfail' THEN 1 ELSE 0 END) as workfail,
         COUNT(*) as total
-      FROM master_wo
-      WHERE sto IS NOT NULL
+      FROM master_wo mw
+      ${whereClause}
+      ${whereConditions.length > 0 ? 'AND' : 'WHERE'} sto IS NOT NULL
       GROUP BY sto
       ORDER BY total DESC
-    `);
-    
-  // 9. Recent WO Activities (ALL, ordered by latest)
-  const [recentWO] = await db.query(`
+    `, queryParams);
+
+    // 10. Recent WO Activities (with filters and search)
+    const [recentWO] = await db.query(`
       SELECT 
         mw.wonum,
         mw.nama,
@@ -88,33 +155,37 @@ router.get('/', async (req, res) => {
         mw.odp_todolist,
         mw.created_at
       FROM master_wo mw
+      ${whereClause}
       ORDER BY mw.created_at DESC
-    `);
-    
-    // 10. Package Distribution
+      LIMIT 500
+    `, queryParams);
+
+    // 11. Package Distribution
     const [packageDist] = await db.query(`
       SELECT package_name, COUNT(*) as count 
-      FROM master_wo 
-      WHERE package_name IS NOT NULL
+      FROM master_wo mw
+      ${whereClause}
+      ${whereConditions.length > 0 ? 'AND' : 'WHERE'} package_name IS NOT NULL
       GROUP BY package_name
       ORDER BY count DESC
-    `);
-    
-    // 11. Regional Performance
+    `, queryParams);
+
+    // 12. Regional Performance
     const [regionalPerf] = await db.query(`
       SELECT 
         regional,
         COUNT(*) as total,
         SUM(CASE WHEN status_daily = 'Complete' THEN 1 ELSE 0 END) as completed,
         ROUND(SUM(CASE WHEN status_daily = 'Complete' THEN 1 ELSE 0 END) / COUNT(*) * 100, 1) as completion_rate
-      FROM master_wo
-      WHERE regional IS NOT NULL
+      FROM master_wo mw
+      ${whereClause}
+      ${whereConditions.length > 0 ? 'AND' : 'WHERE'} regional IS NOT NULL
       GROUP BY regional
       ORDER BY total DESC
-    `);
-    
-  // 12. STO with Wilayah Info (ALL)
-  const [stoInfo] = await db.query(`
+    `, queryParams);
+
+    // 13. STO with Wilayah Info
+    const [stoInfo] = await db.query(`
       SELECT 
         wr.sto,
         wr.uic,
@@ -124,11 +195,12 @@ router.get('/', async (req, res) => {
         SUM(CASE WHEN mw.status_daily = 'Complete' THEN 1 ELSE 0 END) as completed_wo
       FROM wilayah_ridar wr
       LEFT JOIN master_wo mw ON wr.sto = mw.sto
+      ${whereConditions.length > 0 ? 'WHERE ' + whereConditions.map(c => c.replace('mw.', 'mw.')).join(' AND ') : ''}
       GROUP BY wr.sto, wr.uic, wr.pic, wr.leader
       ORDER BY total_wo DESC
-    `);
-    
-    // 13. TTIC Distribution (kendala_pelanggan)
+    `, whereConditions.length > 0 ? queryParams : []);
+
+    // 14. TTIC Distribution
     const [tticDist] = await db.query(`
       SELECT ttic, COUNT(*) as count 
       FROM kendala_pelanggan 
@@ -136,8 +208,8 @@ router.get('/', async (req, res) => {
       GROUP BY ttic
       ORDER BY count DESC
     `);
-    
-    // 14. Segment Distribution
+
+    // 15. Segment Distribution
     const [segmentDist] = await db.query(`
       SELECT segment_alpro, COUNT(*) as count 
       FROM kendala_teknisi_sistem 
@@ -145,6 +217,24 @@ router.get('/', async (req, res) => {
       GROUP BY segment_alpro
       ORDER BY count DESC
     `);
+
+    // 16. TTD KB Distribution (NEW - Trouble Ticket Duration)
+    const [ttdDistribution] = await db.query(`
+      SELECT ttd_kb, COUNT(*) as count 
+      FROM kendala_pelanggan 
+      WHERE ttd_kb IS NOT NULL
+      GROUP BY ttd_kb
+      ORDER BY 
+        CASE 
+          WHEN ttd_kb LIKE '%hari' THEN CAST(SUBSTRING_INDEX(ttd_kb, ' ', 1) AS UNSIGNED)
+          ELSE 999
+        END ASC
+    `);
+
+    // Get distinct values for filters
+    const [stoList] = await db.query('SELECT DISTINCT sto FROM master_wo WHERE sto IS NOT NULL ORDER BY sto');
+    const [regionalList] = await db.query('SELECT DISTINCT regional FROM master_wo WHERE regional IS NOT NULL ORDER BY regional');
+    const [statusList] = await db.query('SELECT DISTINCT status_daily FROM master_wo WHERE status_daily IS NOT NULL ORDER BY status_daily');
 
     // Render dashboard
     res.render('dashboard', {
@@ -154,6 +244,7 @@ router.get('/', async (req, res) => {
       statusHI,
       topSTO,
       dailyTrend,
+      completionTrend,
       activityTech,
       workfallData,
       recentWO,
@@ -161,9 +252,23 @@ router.get('/', async (req, res) => {
       regionalPerf,
       stoInfo,
       tticDist,
-      segmentDist
+      segmentDist,
+      ttdDistribution,
+      // Filter options
+      stoList,
+      regionalList,
+      statusList,
+      // Current filter values
+      filters: {
+        sto_filter: sto_filter || '',
+        regional_filter: regional_filter || '',
+        status_filter: status_filter || '',
+        date_from: date_from || '',
+        date_to: date_to || '',
+        search: search || ''
+      }
     });
-    
+
   } catch (error) {
     console.error('Dashboard Error:', error);
     res.status(500).send('Error loading dashboard: ' + error.message);
@@ -173,8 +278,6 @@ router.get('/', async (req, res) => {
 // API Endpoint for AJAX refresh
 router.get('/api/refresh', async (req, res) => {
   try {
-    // use pooled db from config
-    
     const [totalWO] = await db.query('SELECT COUNT(*) as total FROM master_wo');
     const [statusDaily] = await db.query(`
       SELECT status_daily, COUNT(*) as count 
@@ -182,12 +285,90 @@ router.get('/api/refresh', async (req, res) => {
       WHERE status_daily IS NOT NULL
       GROUP BY status_daily
     `);
-    
+
     res.json({
       success: true,
       totalWO: totalWO[0].total,
       statusDaily
     });
+  } catch (error) {
+    res.json({ success: false, error: error.message });
+  }
+});
+
+// Export to Excel endpoint
+router.get('/export/excel', async (req, res) => {
+  try {
+    const {
+      sto_filter,
+      regional_filter,
+      status_filter,
+      date_from,
+      date_to,
+      search
+    } = req.query;
+
+    let whereConditions = [];
+    let queryParams = [];
+
+    if (sto_filter) {
+      whereConditions.push('mw.sto = ?');
+      queryParams.push(sto_filter);
+    }
+    if (regional_filter) {
+      whereConditions.push('mw.regional = ?');
+      queryParams.push(regional_filter);
+    }
+    if (status_filter) {
+      whereConditions.push('mw.status_daily = ?');
+      queryParams.push(status_filter);
+    }
+    if (date_from) {
+      whereConditions.push('DATE(mw.created_at) >= ?');
+      queryParams.push(date_from);
+    }
+    if (date_to) {
+      whereConditions.push('DATE(mw.created_at) <= ?');
+      queryParams.push(date_to);
+    }
+    if (search) {
+      whereConditions.push('(mw.wonum LIKE ? OR mw.nama LIKE ?)');
+      queryParams.push(`%${search}%`, `%${search}%`);
+    }
+
+    const whereClause = whereConditions.length > 0 
+      ? 'WHERE ' + whereConditions.join(' AND ')
+      : '';
+
+    // Query data lengkap untuk Excel
+    const [woData] = await db.query(`
+      SELECT 
+        mw.wonum,
+        mw.nama,
+        mw.sto,
+        mw.regional,
+        mw.status_daily,
+        mw.package_name,
+        mw.odp_todolist,
+        mw.created_at,
+        kp.status_hi,
+        kp.ttic,
+        kp.ttd_kb,
+        kts.status_todolist,
+        kts.activity_teknisi,
+        kts.segment_alpro
+      FROM master_wo mw
+      LEFT JOIN kendala_pelanggan kp ON mw.wonum = kp.wonum
+      LEFT JOIN kendala_teknisi_sistem kts ON mw.wonum = kts.wonum
+      ${whereClause}
+      ORDER BY mw.created_at DESC
+    `, queryParams);
+
+    res.json({
+      success: true,
+      data: woData
+    });
+
   } catch (error) {
     res.json({ success: false, error: error.message });
   }

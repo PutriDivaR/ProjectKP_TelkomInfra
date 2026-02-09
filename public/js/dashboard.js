@@ -1,4 +1,4 @@
-// Dashboard JavaScript - Modern Charts & Interactions
+// Dashboard JavaScript - Modern Charts & Interactions with Filters & Export
 document.addEventListener('DOMContentLoaded', function() {
   
   // Initialize all charts
@@ -7,9 +7,12 @@ document.addEventListener('DOMContentLoaded', function() {
   initStatusHIChart();
   initTopSTOChart();
   initDailyTrendChart();
+  initCompletionTrendChart();
   initActivityTechChart();
   initPackageChart();
-  initSegmentChart();
+  // initSegmentChart(); // removed
+  initTTDChart();
+  
   // Apply progress widths from data attributes
   initProgressFillWidths();
   
@@ -19,12 +22,36 @@ document.addEventListener('DOMContentLoaded', function() {
     btnRefresh.addEventListener('click', refreshDashboard);
   }
   
+  // Filter form handling
+  const filterForm = document.getElementById('filterForm');
+  if (filterForm) {
+    filterForm.addEventListener('submit', handleFilterSubmit);
+  }
+
+  // Clear filters button
+  const btnClearFilters = document.getElementById('btnClearFilters');
+  if (btnClearFilters) {
+    btnClearFilters.addEventListener('click', clearFilters);
+  }
+
+  // Export buttons
+  const btnExportPDF = document.getElementById('btnExportPDF');
+  if (btnExportPDF) {
+    btnExportPDF.addEventListener('click', exportToPDF);
+  }
+
+  const btnExportExcel = document.getElementById('btnExportExcel');
+  if (btnExportExcel) {
+    btnExportExcel.addEventListener('click', exportToExcel);
+  }
+  
   // Table pagination
   initTablePagination();
   
   // Table horizontal scroll buttons
   initTableScrollButtons();
 });
+
 // Helper: aggregate top N items, rest as 'Lainnya'
 function aggregateTopN(data, labelKey, countKey, topN = 10, othersLabel = 'Lainnya') {
   const items = Array.isArray(data) ? data.slice() : [];
@@ -118,7 +145,7 @@ function initStatusTodolistChart() {
       }]
     },
     options: {
-      indexAxis: 'y', // pakai model horizontal agar label tidak miring
+      indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
@@ -287,52 +314,120 @@ function initDailyTrendChart() {
   });
 }
 
-// 6. Activity Teknisi Chart
-function initActivityTechChart() {
-  const ctx = document.getElementById('chartActivityTech');
+// 6. NEW - Completion Rate Trend Chart
+function initCompletionTrendChart() {
+  const ctx = document.getElementById('chartCompletionTrend');
   if (!ctx) return;
   
-  const raw = JSON.parse(ctx.dataset.values || '[]');
-  const data = aggregateTopN(raw, 'activity_teknisi', 'count', 10, 'Lainnya');
+  const data = JSON.parse(ctx.dataset.values || '[]');
   
   new Chart(ctx, {
-    type: 'doughnut',
+    type: 'line',
     data: {
-      labels: data.map(d => d.activity_teknisi),
+      labels: data.map(d => {
+        const date = new Date(d.date);
+        return date.toLocaleDateString('id-ID', { month: 'short', day: 'numeric' });
+      }),
       datasets: [{
-        data: data.map(d => d.count),
-        backgroundColor: colorPalette.gradient,
-        borderWidth: 2,
-        borderColor: '#ffffff'
+        label: 'Completion Rate (%)',
+        data: data.map(d => d.rate),
+        borderColor: colorPalette.success[0],
+        backgroundColor: colorPalette.success[0] + '20',
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        pointBackgroundColor: '#ffffff',
+        pointBorderWidth: 2
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: {
-          position: 'bottom',
-          labels: {
-            padding: 10,
-            font: { size: 10, weight: '600' },
-            boxWidth: 12
-          }
-        },
+        legend: { display: false },
         tooltip: {
+          backgroundColor: '#1e293b',
+          padding: 12,
+          displayColors: false,
           callbacks: {
             label: function(context) {
-              const total = context.dataset.data.reduce((a, b) => a + b, 0);
-              const percentage = ((context.parsed / total) * 100).toFixed(1);
-              return `${context.parsed} (${percentage}%)`;
+              return `Completion: ${context.parsed.y}%`;
             }
           }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100,
+          ticks: { 
+            font: { size: 11 },
+            callback: function(value) {
+              return value + '%';
+            }
+          },
+          grid: { color: '#e2e8f0' }
+        },
+        x: {
+          ticks: { 
+            font: { size: 10 },
+            maxRotation: 45,
+            minRotation: 45
+          },
+          grid: { display: false }
         }
       }
     }
   });
 }
 
-// 7. Package Distribution Chart
+// 7. Activity Tech Chart
+function initActivityTechChart() {
+  const ctx = document.getElementById('chartActivityTech');
+  if (!ctx) return;
+  
+  const data = JSON.parse(ctx.dataset.values || '[]');
+  
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: data.map(d => d.activity_teknisi || 'N/A'),
+      datasets: [{
+        label: 'Jumlah',
+        data: data.map(d => d.count),
+        backgroundColor: colorPalette.purple[0],
+        borderRadius: 6
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1e293b',
+          padding: 12
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          ticks: { font: { size: 11 } },
+          grid: { color: '#e2e8f0' }
+        },
+        y: {
+          ticks: { font: { size: 10, weight: '600' } },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+// 8. Package Distribution Chart
 function initPackageChart() {
   const ctx = document.getElementById('chartPackage');
   if (!ctx) return;
@@ -341,145 +436,9 @@ function initPackageChart() {
   const data = aggregateTopN(raw, 'package_name', 'count', 10, 'Lainnya');
   
   new Chart(ctx, {
-    type: 'pie',
-    data: {
-      labels: data.map(d => d.package_name),
-      datasets: [{
-        data: data.map(d => d.count),
-        backgroundColor: [
-          colorPalette.success[0],
-          colorPalette.info[0],
-          colorPalette.warning[0],
-          colorPalette.purple[0]
-        ],
-        borderWidth: 2,
-        borderColor: '#ffffff'
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: {
-            padding: 12,
-            font: { size: 11, weight: '600' }
-          }
-        }
-      }
-    }
-  });
-}
-
-// 8. Regional Performance Chart
-function initRegionalChart() {
-  const ctx = document.getElementById('chartRegional');
-  if (!ctx) return;
-  
-  const data = JSON.parse(ctx.dataset.values || '[]');
-  
-  new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: data.map(d => d.regional),
-      datasets: [
-        {
-          label: 'Total WO',
-          data: data.map(d => d.total),
-          backgroundColor: colorPalette.info[0] + '80',
-          borderColor: colorPalette.info[0],
-          borderWidth: 2,
-          borderRadius: 6
-        },
-        {
-          label: 'Completed',
-          data: data.map(d => d.completed),
-          backgroundColor: colorPalette.success[0] + '80',
-          borderColor: colorPalette.success[0],
-          borderWidth: 2,
-          borderRadius: 6
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'top',
-          labels: {
-            padding: 15,
-            font: { size: 12, weight: '600' }
-          }
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: { font: { size: 11 } },
-          grid: { color: '#e2e8f0' }
-        },
-        x: {
-          ticks: { font: { size: 11, weight: '600' } },
-          grid: { display: false }
-        }
-      }
-    }
-  });
-}
-
-// 9. TTIC Distribution Chart
-function initTTICChart() {
-  const ctx = document.getElementById('chartTTIC');
-  if (!ctx) return;
-  
-  const data = JSON.parse(ctx.dataset.values || '[]');
-  
-  new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: data.map(d => d.ttic),
-      datasets: [{
-        label: 'Jumlah',
-        data: data.map(d => d.count),
-        backgroundColor: colorPalette.warning[0],
-        borderRadius: 6
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: { font: { size: 11 } },
-          grid: { color: '#e2e8f0' }
-        },
-        x: {
-          ticks: { font: { size: 11, weight: '600' } },
-          grid: { display: false }
-        }
-      }
-    }
-  });
-}
-
-// 10. Segment Distribution Chart
-function initSegmentChart() {
-  const ctx = document.getElementById('chartSegment');
-  if (!ctx) return;
-  
-  const raw = JSON.parse(ctx.dataset.values || '[]');
-  const data = aggregateTopN(raw, 'segment_alpro', 'count', 10, 'Lainnya');
-  
-  new Chart(ctx, {
     type: 'doughnut',
     data: {
-      labels: data.map(d => d.segment_alpro),
+      labels: data.map(d => d.package_name),
       datasets: [{
         data: data.map(d => d.count),
         backgroundColor: colorPalette.gradient,
@@ -497,10 +456,534 @@ function initSegmentChart() {
             padding: 12,
             font: { size: 11, weight: '600' }
           }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const percentage = ((context.parsed / total) * 100).toFixed(1);
+              return `${context.label}: ${context.parsed} (${percentage}%)`;
+            }
+          }
         }
       }
     }
   });
+}
+
+// Segment chart removed
+
+// 10. NEW - TTD KB Distribution Chart
+function initTTDChart() {
+  const ctx = document.getElementById('chartTTD');
+  if (!ctx) return;
+  
+  const data = JSON.parse(ctx.dataset.values || '[]');
+  
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: data.map(d => d.ttd_kb || 'N/A'),
+      datasets: [{
+        label: 'Jumlah',
+        data: data.map(d => d.count),
+        backgroundColor: colorPalette.warning[0] + '80',
+        borderColor: colorPalette.warning[0],
+        borderWidth: 2,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1e293b',
+          padding: 12
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { font: { size: 11 } },
+          grid: { color: '#e2e8f0' }
+        },
+        x: {
+          ticks: { 
+            font: { size: 10, weight: '600' },
+            maxRotation: 45,
+            minRotation: 45
+          },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+// Filter Form Handler
+function handleFilterSubmit(e) {
+  e.preventDefault();
+  const form = e.target;
+  const formData = new FormData(form);
+  const params = new URLSearchParams();
+
+  for (const [key, value] of formData.entries()) {
+    if (value) {
+      params.append(key, value);
+    }
+  }
+
+  window.location.href = '/dashboard?' + params.toString();
+}
+
+// Clear Filters
+function clearFilters() {
+  window.location.href = '/dashboard';
+}
+
+// ============ EXPORT TO PDF - PROFESSIONAL VERSION ============
+async function exportToPDF() {
+  const btn = document.getElementById('btnExportPDF');
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '<span class="loading-spinner"></span> Generating PDF...';
+  btn.disabled = true;
+
+  try {
+    // Import jsPDF and html2canvas
+    const { jsPDF } = window.jspdf;
+    
+    // Create new PDF document
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 15;
+    let yPosition = margin;
+
+    // Get current date
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('id-ID', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+    const timeStr = now.toLocaleTimeString('id-ID', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+
+    // ============ PAGE 1: COVER & KPI ============
+    
+    // Header/Cover
+    pdf.setFillColor(220, 38, 38);
+    pdf.rect(0, 0, pageWidth, 50, 'F');
+    
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(24);
+    pdf.setFont(undefined, 'bold');
+    pdf.text('LAPORAN DASHBOARD RIDAR', pageWidth / 2, 20, { align: 'center' });
+    
+    pdf.setFontSize(12);
+    pdf.setFont(undefined, 'normal');
+    pdf.text('Real-time Work Order Monitoring & Analytics', pageWidth / 2, 30, { align: 'center' });
+    pdf.text(`Tanggal Laporan: ${dateStr} | ${timeStr}`, pageWidth / 2, 40, { align: 'center' });
+
+    yPosition = 60;
+
+    // Get active filters
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasFilters = urlParams.toString().length > 0;
+    
+    if (hasFilters) {
+      pdf.setFillColor(254, 243, 199);
+      pdf.rect(margin, yPosition, pageWidth - 2 * margin, 15, 'F');
+      
+      pdf.setTextColor(146, 64, 14);
+      pdf.setFontSize(10);
+      pdf.setFont(undefined, 'bold');
+      pdf.text('Filter Aktif:', margin + 5, yPosition + 6);
+      
+      pdf.setFont(undefined, 'normal');
+      let filterText = [];
+      if (urlParams.get('search')) filterText.push(`Search: ${urlParams.get('search')}`);
+      if (urlParams.get('sto_filter')) filterText.push(`STO: ${urlParams.get('sto_filter')}`);
+      if (urlParams.get('regional_filter')) filterText.push(`Regional: ${urlParams.get('regional_filter')}`);
+      if (urlParams.get('status_filter')) filterText.push(`Status: ${urlParams.get('status_filter')}`);
+      if (urlParams.get('date_from')) filterText.push(`Dari: ${urlParams.get('date_from')}`);
+      if (urlParams.get('date_to')) filterText.push(`Sampai: ${urlParams.get('date_to')}`);
+      
+      pdf.text(filterText.join(' | '), margin + 5, yPosition + 11);
+      yPosition += 20;
+    }
+
+    // KPI Cards
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFontSize(14);
+    pdf.setFont(undefined, 'bold');
+    pdf.text('KEY PERFORMANCE INDICATORS', margin, yPosition);
+    yPosition += 10;
+
+    // Get KPI values from page
+    const kpiCards = document.querySelectorAll('.kpi-card');
+    const kpiData = [];
+    kpiCards.forEach(card => {
+      const label = card.querySelector('.kpi-label')?.textContent.trim();
+      const value = card.querySelector('.kpi-value')?.textContent.trim();
+      const subtitle = card.querySelector('.kpi-subtitle')?.textContent.trim();
+      if (label && value) {
+        kpiData.push({ label, value, subtitle });
+      }
+    });
+
+    // Draw KPI boxes
+    const kpiBoxWidth = (pageWidth - 2 * margin - 10) / 3;
+    const kpiBoxHeight = 25;
+    
+    for (let i = 0; i < kpiData.length; i++) {
+      const row = Math.floor(i / 3);
+      const col = i % 3;
+      const x = margin + col * (kpiBoxWidth + 5);
+      const y = yPosition + row * (kpiBoxHeight + 5);
+
+      // Box background
+      pdf.setFillColor(248, 250, 252);
+      pdf.setDrawColor(226, 232, 240);
+      pdf.roundedRect(x, y, kpiBoxWidth, kpiBoxHeight, 2, 2, 'FD');
+
+      // Label
+      pdf.setFontSize(8);
+      pdf.setFont(undefined, 'bold');
+      pdf.setTextColor(100, 116, 139);
+      pdf.text(kpiData[i].label.toUpperCase(), x + 5, y + 6);
+
+      // Value
+      pdf.setFontSize(16);
+      pdf.setFont(undefined, 'bold');
+      pdf.setTextColor(30, 41, 59);
+      pdf.text(kpiData[i].value, x + 5, y + 15);
+
+      // Subtitle
+      pdf.setFontSize(7);
+      pdf.setFont(undefined, 'normal');
+      pdf.setTextColor(148, 163, 184);
+      pdf.text(kpiData[i].subtitle, x + 5, y + 21);
+    }
+
+    yPosition += Math.ceil(kpiData.length / 3) * (kpiBoxHeight + 5) + 15;
+
+    // ============ WORKFALL TABLE ============
+    pdf.setFontSize(12);
+    pdf.setFont(undefined, 'bold');
+    pdf.setTextColor(0, 0, 0);
+    pdf.text('WORK STATUS DISTRIBUTION BY STO', margin, yPosition);
+    yPosition += 8;
+
+    // Get workfall data from table
+    const workfallTable = document.querySelector('.table-work-full');
+    if (workfallTable) {
+      const headers = ['STO', 'Startwork', 'Complete', 'Workfail', 'Total', 'Completion %'];
+      const rows = [];
+      
+      const tbody = workfallTable.querySelector('tbody');
+      const trs = tbody.querySelectorAll('tr');
+      
+      trs.forEach((tr, idx) => {
+        if (idx < trs.length - 1) { // Skip total row for now
+          const tds = tr.querySelectorAll('td');
+          if (tds.length >= 5) {
+            const completionText = tds[5].querySelector('.progress-text')?.textContent.trim() || '0%';
+            rows.push([
+              tds[0].textContent.trim(),
+              tds[1].textContent.trim(),
+              tds[2].textContent.trim(),
+              tds[3].textContent.trim(),
+              tds[4].textContent.trim(),
+              completionText
+            ]);
+          }
+        }
+      });
+
+      // Draw full table (auto-paginates across pages)
+      pdf.autoTable({
+        startY: yPosition,
+        head: [headers],
+        body: rows,
+        theme: 'grid',
+        headStyles: {
+          fillColor: [220, 38, 38],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          fontSize: 9
+        },
+        bodyStyles: {
+          fontSize: 8,
+          cellPadding: 3
+        },
+        alternateRowStyles: {
+          fillColor: [248, 250, 252]
+        },
+        margin: { left: margin, right: margin },
+        showHead: 'everyPage'
+      });
+
+      // Add total row on last page
+      const lastTr = trs[trs.length - 1];
+      const lastTds = lastTr.querySelectorAll('td');
+      if (lastTds.length >= 5) {
+        const totalRow = [[
+          lastTds[0].textContent.trim(),
+          lastTds[1].textContent.trim(),
+          lastTds[2].textContent.trim(),
+          lastTds[3].textContent.trim(),
+          lastTds[4].textContent.trim(),
+          lastTds[5].textContent.trim()
+        ]];
+
+        pdf.autoTable({
+          startY: pdf.lastAutoTable.finalY + 5,
+          body: totalRow,
+          theme: 'grid',
+          bodyStyles: {
+            fillColor: [254, 243, 199],
+            textColor: [146, 64, 14],
+            fontStyle: 'bold',
+            fontSize: 9,
+            cellPadding: 3
+          },
+          margin: { left: margin, right: margin }
+        });
+
+        // After finishing all table content, add charts on a new page
+        pdf.addPage();
+        yPosition = margin;
+
+        // Charts Page Header
+        pdf.setFillColor(220, 38, 38);
+        pdf.rect(0, 0, pageWidth, 15, 'F');
+        pdf.setTextColor(255, 255, 255);
+        pdf.setFontSize(12);
+        pdf.setFont(undefined, 'bold');
+        pdf.text('VISUALISASI DATA & ANALISIS', pageWidth / 2, 10, { align: 'center' });
+
+        yPosition = 25;
+
+        // Capture charts as images (placed after tables)
+        const charts = [
+          { id: 'chartStatusDaily', title: 'Status Daily Distribution' },
+          { id: 'chartTopSTO', title: 'Top 10 STO by WO Count' },
+          { id: 'chartDailyTrend', title: 'WO Trend (30 Days)' },
+          { id: 'chartCompletionTrend', title: 'Completion Rate Trend' }
+        ];
+
+        for (let i = 0; i < charts.length; i++) {
+          const canvas = document.getElementById(charts[i].id);
+          if (canvas) {
+            const imgData = canvas.toDataURL('image/png');
+            const imgWidth = (pageWidth - 2 * margin - 10) / 2;
+            const imgHeight = 60;
+
+            const col = i % 2;
+            const row = Math.floor(i / 2);
+            const x = margin + col * (imgWidth + 10);
+            const y = yPosition + row * (imgHeight + 15);
+
+            // Title
+            pdf.setTextColor(0, 0, 0);
+            pdf.setFontSize(9);
+            pdf.setFont(undefined, 'bold');
+            pdf.text(charts[i].title, x, y - 2);
+
+            // Chart image
+            pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+          }
+        }
+      }
+    }
+
+    // Footer on all pages
+    const pageCount = pdf.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      pdf.setPage(i);
+      pdf.setFontSize(8);
+      pdf.setTextColor(148, 163, 184);
+      pdf.setFont(undefined, 'normal');
+      pdf.text(
+        `Halaman ${i} dari ${pageCount} | Generated on ${dateStr} at ${timeStr}`,
+        pageWidth / 2,
+        pageHeight - 10,
+        { align: 'center' }
+      );
+    }
+
+    // Save PDF
+    const filename = `RIDAR_Dashboard_${now.toISOString().split('T')[0]}.pdf`;
+    pdf.save(filename);
+
+    showToast('Laporan PDF berhasil di-generate!', 'success');
+
+  } catch (error) {
+    console.error('PDF Export Error:', error);
+    showToast('Error generating PDF: ' + error.message, 'error');
+  } finally {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }
+}
+
+// ============ EXPORT TO EXCEL - PROFESSIONAL VERSION ============
+async function exportToExcel() {
+  const btn = document.getElementById('btnExportExcel');
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '<span class="loading-spinner"></span> Generating Excel...';
+  btn.disabled = true;
+
+  try {
+    // Get current filter parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const response = await fetch('/dashboard/export/excel?' + urlParams.toString());
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const result = await response.json();
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Export failed');
+    }
+
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+    
+    // ============ SHEET 1: SUMMARY (KPI & WORKFALL) ============
+    const summaryData = [];
+    
+    // Header
+    summaryData.push(['LAPORAN DASHBOARD RIDAR']);
+    summaryData.push(['Real-time Work Order Monitoring & Analytics']);
+    summaryData.push([`Tanggal Laporan: ${new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`]);
+    summaryData.push([]);
+
+    // Active filters
+    if (urlParams.toString().length > 0) {
+      summaryData.push(['FILTER AKTIF:']);
+      if (urlParams.get('search')) summaryData.push(['Search', urlParams.get('search')]);
+      if (urlParams.get('sto_filter')) summaryData.push(['STO', urlParams.get('sto_filter')]);
+      if (urlParams.get('regional_filter')) summaryData.push(['Regional', urlParams.get('regional_filter')]);
+      if (urlParams.get('status_filter')) summaryData.push(['Status', urlParams.get('status_filter')]);
+      if (urlParams.get('date_from')) summaryData.push(['Dari Tanggal', urlParams.get('date_from')]);
+      if (urlParams.get('date_to')) summaryData.push(['Sampai Tanggal', urlParams.get('date_to')]);
+      summaryData.push([]);
+    }
+
+    // KPI
+    summaryData.push(['KEY PERFORMANCE INDICATORS']);
+    const kpiCards = document.querySelectorAll('.kpi-card');
+    kpiCards.forEach(card => {
+      const label = card.querySelector('.kpi-label')?.textContent.trim();
+      const value = card.querySelector('.kpi-value')?.textContent.trim();
+      if (label && value) {
+        summaryData.push([label, value]);
+      }
+    });
+    summaryData.push([]);
+
+    // Workfall Table
+    summaryData.push(['WORK STATUS DISTRIBUTION BY STO']);
+    summaryData.push(['STO', 'Startwork', 'Complete', 'Workfail', 'Total', 'Completion %']);
+    
+    const workfallTable = document.querySelector('.table-work-full tbody');
+    if (workfallTable) {
+      workfallTable.querySelectorAll('tr').forEach(tr => {
+        const tds = tr.querySelectorAll('td');
+        if (tds.length >= 5) {
+          const completionText = tds[5].querySelector('.progress-text')?.textContent.trim() || tds[5].textContent.trim();
+          summaryData.push([
+            tds[0].textContent.trim(),
+            tds[1].textContent.trim(),
+            tds[2].textContent.trim(),
+            tds[3].textContent.trim(),
+            tds[4].textContent.trim(),
+            completionText
+          ]);
+        }
+      });
+    }
+
+    const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+
+    // Style summary sheet
+    wsSummary['!cols'] = [
+      { wch: 25 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 15 }
+    ];
+
+    XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
+
+    // ============ SHEET 2: DETAILED DATA ============
+    const data = result.data;
+    
+    const detailedData = data.map(row => ({
+      'WO Number': row.wonum,
+      'Nama Pelanggan': row.nama,
+      'STO': row.sto,
+      'Regional': row.regional,
+      'Status Daily': row.status_daily,
+      'Package': row.package_name,
+      'ODP Todolist': row.odp_todolist,
+      'Created At': row.created_at ? new Date(row.created_at).toLocaleString('id-ID') : '',
+      'Status HI': row.status_hi,
+      'TTIC': row.ttic,
+      'TTD KB': row.ttd_kb,
+      'Status Todolist': row.status_todolist,
+      'Activity Teknisi': row.activity_teknisi,
+      'Segment': row.segment_alpro
+    }));
+
+    const wsDetailed = XLSX.utils.json_to_sheet(detailedData);
+
+    // Auto-size columns for detailed sheet
+    const detailedCols = [
+      { wch: 15 },  // WO Number
+      { wch: 25 },  // Nama
+      { wch: 10 },  // STO
+      { wch: 15 },  // Regional
+      { wch: 15 },  // Status Daily
+      { wch: 15 },  // Package
+      { wch: 20 },  // ODP
+      { wch: 20 },  // Created
+      { wch: 12 },  // Status HI
+      { wch: 12 },  // TTIC
+      { wch: 12 },  // TTD KB
+      { wch: 15 },  // Status Todolist
+      { wch: 25 },  // Activity
+      { wch: 15 }   // Segment
+    ];
+    wsDetailed['!cols'] = detailedCols;
+
+    XLSX.utils.book_append_sheet(wb, wsDetailed, 'Detailed Data');
+
+    // Generate filename
+    const filename = `RIDAR_Data_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+    // Write and download
+    XLSX.writeFile(wb, filename);
+    
+    showToast('Data berhasil di-export ke Excel!', 'success');
+
+  } catch (error) {
+    console.error('Excel Export Error:', error);
+    showToast('Error export Excel: ' + error.message, 'error');
+  } finally {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }
 }
 
 // Refresh Dashboard
@@ -560,7 +1043,7 @@ function initTablePagination() {
     
     let totalPages = Math.ceil(rows.length / perPage);
     
-    // Create pagination controls (numbered pages with ellipsis)
+    // Create pagination controls
     const pager = document.createElement('div');
     pager.className = 'table-pager';
     const btnPrev = document.createElement('button');
@@ -643,13 +1126,12 @@ function initTableScrollButtons() {
   });
 }
 
-// Apply widths to progress bars from data-width attribute to avoid inline EJS CSS issues
+// Apply widths to progress bars
 function initProgressFillWidths() {
   const fills = document.querySelectorAll('.progress-fill[data-width]');
   fills.forEach(el => {
     const val = parseFloat(el.getAttribute('data-width'));
     if (!isNaN(val)) {
-      // Clamp between 0 and 100
       const pct = Math.max(0, Math.min(100, val));
       el.style.width = pct + '%';
     }

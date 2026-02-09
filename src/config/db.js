@@ -4,7 +4,7 @@ const db = mysql.createPool({
     host: 'localhost',
     user: 'root',
     password: '',
-    database: 'ridar_db',
+    database: 'ridar_dummydiva',
     port: 3306,
     waitForConnections: true,
     connectionLimit: 10,
