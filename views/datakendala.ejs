@@ -1,0 +1,244 @@
+<%- include('layout/header', { title: title || 'Data Kendala - Import File' }) %>
+<%- include('layout/sidebar', { brandText: typeof brandText !== 'undefined' ? brandText : 'RIDAR Monitor', brandIcon: typeof brandIcon !== 'undefined' ? brandIcon : 'fa-layer-group' }) %>
+<link rel="stylesheet" href="/css/daily.css">
+<link rel="stylesheet" href="/css/datakendala.css">
+
+<div class="main">
+  <input type="file" id="uploadFileTeknik" accept=".csv,.xlsx,.xls" style="display:none" />
+  <input type="file" id="uploadFileSistem" accept=".csv,.xlsx,.xls" style="display:none" />
+
+  <!-- TOPBAR - Red theme seperti daily -->
+  <div class="header">
+    <h2>DATA KENDALA - IMPORT FILE</h2>
+    <div class="topbar-right">
+      <span class="admin-label">Nama Admin</span>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="datakendala-tabs">
+    <button type="button" class="tab-btn <%= typeof activeTab !== 'undefined' && activeTab === 'teknik' ? 'active' : '' %>" data-tab="teknik">Kendala Teknik</button>
+    <button type="button" class="tab-btn <%= typeof activeTab !== 'undefined' && activeTab === 'sistem' ? 'active' : '' %>" data-tab="sistem">Kendala Sistem</button>
+  </div>
+
+  <!-- ========== TAB: KENDALA TEKNIK ========== -->
+  <div id="tab-teknik" class="tab-panel <%= typeof activeTab !== 'undefined' && activeTab === 'teknik' ? 'active' : (typeof activeTab === 'undefined' ? 'active' : '') %>">
+    <div class="sub-header">
+      <h3 class="sub-title">Data Kendala Teknik</h3>
+    </div>
+    <div class="action-bar">
+      <div class="action-left">
+        <button class="btn-upload" id="btnUploadTeknik">
+          <i class="fa-solid fa-upload"></i> Upload/Import
+        </button>
+        <button class="btn-export" id="btnExportTeknik">
+          <i class="fa-solid fa-file-export"></i> Export File
+        </button>
+      </div>
+      <div class="action-right">
+        <form method="GET" action="/datakendala" class="search-form-inline" id="formSearchTeknik">
+          <input type="hidden" name="tab" value="teknik">
+          <input type="hidden" name="limit" value="<%= typeof limit !== 'undefined' ? limit : 25 %>">
+          <div class="search-container">
+            <input type="text" class="search-input" name="q" id="searchTeknik" placeholder="Cari Wonum..." value="<%= typeof q !== 'undefined' ? (q || '') : '' %>">
+            <button type="button" class="btn-clear-search" id="btnClearTeknik">✕</button>
+          </div>
+          <button type="submit" class="btn btn-small">Cari</button>
+        </form>
+        <label class="filter-label">Tampilkan:</label>
+        <select id="limitSelectTeknik" class="filter-select">
+          <option value="5" <%= typeof limit !== 'undefined' && limit === 5 ? 'selected' : '' %>>5</option>
+          <option value="25" <%= typeof limit !== 'undefined' && limit === 25 ? 'selected' : '' %>>25</option>
+          <option value="50" <%= typeof limit !== 'undefined' && limit === 50 ? 'selected' : '' %>>50</option>
+          <option value="100" <%= typeof limit !== 'undefined' && limit === 100 ? 'selected' : '' %>>100</option>
+        </select>
+      </div>
+    </div>
+    <div class="card">
+      <div style="overflow-x:auto">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="col-no">No</th>
+              <th class="col-wonum">Wonum</th>
+              <th class="col-ticket">Track ID</th>
+              <th class="col-sto">STO</th>
+              <th class="col-bulan">Bulan</th>
+              <th class="col-created">Date Created</th>
+              <th class="col-manja">Tgl Manja</th>
+              <th class="col-status">Status Kpro</th>
+              <th class="col-kendala">Errorcode</th>
+              <th class="col-kategori">Kategori</th>
+              <th class="col-catatan">Catatan Teknisi</th>
+              <th class="col-progress">Progress Akhir</th>
+            </tr>
+          </thead>
+          <tbody id="tableTeknikBody">
+            <% if (!dataTeknik || dataTeknik.length === 0) { %>
+              <tr><td colspan="12" class="loading-cell">Tidak ada data</td></tr>
+            <% } else { %>
+              <% dataTeknik.forEach((d, i) => { %>
+                <tr>
+                  <td><%= (typeof pagination !== 'undefined' ? (pagination.page - 1) * pagination.limit : 0) + i + 1 %></td>
+                  <td><%= d.wonum || '-' %></td>
+                  <td><%= d.ticket_id || '-' %></td>
+                  <td><%= d.sto || '-' %></td>
+                  <td><%= d.bulan || '-' %></td>
+                  <td><%= d.created_at ? new Date(d.created_at).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }) : '-' %></td>
+                  <td><%= d.tgl_manja || '-' %></td>
+                  <td><%= d.status_kpro || '-' %></td>
+                  <td><%= (d.kendala || '-').toString().slice(0, 30) %><%= (d.kendala && d.kendala.length > 30) ? '...' : '' %></td>
+                  <td>
+                    <% if (typeof d.kategori !== 'undefined') { %>
+                    <select class="kategori-select" data-wonum="<%= d.wonum %>" data-tab="teknik">
+                      <option value="">-- Pilih --</option>
+                      <option value="cancel" <%= d.kategori === 'cancel' ? 'selected' : '' %>>cancel</option>
+                      <option value="unsc" <%= d.kategori === 'unsc' ? 'selected' : '' %>>unsc</option>
+                    </select>
+                    <% } else { %><%= d.kategori || '-' %><% } %>
+                  </td>
+                  <td><%= (d.catatan_teknisi || '-').toString().slice(0, 40) %><%= (d.catatan_teknisi && d.catatan_teknisi.length > 40) ? '...' : '' %></td>
+                  <td><%= (d.status_akhir || '-').toString().slice(0, 30) %><%= (d.status_akhir && d.status_akhir.length > 30) ? '...' : '' %></td>
+                </tr>
+              <% }) %>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <% if (typeof pagination !== 'undefined' && pagination.totalPages >= 1) { %>
+    <div class="pagination-wrap">
+      <span class="pagination-info">Halaman <%= pagination.page %> dari <%= pagination.totalPages %> (Total: <%= pagination.total %> data)</span>
+      <div class="pagination-buttons">
+        <% if (pagination.page > 1) { %>
+          <a href="?tab=teknik&page=1&limit=<%= limit %>&q=<%= typeof q !== 'undefined' ? encodeURIComponent(q || '') : '' %>" class="btn btn-small">« Awal</a>
+          <a href="?tab=teknik&page=<%= pagination.page - 1 %>&limit=<%= limit %>&q=<%= typeof q !== 'undefined' ? encodeURIComponent(q) : '' %>" class="btn btn-small">‹ Sebelumnya</a>
+        <% } %>
+        <% const startPage = Math.max(1, pagination.page - 2); const endPage = Math.min(pagination.totalPages, pagination.page + 2); for (let p = startPage; p <= endPage; p++) { %>
+          <% if (p === pagination.page) { %>
+            <span class="btn btn-small btn-active"><%= p %></span>
+          <% } else { %>
+            <a href="?tab=teknik&page=<%= p %>&limit=<%= limit %>&q=<%= typeof q !== 'undefined' ? encodeURIComponent(q) : '' %>" class="btn btn-small"><%= p %></a>
+          <% } %>
+        <% } %>
+        <% if (pagination.page < pagination.totalPages) { %>
+          <a href="?tab=teknik&page=<%= pagination.page + 1 %>&limit=<%= limit %>&q=<%= typeof q !== 'undefined' ? encodeURIComponent(q) : '' %>" class="btn btn-small">Selanjutnya ›</a>
+          <a href="?tab=teknik&page=<%= pagination.totalPages %>&limit=<%= limit %>&q=<%= typeof q !== 'undefined' ? encodeURIComponent(q) : '' %>" class="btn btn-small">Akhir »</a>
+        <% } %>
+      </div>
+    </div>
+    <% } %>
+  </div>
+
+  <!-- ========== TAB: KENDALA SISTEM ========== -->
+  <div id="tab-sistem" class="tab-panel <%= typeof activeTab !== 'undefined' && activeTab === 'sistem' ? 'active' : '' %>">
+    <div class="sub-header">
+      <h3 class="sub-title">Data Kendala Sistem</h3>
+    </div>
+    <div class="action-bar">
+      <div class="action-left">
+        <button class="btn-upload" id="btnUploadSistem">
+          <i class="fa-solid fa-upload"></i> Upload/Import
+        </button>
+        <button class="btn-export" id="btnExportSistem">
+          <i class="fa-solid fa-file-export"></i> Export File
+        </button>
+      </div>
+      <div class="action-right">
+        <form method="GET" action="/datakendala" class="search-form-inline" id="formSearchSistem">
+          <input type="hidden" name="tab" value="sistem">
+          <input type="hidden" name="limit" value="<%= typeof limit !== 'undefined' ? limit : 25 %>">
+          <div class="search-container">
+            <input type="text" class="search-input" name="q" id="searchSistem" placeholder="Cari Wonum..." value="<%= typeof q !== 'undefined' ? (q || '') : '' %>">
+            <button type="button" class="btn-clear-search" id="btnClearSistem">✕</button>
+          </div>
+          <button type="submit" class="btn btn-small">Cari</button>
+        </form>
+        <label class="filter-label">Tampilkan:</label>
+        <select id="limitSelectSistem" class="filter-select">
+          <option value="5" <%= typeof limit !== 'undefined' && limit === 5 ? 'selected' : '' %>>5</option>
+          <option value="25" <%= typeof limit !== 'undefined' && limit === 25 ? 'selected' : '' %>>25</option>
+          <option value="50" <%= typeof limit !== 'undefined' && limit === 50 ? 'selected' : '' %>>50</option>
+          <option value="100" <%= typeof limit !== 'undefined' && limit === 100 ? 'selected' : '' %>>100</option>
+        </select>
+      </div>
+    </div>
+    <div class="card">
+      <div style="overflow-x:auto">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="col-no">No</th>
+              <th class="col-wonum">Wonum</th>
+              <th class="col-ticket">Track ID</th>
+              <th class="col-sto">STO</th>
+              <th class="col-bulan">Bulan</th>
+              <th class="col-created">Date Created</th>
+              <th class="col-manja">Tgl Manja</th>
+              <th class="col-status">Status Kpro</th>
+              <th class="col-kendala">Errorcode</th>
+              <th class="col-kategori">Kategori</th>
+              <th class="col-catatan">Catatan Teknisi</th>
+              <th class="col-progress">Progress Akhir</th>
+            </tr>
+          </thead>
+          <tbody id="tableSistemBody">
+            <% if (!dataSistem || dataSistem.length === 0) { %>
+              <tr><td colspan="12" class="loading-cell">Tidak ada data</td></tr>
+            <% } else { %>
+              <% dataSistem.forEach((d, i) => { %>
+                <tr>
+                  <td><%= (typeof pagination !== 'undefined' ? (pagination.page - 1) * pagination.limit : 0) + i + 1 %></td>
+                  <td><%= d.wonum || '-' %></td>
+                  <td><%= d.ticket_id || '-' %></td>
+                  <td><%= d.sto || '-' %></td>
+                  <td><%= d.bulan || '-' %></td>
+                  <td><%= d.created_at ? new Date(d.created_at).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }) : '-' %></td>
+                  <td><%= d.tgl_manja || '-' %></td>
+                  <td><%= d.status_kpro || '-' %></td>
+                  <td><%= (d.kendala || '-').toString().slice(0, 30) %><%= (d.kendala && d.kendala.length > 30) ? '...' : '' %></td>
+                  <td>
+                    <% if (typeof d.kategori !== 'undefined') { %>
+                    <select class="kategori-select" data-wonum="<%= d.wonum %>" data-tab="sistem">
+                      <option value="">-- Pilih --</option>
+                      <option value="cancel" <%= d.kategori === 'cancel' ? 'selected' : '' %>>cancel</option>
+                      <option value="unsc" <%= d.kategori === 'unsc' ? 'selected' : '' %>>unsc</option>
+                    </select>
+                    <% } else { %><%= d.kategori || '-' %><% } %>
+                  </td>
+                  <td><%= (d.catatan_teknisi || '-').toString().slice(0, 40) %><%= (d.catatan_teknisi && d.catatan_teknisi.length > 40) ? '...' : '' %></td>
+                  <td><%= (d.status_akhir || '-').toString().slice(0, 30) %><%= (d.status_akhir && d.status_akhir.length > 30) ? '...' : '' %></td>
+                </tr>
+              <% }) %>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <% if (typeof pagination !== 'undefined' && pagination.totalPages >= 1) { %>
+    <div class="pagination-wrap">
+      <span class="pagination-info">Halaman <%= pagination.page %> dari <%= pagination.totalPages %> (Total: <%= pagination.total %> data)</span>
+      <div class="pagination-buttons">
+        <% if (pagination.page > 1) { %>
+          <a href="?tab=sistem&page=1&limit=<%= limit %>&q=<%= typeof q !== 'undefined' ? encodeURIComponent(q || '') : '' %>" class="btn btn-small">« Awal</a>
+          <a href="?tab=sistem&page=<%= pagination.page - 1 %>&limit=<%= limit %>&q=<%= typeof q !== 'undefined' ? encodeURIComponent(q) : '' %>" class="btn btn-small">‹ Sebelumnya</a>
+        <% } %>
+        <% const startPage = Math.max(1, pagination.page - 2); const endPage = Math.min(pagination.totalPages, pagination.page + 2); for (let p = startPage; p <= endPage; p++) { %>
+          <% if (p === pagination.page) { %>
+            <span class="btn btn-small btn-active"><%= p %></span>
+          <% } else { %>
+            <a href="?tab=sistem&page=<%= p %>&limit=<%= limit %>&q=<%= typeof q !== 'undefined' ? encodeURIComponent(q) : '' %>" class="btn btn-small"><%= p %></a>
+          <% } %>
+        <% } %>
+        <% if (pagination.page < pagination.totalPages) { %>
+          <a href="?tab=sistem&page=<%= pagination.page + 1 %>&limit=<%= limit %>&q=<%= typeof q !== 'undefined' ? encodeURIComponent(q) : '' %>" class="btn btn-small">Selanjutnya ›</a>
+          <a href="?tab=sistem&page=<%= pagination.totalPages %>&limit=<%= limit %>&q=<%= typeof q !== 'undefined' ? encodeURIComponent(q) : '' %>" class="btn btn-small">Akhir »</a>
+        <% } %>
+      </div>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<script src="/js/datakendala.js"></script>
+<%- include('layout/footer') %>

@@ -1,14 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // Set active menu item for Daily Housekeeping
-  const sidebarLinks = document.querySelectorAll('.sidebar .menu a');
-  sidebarLinks.forEach(link => {
-    if (link.getAttribute('href') === '/daily') {
-      link.classList.add('active');
-    } else {
-      link.classList.remove('active');
-    }
-  });
-
+  // Sidebar active state is set by sidebar.js based on pathname (/dailyhouse and /dailyhouse/:wonum)
   const tableBody = document.getElementById('dailyTableBody');
   const searchInput = document.getElementById('searchInput');
   const btnUpload = document.getElementById('btnUpload');

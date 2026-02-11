@@ -9,13 +9,156 @@
         <h1>📊 RIDAR Dashboard</h1>
         <p>Real-time Work Order Monitoring & Analytics</p>
       </div>
-      <button class="btn-refresh" id="btnRefresh">
-        <span class="icon">🔄</span>
-        Refresh Data
-      </button>
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <button class="btn-refresh" id="btnRefresh">
+          <span class="icon">🔄</span>
+          Refresh Data
+        </button>
+      </div>
     </div>
 
-    <!-- KPI SECTION (dipulihkan) -->
+    <!-- FILTER & EXPORT PANEL -->
+    <div class="filter-panel">
+      <div class="filter-header">
+        <div class="filter-title">
+          <span>🔍</span>
+          Filter & Export Data
+        </div>
+        <button class="btn-toggle-filter" id="btnToggleFilter">
+          <span id="filterToggleIcon">▼</span>
+        </button>
+      </div>
+      
+      <div class="filter-content" id="filterContent">
+        <form id="filterForm" class="filter-form">
+          <div class="filter-row">
+            <!-- Search -->
+            <div class="filter-group">
+              <label>🔎 Search WO/Nama</label>
+              <input type="text" name="search" class="filter-input" 
+                     placeholder="WO Number atau Nama Pelanggan" 
+                     value="<%= filters.search %>">
+            </div>
+
+            <!-- STO Filter -->
+            <div class="filter-group">
+              <label>📍 STO</label>
+              <select name="sto_filter" class="filter-select">
+                <option value="">-- Semua STO --</option>
+                <% stoList.forEach(item => { %>
+                  <option value="<%= item.sto %>" <%= filters.sto_filter === item.sto ? 'selected' : '' %>>
+                    <%= item.sto %>
+                  </option>
+                <% }) %>
+              </select>
+            </div>
+
+            <!-- Regional Filter -->
+            <div class="filter-group">
+              <label>🌏 Regional</label>
+              <select name="regional_filter" class="filter-select">
+                <option value="">-- Semua Regional --</option>
+                <% regionalList.forEach(item => { %>
+                  <option value="<%= item.regional %>" <%= filters.regional_filter === item.regional ? 'selected' : '' %>>
+                    <%= item.regional %>
+                  </option>
+                <% }) %>
+              </select>
+            </div>
+
+            <!-- Status Filter -->
+            <div class="filter-group">
+              <label>📊 Status Daily</label>
+              <select name="status_filter" class="filter-select">
+                <option value="">-- Semua Status --</option>
+                <% statusList.forEach(item => { %>
+                  <option value="<%= item.status_daily %>" <%= filters.status_filter === item.status_daily ? 'selected' : '' %>>
+                    <%= item.status_daily %>
+                  </option>
+                <% }) %>
+              </select>
+            </div>
+          </div>
+
+          <div class="filter-row">
+            <!-- Date From -->
+            <div class="filter-group">
+              <label>📅 Tanggal Dari</label>
+              <input type="date" name="date_from" class="filter-input" 
+                     value="<%= filters.date_from %>">
+            </div>
+
+            <!-- Date To -->
+            <div class="filter-group">
+              <label>📅 Tanggal Sampai</label>
+              <input type="date" name="date_to" class="filter-input" 
+                     value="<%= filters.date_to %>">
+            </div>
+
+            <!-- Filter Buttons -->
+            <div class="filter-group" style="flex: 2;">
+              <label>&nbsp;</label>
+              <div class="filter-buttons">
+                <button type="submit" class="btn-apply-filter">
+                  <span>✓</span> Terapkan Filter
+                </button>
+                <button type="button" class="btn-clear-filter" id="btnClearFilters">
+                  <span>✕</span> Reset
+                </button>
+              </div>
+            </div>
+          </div>
+        </form>
+
+        <!-- Export Buttons -->
+        <div class="export-section">
+          <div class="export-label">
+            <span>📥</span> Ekspor Laporan:
+          </div>
+          <div class="export-buttons">
+            <button class="btn-export btn-export-pdf" id="btnExportPDF">
+              <span>📄</span> Export PDF
+            </button>
+            <button class="btn-export btn-export-excel" id="btnExportExcel">
+              <span>📊</span> Export Excel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVE FILTERS DISPLAY -->
+    <% 
+      const hasActiveFilters = filters.search || filters.sto_filter || filters.regional_filter || 
+                               filters.status_filter || filters.date_from || filters.date_to;
+    %>
+    <% if (hasActiveFilters) { %>
+    <div class="active-filters">
+      <div class="active-filters-title">🏷️ Filter Aktif:</div>
+      <div class="active-filters-tags">
+        <% if (filters.search) { %>
+          <span class="filter-tag">Search: <%= filters.search %></span>
+        <% } %>
+        <% if (filters.sto_filter) { %>
+          <span class="filter-tag">STO: <%= filters.sto_filter %></span>
+        <% } %>
+        <% if (filters.regional_filter) { %>
+          <span class="filter-tag">Regional: <%= filters.regional_filter %></span>
+        <% } %>
+        <% if (filters.status_filter) { %>
+          <span class="filter-tag">Status: <%= filters.status_filter %></span>
+        <% } %>
+        <% if (filters.date_from) { %>
+          <span class="filter-tag">Dari: <%= filters.date_from %></span>
+        <% } %>
+        <% if (filters.date_to) { %>
+          <span class="filter-tag">Sampai: <%= filters.date_to %></span>
+        <% } %>
+      </div>
+    </div>
+    <% } %>
+
+    <!-- KPI SECTION -->
     <div class="kpi-section">
       <div class="section-title">🎯 Key Performance Indicators</div>
       <div class="kpi-grid">
@@ -48,13 +191,25 @@
           </div>
           <div class="kpi-subtitle">WO yang gagal</div>
         </div>
+
+        <div class="kpi-card info">
+          <div class="kpi-label">Completion Rate</div>
+          <div class="kpi-value">
+            <% 
+              const totalComplete = statusDaily.find(s => s.status_daily === 'Complete')?.count || 0;
+              const completionRate = totalWO > 0 ? ((totalComplete / totalWO) * 100).toFixed(1) : 0;
+            %>
+            <%= completionRate %>%
+          </div>
+          <div class="kpi-subtitle">Persentase penyelesaian</div>
+        </div>
       </div>
     </div>
 
-    <!-- WORKFALL TABLE (posisi kedua setelah KPI) -->
+    <!-- WORKFALL TABLE -->
     <div class="kpi-section">
       <div class="section-title">📑 Work Status Distribution by STO</div>
-  <div class="table-container compact">
+      <div class="table-container compact">
         <div class="table-header">
           <div class="table-title">
             <span>📊</span>
@@ -156,8 +311,6 @@
           </div>
         </div>
 
-  
-
       </div>
     </div>
 
@@ -190,6 +343,18 @@
           </div>
         </div>
 
+        <!-- NEW: Completion Rate Trend -->
+        <div class="chart-card">
+          <div class="chart-title">
+            <span class="chart-icon">✅</span>
+            Completion Rate Trend (30 Days)
+          </div>
+          <div class="chart-wrapper tall">
+            <canvas id="chartCompletionTrend" 
+                    data-values='<%= JSON.stringify(completionTrend) %>'></canvas>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -210,21 +375,7 @@
           </div>
         </div>
 
-        
-
-        <!-- Segment Distribution -->
-        <div class="chart-card">
-          <div class="chart-title">
-            <span class="chart-icon">🎯</span>
-            Segment Distribution
-          </div>
-          <div class="chart-wrapper">
-            <canvas id="chartSegment" 
-                    data-values='<%= JSON.stringify(segmentDist) %>'></canvas>
-          </div>
-        </div>
-
-                <!-- Package Distribution -->
+        <!-- Package Distribution -->
         <div class="chart-card">
           <div class="chart-title">
             <span class="chart-icon">📦</span>
@@ -236,9 +387,22 @@
           </div>
         </div>
 
+        <!-- Segment Distribution removed -->
+
+        <!-- NEW: TTD KB Distribution -->
+        <div class="chart-card">
+          <div class="chart-title">
+            <span class="chart-icon">⏱️</span>
+            Trouble Ticket Duration (TTD KB)
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="chartTTD" 
+                    data-values='<%= JSON.stringify(ttdDistribution) %>'></canvas>
+          </div>
+        </div>
+
       </div>
     </div>
-
 
     <!-- STO INFORMATION TABLE -->
     <div class="kpi-section">
@@ -248,6 +412,10 @@
           <div class="table-title">
             <span>👥</span>
             STO Details with Team Information
+          </div>
+          <div class="table-scroll-btn">
+            <button class="btn-scroll-left">←</button>
+            <button class="btn-scroll-right">→</button>
           </div>
         </div>
         
@@ -261,26 +429,30 @@
                 <th>Leader</th>
                 <th>Total WO</th>
                 <th>Completed</th>
-                <th>Performance</th>
+                <th>Completion %</th>
               </tr>
             </thead>
             <tbody>
-              <% stoInfo.forEach(sto => { %>
-                <% const perfRate = sto.total_wo > 0 ? ((Number(sto.completed_wo || 0) / Number(sto.total_wo || 0)) * 100).toFixed(1) : 0 %>
-                <tr data-perf="<%= perfRate %>">
-                  <td><strong><%= sto.sto %></strong></td>
-                  <td><%= sto.uic %></td>
-                  <td><%= sto.pic %></td>
-                  <td><%= sto.leader %></td>
-                  <td><%= sto.total_wo %></td>
-                  <td><%= sto.completed_wo %></td>
+              <% stoInfo.forEach(row => { %>
+                <% 
+                  const stoCompletionRate = Number(row.total_wo || 0) > 0 
+                    ? ((Number(row.completed_wo || 0) / Number(row.total_wo || 0)) * 100).toFixed(1) 
+                    : 0;
+                %>
+                <tr>
+                  <td><strong><%= row.sto %></strong></td>
+                  <td><%= row.uic %></td>
+                  <td><%= row.pic %></td>
+                  <td><%= row.leader %></td>
+                  <td><%= row.total_wo %></td>
+                  <td><%= row.completed_wo %></td>
                   <td>
                     <div class="progress-container">
                       <div class="progress-bar">
-                        <div class="progress-fill <%= perfRate >= 75 ? 'complete' : perfRate >= 50 ? 'high' : perfRate >= 25 ? 'medium' : 'low' %>" 
-                             data-width="<%= perfRate %>"></div>
+                        <div class="progress-fill <%= stoCompletionRate >= 75 ? 'complete' : stoCompletionRate >= 50 ? 'high' : stoCompletionRate >= 25 ? 'medium' : 'low' %>" 
+                             data-width="<%= stoCompletionRate %>"></div>
                       </div>
-                      <span class="progress-text"><%= perfRate %>%</span>
+                      <span class="progress-text"><%= stoCompletionRate %>%</span>
                     </div>
                   </td>
                 </tr>
@@ -291,14 +463,14 @@
       </div>
     </div>
 
-    <!-- RECENT ACTIVITIES TABLE -->
+    <!-- RECENT WO ACTIVITIES -->
     <div class="kpi-section">
-      <div class="section-title">🕐 Recent Work Orders</div>
+      <div class="section-title">🕒 Recent Work Order Activities</div>
       <div class="table-container">
         <div class="table-header">
           <div class="table-title">
-            <span>⚡</span>
-            Latest 20 WO Activities
+            <span>📝</span>
+            Latest Work Orders
           </div>
         </div>
         
@@ -307,10 +479,10 @@
             <thead>
               <tr>
                 <th>WO Number</th>
-                <th>Customer Name</th>
+                <th>Nama Pelanggan</th>
                 <th>STO</th>
-                <th>Status</th>
-                <th>Activity</th>
+                <th>Status Daily</th>
+                <th>ODP Todolist</th>
                 <th>Created At</th>
               </tr>
             </thead>
@@ -321,20 +493,12 @@
                   <td><%= wo.nama %></td>
                   <td><%= wo.sto %></td>
                   <td>
-                    <span class="status-badge status-<%= wo.status_daily ? wo.status_daily.toLowerCase().replace(' ', '_') : 'default' %>">
+                    <span class="status-badge status-<%= (wo.status_daily || '').toLowerCase().replace(/\s+/g, '') %>">
                       <%= wo.status_daily || 'N/A' %>
                     </span>
                   </td>
-                  <td style="font-size: 11px;"><%= wo.odp_todolist || '-' %></td>
-                  <td>
-                    <%= new Date(wo.created_at).toLocaleDateString('id-ID', { 
-                      year: 'numeric', 
-                      month: 'short', 
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    }) %>
-                  </td>
+                  <td><%= wo.odp_todolist || '-' %></td>
+                  <td><%= new Date(wo.created_at).toLocaleString('id-ID') %></td>
                 </tr>
               <% }) %>
             </tbody>
@@ -345,5 +509,33 @@
 
   </div>
 
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<!-- jsPDF for PDF export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+<!-- SheetJS for Excel export -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+
+<!-- Custom Dashboard Script -->
+<script src="/js/dashboard.js"></script>
+
+<!-- Filter Toggle Script -->
+<script>
+document.getElementById('btnToggleFilter')?.addEventListener('click', function() {
+  const content = document.getElementById('filterContent');
+  const icon = document.getElementById('filterToggleIcon');
   
+  if (content.style.display === 'none' || content.style.display === '') {
+    content.style.display = 'block';
+    icon.textContent = '▲';
+  } else {
+    content.style.display = 'none';
+    icon.textContent = '▼';
+  }
+});
+</script>
+
 <%- include('layout/footer') %>

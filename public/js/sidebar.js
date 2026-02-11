@@ -155,20 +155,20 @@ document.addEventListener('DOMContentLoaded', function() {
       link.classList.remove('active');
     });
     
-    // Find and set active link
+    // Find and set active link (exact match or current path starts with href for subpages e.g. /dailyhouse/123)
     menuLinks.forEach(link => {
       const href = link.getAttribute('href');
-      
-      if (href === currentPath || (currentPath === '/' && href === '/dashboard')) {
+      if (!href || href === '#') return;
+      // Handle query parameters - compare pathname only
+      const hrefPath = href.split('?')[0];
+      const exactMatch = hrefPath === currentPath || (currentPath === '/' && hrefPath === '/dashboard');
+      const subpageMatch = hrefPath !== '/' && currentPath.startsWith(hrefPath + '/');
+      if (exactMatch || subpageMatch) {
         link.classList.add('active');
-        
-        // If it's a submenu item, open the parent
         const parentSubmenu = link.closest('.submenu');
         if (parentSubmenu) {
           const parentMenuItem = parentSubmenu.closest('li.has-submenu');
-          if (parentMenuItem) {
-            parentMenuItem.classList.add('active');
-          }
+          if (parentMenuItem) parentMenuItem.classList.add('active');
         }
       }
     });

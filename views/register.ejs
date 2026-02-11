@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/auth.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="auth-page">
+    <!-- Background Image -->
+    <div class="auth-bg-image"></div>
+    <div class="auth-overlay"></div>
+
+    <!-- Hero Section -->
+    <div class="hero-section">
+      <div class="hero-content">
+        <div class="brand-logo">
+          <div class="logo-icon">
+            <i class="fas fa-clipboard-check"></i>
+          </div>
+          <h1 class="brand-name">TRID</h1>
+          <p class="brand-tagline">Aplikasi Pelaporan & Tugas RIDAR</p>
+        </div>
+        <h2 class="hero-title">Kelola Laporan dan Tugas Harian</h2>
+        <p class="hero-description">Catat aktivitas, kelola to‑do, dan pantau kendala operasional dalam satu aplikasi.</p>
+      </div>
+    </div>
+
+    <!-- Auth Form -->
+    <div class="auth-container">
+      <div class="auth-card">
+        <div class="card-header">
+          <h2 class="card-title">Buat Akun TRID</h2>
+          <p class="card-subtitle">Isi data dasar untuk mulai menggunakan aplikasi</p>
+        </div>
+
+        <div class="card-body">
+          <form id="registerForm" class="auth-form">
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fas fa-user"></i>
+                Username
+              </label>
+              <input 
+                type="text" 
+                id="username" 
+                class="form-input" 
+                placeholder="Pilih Username"
+                autocomplete="username"
+                required
+              >
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fas fa-lock"></i>
+                Password
+              </label>
+              <input 
+                type="password" 
+                id="password" 
+                class="form-input" 
+                placeholder="Minimal 6 karakter"
+                autocomplete="new-password"
+                required
+              >
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fas fa-lock"></i>
+                Konfirmasi Password
+              </label>
+              <input 
+                type="password" 
+                id="confirmPassword" 
+                class="form-input" 
+                placeholder="Ulangi Password"
+                autocomplete="new-password"
+                required
+              >
+            </div>
+
+            <div id="errorMessage" class="message error-message"></div>
+            <div id="successMessage" class="message success-message"></div>
+
+            <button type="submit" id="btnRegister" class="btn-submit">
+              <span class="btn-text">Daftar</span>
+              <span class="btn-loader">
+                <i class="fas fa-spinner fa-spin"></i>
+              </span>
+            </button>
+          </form>
+        </div>
+
+        <div class="card-footer">
+          <p>Sudah punya akun? <a href="/login" class="link-switch">Masuk di sini</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initRegisterPage();
+    });
+  </script>
+</body>
+</html>

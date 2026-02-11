@@ -233,6 +233,33 @@
   border-radius: 8px;
   margin-bottom: 1rem;
   font-size: 0.95rem;
+  animation: slideInDown 0.3s ease-out;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideOutUp {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+.alert.hide-alert {
+  animation: slideOutUp 0.3s ease-out forwards;
 }
 
 .alert-success {
@@ -369,13 +396,33 @@
 .table-wrapper {
   background: #fff;
   border-radius: 12px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   box-shadow: 0 2px 12px rgba(0,0,0,.06);
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-wrapper::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-wrapper::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
 }
 
 .kendala-table.rekap-table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 1000px;
 }
 
 .kendala-table.rekap-table thead tr {
@@ -396,9 +443,19 @@
 
 .kendala-table.rekap-table thead th:last-child {
   border-radius: 0 12px 0 0;
-  width: 48px;
+  width: 100px;
   text-align: center;
+  position: sticky;
+  right: 0;
+  z-index: 10;
 }
+
+/* Header text color for kendala page: only page title and admin label */
+.kendala-container .header h2,
+.kendala-container .header .admin-label {
+  color: #ffffff !important;
+}
+
 
 .kendala-table.rekap-table tbody tr {
   border-bottom: 1px solid #eee;
@@ -416,6 +473,20 @@
 
 .kendala-table.rekap-table tbody td:last-child {
   text-align: center;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  position: sticky;
+  right: 0;
+  background: #fff;
+  min-width: 100px;
+  z-index: 5;
+}
+
+.kendala-table.rekap-table tbody tr:hover td:last-child {
+  background: #fafafa;
 }
 
 .kendala-table.rekap-table .empty-row {
@@ -425,21 +496,28 @@
   font-style: italic;
 }
 
-.btn-view {
+.btn-view,
+.btn-detail,
+.btn-delete {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 36px;
   height: 36px;
-  color: #e53935;
+  background: #e53935;
+  color: #fff;
   text-decoration: none;
+  border: none;
   border-radius: 8px;
-  transition: background 0.2s, color 0.2s;
+  cursor: pointer;
+  transition: background 0.2s;
 }
 
-.btn-view:hover {
-  background: #ffebee;
-  color: #c62828;
+.btn-view:hover,
+.btn-detail:hover,
+.btn-delete:hover {
+  background: #c62828;
+  color: #fff;
 }
 
 .kendala-table {
@@ -468,4 +546,116 @@
   text-align: center;
   margin-top: 30px;
   color: #777;
+}
+/* Modal styles for detail popup */
+.modal {
+  position: fixed;
+  z-index: 1200;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 2.5rem;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  position: relative;
+  animation: slideInModal 0.3s ease-out;
+}
+
+@keyframes slideInModal {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modal-content h3 {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.25rem;
+  color: #1a1a1a;
+  font-weight: 700;
+  border-bottom: 2px solid #e53935;
+  padding-bottom: 0.75rem;
+}
+
+.modal-close {
+  position: absolute;
+  right: 16px;
+  top: 12px;
+  font-size: 1.8rem;
+  cursor: pointer;
+  color: #aaa;
+  transition: color 0.2s;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.modal-close:hover {
+  color: #e53935;
+}
+
+.modal .detail-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.modal .detail-list p {
+  margin: 0;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #e53935;
+  color: #333;
+}
+
+.modal .detail-list p strong {
+  display: block;
+  font-size: 0.75rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.modal .detail-list p:last-child,
+.modal .detail-list p:nth-last-child(2) {
+  grid-column: 1 / -1;
+}
+
+.modal .modal-actions {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: nowrap;
+}
+
+.modal .modal-actions .btn-input-data {
+  padding: 12px 28px;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.modal .modal-actions .btn-back {
+  padding: 12px 28px;
+  font-size: 0.95rem;
+  white-space: nowrap;
 }

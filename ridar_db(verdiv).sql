@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 07 Feb 2026 pada 13.27
+-- Waktu pembuatan: 08 Feb 2026 pada 09.18
 -- Versi server: 10.4.32-MariaDB
 -- Versi PHP: 8.2.12
 
@@ -43,10 +43,7 @@ CREATE TABLE `bot_logs` (
 --
 
 INSERT INTO `bot_logs` (`id`, `input_type`, `input_value`, `result_status`, `created_at`, `response_message`, `session_id`, `command_used`) VALUES
-(86, 'keyword', 'WO033400047', 'PROGRESS', '2026-02-07 18:42:44', 'Status tiket ditemukan', 'session_1769995803622_8ccx3pcw9', NULL),
-(87, 'keyword', 'WO033400050', 'OPEN', '2026-02-07 18:53:18', 'Status tiket ditemukan', 'session_1769995803622_8ccx3pcw9', NULL),
-(88, 'keyword', 'WO033400047', 'PROGRESS', '2026-02-07 18:53:48', 'Status tiket ditemukan', 'session_1769995803622_8ccx3pcw9', NULL),
-(89, 'keyword', 'WO033400048', 'Workfail', '2026-02-07 19:02:27', 'Status tiket ditemukan', 'session_1769995803622_8ccx3pcw9', NULL);
+(91, 'keyword', 'WO033400043', 'Workfail', '2026-02-08 15:12:01', 'Status tiket ditemukan', 'session_1769995803622_8ccx3pcw9', NULL);
 
 -- --------------------------------------------------------
 
@@ -155,58 +152,58 @@ CREATE TABLE `kendala_teknisi_sistem` (
 --
 
 INSERT INTO `kendala_teknisi_sistem` (`id`, `unit_inisiator`, `wonum`, `activity_id`, `activity`, `activity_teknisi`, `status_todolist`, `segment_alpro`, `month_date`, `sto`, `target`, `proses`, `solusi_progress`, `sc_order`, `sto_inputan`, `created_at`, `updated_at`) VALUES
-(14201, 'RIDAR RIAU', 'WO033400001', 1, 'Daily Housekeeping', 'PT 2 | KENDALA ODP FULL ( NOK EXPAND)', 'PINDAH LOKER', 'VALINS', '2026-01-15', 'PBB', 1, 'Expand ODP sedang diproses', 'Menunggu material ODP expand 16 port', 'SC2026011501', 'PBB', '2026-01-15 08:30:00', '2026-01-16 14:20:00'),
-(14202, 'RIDAR RIAU', 'WO033400002', NULL, 'Upload Excel', 'PT 3 | JARAK JAUH (Lebih dari 250M)', 'OPEN', 'VALINS', '2026-01-15', 'ARK', 2, 'Pengadaan kabel 500m', 'Material ready tunggu jadwal teknisi', 'SC2026011502', 'ARK', '2026-01-15 09:15:00', '2026-01-15 09:15:00'),
-(14203, 'RIDAR RIAU', 'WO033400003', NULL, 'Upload Excel', 'PT2 | FEEDER RETI', 'OPEN', 'VALINS', '2026-01-15', 'DUM', 1, 'Perbaikan feeder', 'Tim splicing feeder di joint closure', 'SC2026011503', 'DUM', '2026-01-15 10:00:00', '2026-01-15 10:00:00'),
-(14204, 'RIDAR RIAU', 'WO033400004', 1, 'Daily Housekeeping', 'BENJAR ODP', 'COMPLETE', 'VALINS', '2026-01-16', 'PKR', 1, 'ODP sudah diperbaiki', 'Box ODP diganti dan kabel rapih', 'SC2026011601', 'PKR', '2026-01-16 07:45:00', '2026-01-17 10:30:00'),
-(14205, 'RIDAR RIAU', 'WO033400005', NULL, 'Upload Excel', 'PT 3 | CROSSING JALAN', 'OGP', 'VALINS', '2026-01-16', 'BKR', 3, 'Menunggu izin Dishub', 'Surat perizinan crossing diajukan', 'SC2026011602', 'BKR', '2026-01-16 11:20:00', '2026-01-16 11:20:00'),
-(14206, 'RIDAR RIAU', 'WO033400006', NULL, 'Upload Excel', 'OVER BOUNDARY', 'OGP', 'VALINS', '2026-01-17', 'RBI', 2, 'Koordinasi STO tetangga', 'Diskusi coverage area dengan regional', 'SC2026011701', 'RBI', '2026-01-17 08:00:00', '2026-01-17 08:00:00'),
-(14207, 'RIDAR RIAU', 'WO033400007', 3, 'Daily Housekeeping', 'BUTUH TANAM TIANG', 'PINDAH LOKER', 'VALINS', '2026-01-17', 'DRI', 3, 'Proses tanam tiang', 'Koordinasi PLN pemasangan tiang', 'SC2026011702', 'DRI', '2026-01-17 13:30:00', '2026-01-17 13:30:00'),
-(14208, 'RIDAR RIAU', 'WO033400008', 2, 'Daily Housekeeping', 'KENDALA SPBT', 'OPEN', 'VALINS', '2026-01-18', 'PPN', 2, 'Penambahan port SPBT', 'SPBT tambahan dikirim tunggu instal', 'SC2026011801', 'PPN', '2026-01-18 09:00:00', '2026-01-18 09:00:00'),
-(14209, 'RIDAR RIAU', 'WO033400009', 2, 'Daily Housekeeping', 'ODP RETI/LOSS', 'COMPLETE', 'VALINS', '2026-01-18', 'BGU', 1, 'Splitter diganti', 'Loss normal setelah ganti splitter', 'SC2026011802', 'BGU', '2026-01-18 14:15:00', '2026-01-19 09:00:00'),
-(14210, 'RIDAR RIAU', 'WO033400010', NULL, 'Upload Excel', 'CANCEL | PELANGGAN RAGU', 'COMPLETE', 'VALINS', '2026-01-19', 'TAK', 1, 'Order dibatalkan', 'Pelanggan tidak jadi berlangganan', 'SC2026011901', 'TAK', '2026-01-19 10:30:00', '2026-01-19 10:30:00'),
-(14211, 'RIDAR RIAU', 'WO033400011', 1, 'Daily Housekeeping', 'PT 2 | KENDALA ODP FULL ( NOK EXPAND)', 'OPEN', 'VALINS', '2026-01-20', 'PBB', 2, 'Proses expand ODP', 'Material expand ready jadwal teknisi', 'SC2026012001', 'PBB', '2026-01-20 08:45:00', '2026-01-20 08:45:00'),
-(14212, 'RIDAR RIAU', 'WO033400012', NULL, 'Upload Excel', 'PT 3 | JARAK JAUH (Lebih dari 250M)', 'OGP', 'VALINS', '2026-01-20', 'UBT', 2, 'Survey ulang', 'Butuh kabel tambahan approval budget', 'SC2026012002', 'UBT', '2026-01-20 11:00:00', '2026-01-20 11:00:00'),
-(14213, 'RIDAR RIAU', 'WO033400013', 2, 'Daily Housekeeping', 'BENJAR ODP', 'COMPLETE', 'VALINS', '2026-01-21', 'ARK', 1, 'Maintenance selesai', 'ODP dibersihkan kondisi normal', 'SC2026012101', 'ARK', '2026-01-21 07:30:00', '2026-01-21 15:00:00'),
-(14214, 'RIDAR RIAU', 'WO033400014', NULL, 'Upload Excel', 'PT 3 | CROSSING JALAN', 'OGP', 'VALINS', '2026-01-21', 'RGT', 3, 'Izin jalan protokol', 'Surat ke Dishub dan Pemda diajukan', 'SC2026012102', 'RGT', '2026-01-21 13:00:00', '2026-01-21 13:00:00'),
-(14215, 'RIDAR RIAU', 'WO033400015', NULL, 'Upload Excel', 'PT2 | FEEDER RETI', 'OPEN', 'VALINS', '2026-01-22', 'PMB', 2, 'Perbaikan feeder putus', 'Tim splicing kabel feeder', 'SC2026012201', 'PMB', '2026-01-22 08:15:00', '2026-01-22 08:15:00'),
-(14216, 'RIDAR RIAU', 'WO033400016', 3, 'Daily Housekeeping', 'BUTUH TANAM TIANG', 'OGP', 'VALINS', '2026-01-22', 'DUM', 3, 'Koordinasi PLN', 'Menunggu jadwal tiang dari PLN', 'SC2026012202', 'DUM', '2026-01-22 10:45:00', '2026-01-22 10:45:00'),
-(14217, 'RIDAR RIAU', 'WO033400017', 2, 'Daily Housekeeping', 'ODP RETI/LOSS', 'COMPLETE', 'VALINS', '2026-01-23', 'PKR', 1, 'Splitter diganti', 'Loss normal setelah penggantian', 'SC2026012301', 'PKR', '2026-01-23 09:20:00', '2026-01-23 16:00:00'),
-(14218, 'RIDAR RIAU', 'WO033400018', 2, 'Daily Housekeeping', 'KENDALA SPBT', 'OPEN', 'VALINS', '2026-01-23', 'BKN', 2, 'Maintenance SPBT', 'Teknisi cek dan restart SPBT', 'SC2026012302', 'BKN', '2026-01-23 14:00:00', '2026-01-23 14:00:00'),
-(14219, 'RIDAR RIAU', 'WO033400019', NULL, 'Upload Excel', 'OVER BOUNDARY', 'OGP', 'VALINS', '2026-01-24', 'PBB', 2, 'Koordinasi wilayah', 'Diskusi boundary dengan regional', 'SC2026012401', 'PBB', '2026-01-24 08:00:00', '2026-01-24 08:00:00'),
-(14220, 'RIDAR RIAU', 'WO033400020', 1, 'Daily Housekeeping', 'PT 2 | KENDALA ODP FULL ( NOK EXPAND)', 'OPEN', 'VALINS', '2026-01-24', 'ARK', 2, 'Expand ODP', 'Material datang jadwal expand hari ini', 'SC2026012402', 'ARK', '2026-01-24 11:30:00', '2026-01-24 11:30:00'),
-(14221, 'RIDAR RIAU', 'WO033400021', NULL, 'Upload Excel', 'PT 3 | JARAK JAUH (Lebih dari 250M)', 'OPEN', 'VALINS', '2026-01-25', 'BKR', 2, 'Penarikan kabel', 'Kabel 500m ready tarik besok', 'SC2026012501', 'BKR', '2026-01-25 07:45:00', '2026-01-25 07:45:00'),
-(14222, 'RIDAR RIAU', 'WO033400022', NULL, 'Upload Excel', 'PT 3 | CROSSING JALAN', 'COMPLETE', 'VALINS', '2026-01-25', 'DRI', 1, 'Crossing selesai', 'Boring berhasil dilakukan', 'SC2026012502', 'DRI', '2026-01-25 13:15:00', '2026-01-26 14:00:00'),
-(14223, 'RIDAR RIAU', 'WO033400023', 2, 'Daily Housekeeping', 'BENJAR ODP', 'COMPLETE', 'VALINS', '2026-01-26', 'RBI', 1, 'ODP diperbaiki', 'Box diganti kabel rapih', 'SC2026012601', 'RBI', '2026-01-26 09:00:00', '2026-01-27 10:00:00'),
-(14224, 'RIDAR RIAU', 'WO033400024', NULL, 'Upload Excel', 'CANCEL | PELANGGAN RAGU', 'COMPLETE', 'VALINS', '2026-01-26', 'PPN', 1, 'Order dibatalkan', 'Pilih provider lain', 'SC2026012602', 'PPN', '2026-01-26 15:30:00', '2026-01-26 15:30:00'),
-(14225, 'RIDAR RIAU', 'WO033400025', NULL, 'Upload Excel', 'PT2 | FEEDER RETI', 'OPEN', 'VALINS', '2026-01-27', 'TAK', 2, 'Cek feeder OLT', 'Troubleshoot dari sisi OLT', 'SC2026012701', 'TAK', '2026-01-27 08:30:00', '2026-01-27 08:30:00'),
-(14226, 'RIDAR RIAU', 'WO033400026', 3, 'Daily Housekeeping', 'BUTUH TANAM TIANG', 'OGP', 'VALINS', '2026-01-27', 'BGU', 3, 'Menunggu tiang PLN', 'Pengajuan tiang diproses PLN', 'SC2026012702', 'BGU', '2026-01-27 10:00:00', '2026-01-27 10:00:00'),
-(14227, 'RIDAR RIAU', 'WO033400027', 2, 'Daily Housekeeping', 'KENDALA SPBT', 'OPEN', 'VALINS', '2026-01-28', 'UBT', 2, 'Penambahan SPBT', 'SPBT baru dalam perjalanan', 'SC2026012801', 'UBT', '2026-01-28 11:45:00', '2026-01-28 11:45:00'),
-(14228, 'RIDAR RIAU', 'WO033400028', 2, 'Daily Housekeeping', 'ODP RETI/LOSS', 'COMPLETE', 'VALINS', '2026-01-28', 'PBB', 1, 'Loss normal', 'Connector bersih pigtail diganti', 'SC2026012802', 'PBB', '2026-01-28 14:20:00', '2026-01-29 09:00:00'),
-(14229, 'RIDAR RIAU', 'WO033400029', NULL, 'Upload Excel', 'PT 3 | CROSSING JALAN', 'OGP', 'VALINS', '2026-01-29', 'ARK', 3, 'Izin pemda', 'Surat crossing jalan utama diproses', 'SC2026012901', 'ARK', '2026-01-29 08:15:00', '2026-01-29 08:15:00'),
-(14230, 'RIDAR RIAU', 'WO033400030', 1, 'Daily Housekeeping', 'PT 2 | KENDALA ODP FULL ( NOK EXPAND)', 'OPEN', 'VALINS', '2026-01-29', 'RGT', 2, 'Expand ODP kampus', 'Material ready tunggu izin kampus', 'SC2026012902', 'RGT', '2026-01-29 13:00:00', '2026-01-29 13:00:00'),
-(14231, 'RIDAR RIAU', 'WO033400031', NULL, 'Upload Excel', 'PT 3 | JARAK JAUH (Lebih dari 250M)', 'OPEN', 'VALINS', '2026-01-30', 'PKR', 2, 'Tarik kabel panjang', 'Kabel splitter inline ready', 'SC2026013001', 'PKR', '2026-01-30 09:30:00', '2026-01-30 09:30:00'),
-(14232, 'RIDAR RIAU', 'WO033400032', 2, 'Daily Housekeeping', 'BENJAR ODP', 'COMPLETE', 'VALINS', '2026-01-30', 'DUM', 1, 'Maintenance selesai', 'Dibersihkan rayap dan kotoran', 'SC2026013002', 'DUM', '2026-01-30 15:00:00', '2026-01-31 10:00:00'),
-(14233, 'RIDAR RIAU', 'WO033400033', NULL, 'Upload Excel', 'OVER BOUNDARY', 'OGP', 'VALINS', '2026-01-31', 'PMB', 2, 'Koordinasi boundary', 'Diskusi perbatasan kabupaten', 'SC2026013101', 'PMB', '2026-01-31 08:00:00', '2026-01-31 08:00:00'),
-(14234, 'RIDAR RIAU', 'WO033400034', 3, 'Daily Housekeeping', 'BUTUH TANAM TIANG', 'PINDAH LOKER', 'VALINS', '2026-01-31', 'BKR', 3, 'Tanam 3 tiang', 'Koordinasi PLN 3 titik tiang', 'SC2026013102', 'BKR', '2026-01-31 10:30:00', '2026-01-31 10:30:00'),
-(14235, 'RIDAR RIAU', 'WO033400035', NULL, 'Upload Excel', 'PT2 | FEEDER RETI', 'OPEN', 'VALINS', '2026-02-01', 'DRI', 2, 'Repair fiber bengkok', 'Splicing ulang di joint closure', 'SC2026020101', 'DRI', '2026-02-01 07:45:00', '2026-02-01 07:45:00'),
-(14236, 'RIDAR RIAU', 'WO033400036', 2, 'Daily Housekeeping', 'ODP RETI/LOSS', 'COMPLETE', 'VALINS', '2026-02-01', 'PPN', 1, 'Connector bersih', 'Loss normal cleaning connector', 'SC2026020102', 'PPN', '2026-02-01 11:15:00', '2026-02-01 15:00:00'),
-(14237, 'RIDAR RIAU', 'WO033400037', 2, 'Daily Housekeeping', 'KENDALA SPBT', 'COMPLETE', 'VALINS', '2026-02-02', 'PBB', 1, 'SPBT normal', 'Reset configuration berhasil', 'SC2026020201', 'PBB', '2026-02-02 09:00:00', '2026-02-02 11:30:00'),
-(14238, 'RIDAR RIAU', 'WO033400038', NULL, 'Upload Excel', 'PT 3 | CROSSING JALAN', 'OGP', 'VALINS', '2026-02-02', 'ARK', 3, 'Izin tol', 'Boring horizontal izin khusus', 'SC2026020202', 'ARK', '2026-02-02 13:45:00', '2026-02-02 13:45:00'),
-(14239, 'RIDAR RIAU', 'WO033400039', NULL, 'Upload Excel', 'CANCEL | PELANGGAN RAGU', 'COMPLETE', 'VALINS', '2026-02-03', 'TAK', 1, 'Order dibatalkan', 'Pelanggan pindah alamat', 'SC2026020301', 'TAK', '2026-02-03 08:30:00', '2026-02-03 08:30:00'),
-(14240, 'RIDAR RIAU', 'WO033400040', 1, 'Daily Housekeeping', 'PT 2 | KENDALA ODP FULL ( NOK EXPAND)', 'OPEN', 'VALINS', '2026-02-03', 'BGU', 2, 'Upgrade ODP 32', 'Material ODP 32 core datang', 'SC2026020302', 'BGU', '2026-02-03 14:00:00', '2026-02-03 14:00:00'),
-(14241, 'RIDAR RIAU', 'WO033400041', NULL, 'Upload Excel', 'PT 3 | JARAK JAUH (Lebih dari 250M)', 'OGP', 'VALINS', '2026-02-04', 'RBI', 3, 'Survey perbukitan', 'Jarak jauh approval khusus', 'SC2026020401', 'RBI', '2026-02-04 10:15:00', '2026-02-04 10:15:00'),
-(14242, 'RIDAR RIAU', 'WO033400042', 2, 'Daily Housekeeping', 'BENJAR ODP', 'OPEN', 'VALINS', '2026-02-04', 'UBT', 2, 'Ganti ODP total', 'Material ODP baru dikirim', 'SC2026020402', 'UBT', '2026-02-04 15:30:00', '2026-02-04 15:30:00'),
-(14243, 'RIDAR RIAU', 'WO033400043', NULL, 'Upload Excel', 'OVER BOUNDARY', 'OGP', 'VALINS', '2026-02-05', 'PKR', 2, 'Verifikasi coverage', 'Alamat tidak sesuai sistem', 'SC2026020501', 'PKR', '2026-02-05 08:00:00', '2026-02-05 08:00:00'),
-(14244, 'RIDAR RIAU', 'WO033400044', 3, 'Daily Housekeeping', 'BUTUH TANAM TIANG', 'OGP', 'VALINS', '2026-02-05', 'DUM', 3, 'Proses tiang', 'Jadwal PLN untuk 3 tiang', 'SC2026020502', 'DUM', '2026-02-05 11:00:00', '2026-02-05 11:00:00'),
-(14245, 'RIDAR RIAU', 'WO033400045', NULL, 'Upload Excel', 'PT2 | FEEDER RETI', 'OPEN', 'VALINS', '2026-02-06', 'RGT', 2, 'Cek splitter feeder', 'Troubleshoot OLT ke splitter', 'SC2026020601', 'RGT', '2026-02-06 07:30:00', '2026-02-06 07:30:00'),
-(14246, 'RIDAR RIAU', 'WO033400046', 2, 'Daily Housekeeping', 'ODP RETI/LOSS', 'OPEN', 'VALINS', '2026-02-06', 'AMK', 1, 'Pigtail diganti', 'Menunggu material', 'SC2026020602', 'PMB', '2026-02-06 13:20:00', '2026-02-07 14:47:37'),
-(14247, 'RIDAR RIAU', 'WO033400047', 2, 'Daily Housekeeping', 'KENDALA SPBT', 'OPEN', 'VALINS', '2026-02-06', 'BKN', 2, 'Tambah port SPBT', 'Material SPBT dalam perjalanan', 'SC2026020603', 'BKN', '2026-02-06 16:00:00', '2026-02-06 16:00:00'),
-(14248, 'RIDAR RIAU', 'WO033400048', NULL, 'Upload Excel', 'PT 3 | CROSSING JALAN', 'OGP', 'VALINS', '2026-02-07', 'PBB', 3, 'Izin crossing tol', 'Izin khusus boring area tol', 'SC2026020701', 'PBB', '2026-02-07 08:45:00', '2026-02-07 08:45:00'),
-(14249, 'RIDAR RIAU', 'WO033400049', 1, 'Daily Housekeeping', 'PT 2 | KENDALA ODP FULL ( NOK EXPAND)', 'OPEN', 'VALINS', '2026-02-07', 'ARK', 2, 'Expand 16 core', 'Proses expand hari ini', 'SC2026020702', 'ARK', '2026-02-07 10:30:00', '2026-02-07 10:30:00'),
-(14250, 'RIDAR RIAU', 'WO033400050', 1, 'Upload Excel', 'CANCEL | PELANGGAN RAGU', 'OGP', 'VALINS', '2026-02-07', 'BKR', 1, 'Order dibatalkan', 'Sisip tiang', 'SC2026020703', 'BKR', '2026-02-07 14:15:00', '2026-02-07 14:59:35'),
-(14251, NULL, 'WO033400048', 1, 'Daily Housekeeping', 'Update Daily', 'PINDAH LOKER', NULL, NULL, 'BAG', NULL, NULL, 'Sisip tiang', NULL, NULL, '2026-02-07 12:32:27', '2026-02-07 14:43:15'),
-(14252, NULL, 'WO033400050', 4, 'Daily Housekeeping', 'Update Daily', 'OPEN', NULL, NULL, 'BGU', NULL, NULL, 'Melakukan Pembangunan ODP di jalur baru', NULL, NULL, '2026-02-07 14:56:00', '2026-02-07 14:59:49');
+(14201, 'RIDAR RIAU', 'WO033400001', 1, 'Daily Housekeeping', 'PEMBANGUNAN ODP BARU', 'PINDAH LOKER', 'VALINS', '2026-01-15', 'PBB', 1, 'Expand ODP sedang diproses', 'Menunggu material ODP expand 16 port', 'SC2026011501', 'PBB', '2026-01-15 08:30:00', '2026-01-16 14:20:00'),
+(14202, 'RIDAR RIAU', 'WO033400002', NULL, 'Upload Excel', 'Perbaikan Jalur DC', 'OPEN', 'VALINS', '2026-01-15', 'ARK', 2, 'Pengadaan kabel 500m', 'Material ready tunggu jadwal teknisi', 'SC2026011502', 'ARK', '2026-01-15 09:15:00', '2026-01-15 09:15:00'),
+(14203, 'RIDAR RIAU', 'WO033400003', NULL, 'Upload Excel', 'Perbaikan Jalur DC', 'OPEN', 'VALINS', '2026-01-15', 'DUM', 1, 'Perbaikan feeder', 'Tim splicing feeder di joint closure', 'SC2026011503', 'DUM', '2026-01-15 10:00:00', '2026-01-15 10:00:00'),
+(14204, 'RIDAR RIAU', 'WO033400004', 1, 'Daily Housekeeping', 'Penggantian ODP', 'COMPLETE', 'VALINS', '2026-01-16', 'PKR', 1, 'ODP sudah diperbaiki', 'Box ODP diganti dan kabel rapih', 'SC2026011601', 'PKR', '2026-01-16 07:45:00', '2026-01-17 10:30:00'),
+(14205, 'RIDAR RIAU', 'WO033400005', NULL, 'Upload Excel', 'Perbaikan Jalur DC', 'OGP', 'VALINS', '2026-01-16', 'BKR', 3, 'Menunggu izin Dishub', 'Surat perizinan crossing diajukan', 'SC2026011602', 'BKR', '2026-01-16 11:20:00', '2026-01-16 11:20:00'),
+(14206, 'RIDAR RIAU', 'WO033400006', NULL, 'Upload Excel', 'TIANG | IZIN OK', 'OGP', 'VALINS', '2026-01-17', 'RBI', 2, 'Koordinasi STO tetangga', 'Diskusi coverage area dengan regional', 'SC2026011701', 'RBI', '2026-01-17 08:00:00', '2026-01-17 08:00:00'),
+(14207, 'RIDAR RIAU', 'WO033400007', 3, 'Daily Housekeeping', 'TIANG | IZIN OK', 'PINDAH LOKER', 'VALINS', '2026-01-17', 'DRI', 3, 'Proses tanam tiang', 'Koordinasi PLN pemasangan tiang', 'SC2026011702', 'DRI', '2026-01-17 13:30:00', '2026-01-17 13:30:00'),
+(14208, 'RIDAR RIAU', 'WO033400008', 2, 'Daily Housekeeping', 'Penggantian ODP', 'OPEN', 'VALINS', '2026-01-18', 'PPN', 2, 'Penambahan port SPBT', 'SPBT tambahan dikirim tunggu instal', 'SC2026011801', 'PPN', '2026-01-18 09:00:00', '2026-01-18 09:00:00'),
+(14209, 'RIDAR RIAU', 'WO033400009', 2, 'Daily Housekeeping', 'Penggantian ODP', 'COMPLETE', 'VALINS', '2026-01-18', 'BGU', 1, 'Splitter diganti', 'Loss normal setelah ganti splitter', 'SC2026011802', 'BGU', '2026-01-18 14:15:00', '2026-01-19 09:00:00'),
+(14210, 'RIDAR RIAU', 'WO033400010', NULL, 'Upload Excel', 'Perbaikan Jalur DC', 'COMPLETE', '	\nSegment B', '2026-01-19', 'TAK', 1, 'Order dibatalkan', 'Pelanggan tidak jadi berlangganan', 'SC2026011901', 'TAK', '2026-01-19 10:30:00', '2026-01-19 10:30:00'),
+(14211, 'RIDAR RIAU', 'WO033400011', 1, 'Daily Housekeeping', 'PEMBANGUNAN ODP BARU', 'OPEN', 'VALINS', '2026-01-20', 'PBB', 2, 'Proses expand ODP', 'Material expand ready jadwal teknisi', 'SC2026012001', 'PBB', '2026-01-20 08:45:00', '2026-01-20 08:45:00'),
+(14212, 'RIDAR RIAU', 'WO033400012', NULL, 'Upload Excel', 'Perbaikan Jalur DC', 'OGP', 'Segment A', '2026-01-20', 'UBT', 2, 'Survey ulang', 'Butuh kabel tambahan approval budget', 'SC2026012002', 'UBT', '2026-01-20 11:00:00', '2026-01-20 11:00:00'),
+(14213, 'RIDAR RIAU', 'WO033400013', 2, 'Daily Housekeeping', 'Penggantian ODP', 'COMPLETE', 'VALINS', '2026-01-21', 'ARK', 1, 'Maintenance selesai', 'ODP dibersihkan kondisi normal', 'SC2026012101', 'ARK', '2026-01-21 07:30:00', '2026-01-21 15:00:00'),
+(14214, 'RIDAR RIAU', 'WO033400014', NULL, 'Upload Excel', 'Perbaikan Jalur DC', 'OGP', 'VALINS', '2026-01-21', 'RGT', 3, 'Izin jalan protokol', 'Surat ke Dishub dan Pemda diajukan', 'SC2026012102', 'RGT', '2026-01-21 13:00:00', '2026-01-21 13:00:00'),
+(14215, 'RIDAR RIAU', 'WO033400015', NULL, 'Upload Excel', 'Perbaikan Jalur DC', 'OPEN', 'VALINS', '2026-01-22', 'PMB', 2, 'Perbaikan feeder putus', 'Tim splicing kabel feeder', 'SC2026012201', 'PMB', '2026-01-22 08:15:00', '2026-01-22 08:15:00'),
+(14216, 'RIDAR RIAU', 'WO033400016', 3, 'Daily Housekeeping', 'TIANG | IZIN OK', 'OGP', 'VALINS', '2026-01-22', 'DUM', 3, 'Koordinasi PLN', 'Menunggu jadwal tiang dari PLN', 'SC2026012202', 'DUM', '2026-01-22 10:45:00', '2026-01-22 10:45:00'),
+(14217, 'RIDAR RIAU', 'WO033400017', 2, 'Daily Housekeeping', 'Penggantian ODP', 'COMPLETE', 'VALINS', '2026-01-23', 'PKR', 1, 'Splitter diganti', 'Loss normal setelah penggantian', 'SC2026012301', 'PKR', '2026-01-23 09:20:00', '2026-01-23 16:00:00'),
+(14218, 'RIDAR RIAU', 'WO033400018', 2, 'Daily Housekeeping', 'Penggantian ODP', 'OPEN', 'VALINS', '2026-01-23', 'BKN', 2, 'Maintenance SPBT', 'Teknisi cek dan restart SPBT', 'SC2026012302', 'BKN', '2026-01-23 14:00:00', '2026-01-23 14:00:00'),
+(14219, 'RIDAR RIAU', 'WO033400019', NULL, 'Upload Excel', 'TIANG | IZIN OK', 'OGP', 'VALINS', '2026-01-24', 'PBB', 2, 'Koordinasi wilayah', 'Diskusi boundary dengan regional', 'SC2026012401', 'PBB', '2026-01-24 08:00:00', '2026-01-24 08:00:00'),
+(14220, 'RIDAR RIAU', 'WO033400020', 1, 'Daily Housekeeping', 'PEMBANGUNAN ODP BARU', 'OPEN', 'VALINS', '2026-01-24', 'ARK', 2, 'Expand ODP', 'Material datang jadwal expand hari ini', 'SC2026012402', 'ARK', '2026-01-24 11:30:00', '2026-01-24 11:30:00'),
+(14221, 'RIDAR RIAU', 'WO033400021', NULL, 'Upload Excel', 'Perbaikan Jalur DC', 'OPEN', 'VALINS', '2026-01-25', 'BKR', 2, 'Penarikan kabel', 'Kabel 500m ready tarik besok', 'SC2026012501', 'BKR', '2026-01-25 07:45:00', '2026-01-25 07:45:00'),
+(14222, 'RIDAR RIAU', 'WO033400022', NULL, 'Upload Excel', 'Perbaikan Jalur DC', 'COMPLETE', 'VALINS', '2026-01-25', 'DRI', 1, 'Crossing selesai', 'Boring berhasil dilakukan', 'SC2026012502', 'DRI', '2026-01-25 13:15:00', '2026-01-26 14:00:00'),
+(14223, 'RIDAR RIAU', 'WO033400023', 2, 'Daily Housekeeping', 'Penggantian ODP', 'COMPLETE', 'VALINS', '2026-01-26', 'RBI', 1, 'ODP diperbaiki', 'Box diganti kabel rapih', 'SC2026012601', 'RBI', '2026-01-26 09:00:00', '2026-01-27 10:00:00'),
+(14224, 'RIDAR RIAU', 'WO033400024', NULL, 'Upload Excel', 'Perbaikan Jalur DC', 'COMPLETE', 'VALINS', '2026-01-26', 'PPN', 1, 'Order dibatalkan', 'Pilih provider lain', 'SC2026012602', 'PPN', '2026-01-26 15:30:00', '2026-01-26 15:30:00'),
+(14225, 'RIDAR RIAU', 'WO033400025', NULL, 'Upload Excel', 'Perbaikan Jalur DC', 'OPEN', '	\nSegment C', '2026-01-27', 'TAK', 2, 'Cek feeder OLT', 'Troubleshoot dari sisi OLT', 'SC2026012701', 'TAK', '2026-01-27 08:30:00', '2026-01-27 08:30:00'),
+(14226, 'RIDAR RIAU', 'WO033400026', 3, 'Daily Housekeeping', 'TIANG | IZIN OK', 'OGP', 'VALINS', '2026-01-27', 'BGU', 3, 'Menunggu tiang PLN', 'Pengajuan tiang diproses PLN', 'SC2026012702', 'BGU', '2026-01-27 10:00:00', '2026-01-27 10:00:00'),
+(14227, 'RIDAR RIAU', 'WO033400027', 2, 'Daily Housekeeping', 'Penggantian ODP', 'OPEN', 'Segment B', '2026-01-28', 'UBT', 2, 'Penambahan SPBT', 'SPBT baru dalam perjalanan', 'SC2026012801', 'UBT', '2026-01-28 11:45:00', '2026-01-28 11:45:00'),
+(14228, 'RIDAR RIAU', 'WO033400028', 2, 'Daily Housekeeping', 'Penggantian ODP', 'COMPLETE', 'VALINS', '2026-01-28', 'PBB', 1, 'Loss normal', 'Connector bersih pigtail diganti', 'SC2026012802', 'PBB', '2026-01-28 14:20:00', '2026-01-29 09:00:00'),
+(14229, 'RIDAR RIAU', 'WO033400029', NULL, 'Upload Excel', 'Perbaikan Jalur DC', 'OGP', 'VALINS', '2026-01-29', 'ARK', 3, 'Izin pemda', 'Surat crossing jalan utama diproses', 'SC2026012901', 'ARK', '2026-01-29 08:15:00', '2026-01-29 08:15:00'),
+(14230, 'RIDAR RIAU', 'WO033400030', 1, 'Daily Housekeeping', 'PEMBANGUNAN ODP BARU', 'OPEN', 'VALINS', '2026-01-29', 'RGT', 2, 'Expand ODP kampus', 'Material ready tunggu izin kampus', 'SC2026012902', 'RGT', '2026-01-29 13:00:00', '2026-01-29 13:00:00'),
+(14231, 'RIDAR RIAU', 'WO033400031', NULL, 'Upload Excel', 'Perbaikan Jalur DC', 'OPEN', 'VALINS', '2026-01-30', 'PKR', 2, 'Tarik kabel panjang', 'Kabel splitter inline ready', 'SC2026013001', 'PKR', '2026-01-30 09:30:00', '2026-01-30 09:30:00'),
+(14232, 'RIDAR RIAU', 'WO033400032', 2, 'Daily Housekeeping', 'Penggantian ODP', 'COMPLETE', 'VALINS', '2026-01-30', 'DUM', 1, 'Maintenance selesai', 'Dibersihkan rayap dan kotoran', 'SC2026013002', 'DUM', '2026-01-30 15:00:00', '2026-01-31 10:00:00'),
+(14233, 'RIDAR RIAU', 'WO033400033', NULL, 'Upload Excel', 'TIANG | IZIN OK', 'OGP', 'VALINS', '2026-01-31', 'PMB', 2, 'Koordinasi boundary', 'Diskusi perbatasan kabupaten', 'SC2026013101', 'PMB', '2026-01-31 08:00:00', '2026-01-31 08:00:00'),
+(14234, 'RIDAR RIAU', 'WO033400034', 3, 'Daily Housekeeping', 'TIANG | IZIN OK', 'PINDAH LOKER', 'VALINS', '2026-01-31', 'BKR', 3, 'Tanam 3 tiang', 'Koordinasi PLN 3 titik tiang', 'SC2026013102', 'BKR', '2026-01-31 10:30:00', '2026-01-31 10:30:00'),
+(14235, 'RIDAR RIAU', 'WO033400035', NULL, 'Upload Excel', 'Perbaikan Jalur DC', 'OPEN', 'VALINS', '2026-02-01', 'DRI', 2, 'Repair fiber bengkok', 'Splicing ulang di joint closure', 'SC2026020101', 'DRI', '2026-02-01 07:45:00', '2026-02-01 07:45:00'),
+(14236, 'RIDAR RIAU', 'WO033400036', 2, 'Daily Housekeeping', 'Penggantian ODP', 'COMPLETE', 'VALINS', '2026-02-01', 'PPN', 1, 'Connector bersih', 'Loss normal cleaning connector', 'SC2026020102', 'PPN', '2026-02-01 11:15:00', '2026-02-01 15:00:00'),
+(14237, 'RIDAR RIAU', 'WO033400037', 2, 'Daily Housekeeping', 'Penggantian ODP', 'COMPLETE', 'VALINS', '2026-02-02', 'PBB', 1, 'SPBT normal', 'Reset configuration berhasil', 'SC2026020201', 'PBB', '2026-02-02 09:00:00', '2026-02-02 11:30:00'),
+(14238, 'RIDAR RIAU', 'WO033400038', NULL, 'Upload Excel', 'Perbaikan Jalur DC', 'OGP', 'VALINS', '2026-02-02', 'ARK', 3, 'Izin tol', 'Boring horizontal izin khusus', 'SC2026020202', 'ARK', '2026-02-02 13:45:00', '2026-02-02 13:45:00'),
+(14239, 'RIDAR RIAU', 'WO033400039', NULL, 'Upload Excel', 'Perbaikan Jalur DC', 'COMPLETE', 'VALINS', '2026-02-03', 'TAK', 1, 'Order dibatalkan', 'Pelanggan pindah alamat', 'SC2026020301', 'TAK', '2026-02-03 08:30:00', '2026-02-03 08:30:00'),
+(14240, 'RIDAR RIAU', 'WO033400040', 1, 'Daily Housekeeping', 'PEMBANGUNAN ODP BARU', 'OPEN', 'VALINS', '2026-02-03', 'BGU', 2, 'Upgrade ODP 32', 'Material ODP 32 core datang', 'SC2026020302', 'BGU', '2026-02-03 14:00:00', '2026-02-03 14:00:00'),
+(14241, 'RIDAR RIAU', 'WO033400041', NULL, 'Upload Excel', 'Perbaikan Jalur DC', 'OGP', 'VALINS', '2026-02-04', 'RBI', 3, 'Survey perbukitan', 'Jarak jauh approval khusus', 'SC2026020401', 'RBI', '2026-02-04 10:15:00', '2026-02-04 10:15:00'),
+(14242, 'RIDAR RIAU', 'WO033400042', 2, 'Daily Housekeeping', 'Penggantian ODP', 'OPEN', '	\nSegment B', '2026-02-04', 'UBT', 2, 'Ganti ODP total', 'Material ODP baru dikirim', 'SC2026020402', 'UBT', '2026-02-04 15:30:00', '2026-02-04 15:30:00'),
+(14243, 'RIDAR RIAU', 'WO033400043', NULL, 'Upload Excel', 'TIANG | IZIN OK', 'OGP', 'VALINS', '2026-02-05', 'PKR', 2, 'Verifikasi coverage', 'Alamat tidak sesuai sistem', 'SC2026020501', 'PKR', '2026-02-05 08:00:00', '2026-02-05 08:00:00'),
+(14244, 'RIDAR RIAU', 'WO033400044', 3, 'Daily Housekeeping', 'TIANG | IZIN OK', 'OGP', 'VALINS', '2026-02-05', 'DUM', 3, 'Proses tiang', 'Jadwal PLN untuk 3 tiang', 'SC2026020502', 'DUM', '2026-02-05 11:00:00', '2026-02-05 11:00:00'),
+(14245, 'RIDAR RIAU', 'WO033400045', NULL, 'Upload Excel', 'Perbaikan Jalur DC', 'OPEN', 'VALINS', '2026-02-06', 'RGT', 2, 'Cek splitter feeder', 'Troubleshoot OLT ke splitter', 'SC2026020601', 'RGT', '2026-02-06 07:30:00', '2026-02-06 07:30:00'),
+(14246, 'RIDAR RIAU', 'WO033400046', 2, 'Daily Housekeeping', 'Penggantian ODP', 'OPEN', 'VALINS', '2026-02-06', 'AMK', 1, 'Pigtail diganti', 'Menunggu material', 'SC2026020602', 'PMB', '2026-02-06 13:20:00', '2026-02-07 14:47:37'),
+(14247, 'RIDAR RIAU', 'WO033400047', 2, 'Daily Housekeeping', 'Penggantian ODP', 'OPEN', 'VALINS', '2026-02-06', 'BKN', 2, 'Tambah port SPBT', 'Material SPBT dalam perjalanan', 'SC2026020603', 'BKN', '2026-02-06 16:00:00', '2026-02-06 16:00:00'),
+(14248, 'RIDAR RIAU', 'WO033400048', NULL, 'Upload Excel', 'Perbaikan Jalur DC', 'OGP', 'VALINS', '2026-02-07', 'PBB', 3, 'Izin crossing tol', 'Izin khusus boring area tol', 'SC2026020701', 'PBB', '2026-02-07 08:45:00', '2026-02-07 08:45:00'),
+(14249, 'RIDAR RIAU', 'WO033400049', 1, 'Daily Housekeeping', 'PEMBANGUNAN ODP BARU', 'OPEN', 'VALINS', '2026-02-07', 'ARK', 2, 'Expand 16 core', 'Proses expand hari ini', 'SC2026020702', 'ARK', '2026-02-07 10:30:00', '2026-02-07 10:30:00'),
+(14250, 'RIDAR RIAU', 'WO033400050', 1, 'Upload Excel', 'Perbaikan Jalur DC', 'OGP', 'VALINS', '2026-02-07', 'BKR', 1, 'Order dibatalkan', 'Sisip tiang', 'SC2026020703', 'BKR', '2026-02-07 14:15:00', '2026-02-07 14:59:35'),
+(14251, NULL, 'WO033400048', 1, 'Daily Housekeeping', 'PEMBANGUNAN ODP BARU', 'PINDAH LOKER', NULL, NULL, 'BAG', NULL, NULL, 'Sisip tiang', NULL, NULL, '2026-02-07 12:32:27', '2026-02-07 14:43:15'),
+(14252, NULL, 'WO033400050', 4, 'Daily Housekeeping', 'PEMBANGUNAN ODP BARU', 'OPEN', NULL, NULL, 'BGU', NULL, NULL, 'Melakukan Pembangunan ODP di jalur baru', NULL, NULL, '2026-02-07 14:56:00', '2026-02-07 14:59:49');
 
 -- --------------------------------------------------------
 
@@ -473,7 +470,7 @@ ALTER TABLE `wilayah_ridar`
 -- AUTO_INCREMENT untuk tabel `bot_logs`
 --
 ALTER TABLE `bot_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=90;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=92;
 
 --
 -- AUTO_INCREMENT untuk tabel `kendala_pelanggan`

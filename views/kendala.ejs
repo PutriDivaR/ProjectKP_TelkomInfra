@@ -1,22 +1,28 @@
-<%- include('layout/header') %>
+<%- include('layout/header', { title: 'Kendala Pelanggan' }) %>
 <%- include('layout/sidebar') %>
-
-<head>
-  <title>Kendala Pelanggan</title>
-  <link rel="stylesheet" href="/css/kendala.css">
-</head>
+<link rel="stylesheet" href="/css/kendala.css">
 
 <div class="main">
-<div class="kendala-container">
+  <div class="kendala-container">
 
-  <h2>KENDALA PELANGGAN</h2>
+  <!-- TOPBAR -->
+  <div class="header">
+    <h2>KENDALA PELANGGAN</h2>
+    <div class="topbar-right">
+      <span class="admin-label"><%= user && user.username ? user.username : 'Nama Admin' %></span>
+    </div>
+  </div>
+
+  <!-- SUB HEADER -->
   <% if (mode === 'rekap') { %>
-  <h3 class="section-title">Data Kendala Pelanggan</h3>
+  <div class="sub-header">
+    <h3 class="sub-title">Data Kendala Pelanggan</h3>
+  </div>
   <% } %>
 
   <% if (mode === 'rekap') { %>
     <% if (typeof saved !== 'undefined' && saved) { %>
-    <div class="alert alert-success">
+    <div class="alert alert-success" id="successAlert">
       Data berhasil disimpan dan masuk ke rekapan.
       <% if (typeof warningWonum !== 'undefined' && warningWonum) { %>
       <span class="alert-warning-text">Catatan: WONUM belum terdaftar di Master WO.</span>
@@ -25,7 +31,7 @@
     <% } %>
     <div class="rekap-card">
       <div class="rekap-card-header">
-        <a href="/kendala/input" class="btn-input-data">Input Data</a>
+        <a href="/kendala/input" class="btn-input-data"><i class="fa-solid fa-plus"></i> Input Data</a>
       </div>
       <hr class="rekap-divider">
       <div class="rekap-summary">
@@ -77,7 +83,7 @@
             </tr>
           <% } else { %>
             <% list.forEach((d, i) => { %>
-              <tr>
+              <tr data-id="<%= d.id %>" data-wonum="<%= d.wonum %>" data-ticket_id="<%= d.ticket_id || '' %>" data-status_hi="<%= d.status_hi || '' %>" data-sto="<%= d.sto || '' %>" data-ttd_kb="<%= d.ttd_kb || '' %>" data-ttic="<%= d.ttic || '' %>" data-keterangan="<%= (d.keterangan || '').replace(/"/g, '&quot;') %>" data-created_at="<%= d.created_at ? new Date(d.created_at).toISOString() : '' %>" data-updated_at="<%= d.updated_at ? new Date(d.updated_at).toISOString() : '' %>" data-nama_teknis="<%= d.nama_teknis || '' %>">
                 <td><%= i + 1 %></td>
                 <td><%= d.wonum %></td>
                 <td><%= d.ticket_id || '-' %></td>
@@ -86,10 +92,11 @@
                 <td><%= d.ttd_kb || '-' %></td>
                 <td><%= d.ttic || '-' %></td>
                 <td><%= d.keterangan || '-' %></td>
-                <td><%= d.created_at ? new Date(d.created_at).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'medium' }).replace(/\./g, '-') : '-' %></td>
+                <td><%= d.updated_at ? new Date(d.updated_at).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'medium' }).replace(/\./g, '-') : (d.created_at ? new Date(d.created_at).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'medium' }).replace(/\./g, '-') : '-') %></td>
                 <td><%= d.nama_teknis || '-' %></td>
                 <td>
-                  <a href="/kendala/edit/<%= d.id %>" class="btn-view" title="Lihat/Edit"><i class="fa-solid fa-eye"></i></a>
+                  <button type="button" class="btn-view btn-detail" title="Detail"><i class="fa-solid fa-eye"></i></button>
+                  <button type="button" class="btn-delete" title="Hapus"><i class="fa-solid fa-trash"></i></button>
                 </td>
               </tr>
             <% }) %>
@@ -108,6 +115,16 @@
       <% if (typeof errorMsg !== 'undefined' && errorMsg) { %><br><small>Detail: <%= errorMsg %></small><% } %>
     </div>
     <% } %>
+    <% if (typeof errorWonumInvalid !== 'undefined' && errorWonumInvalid) { %>
+    <div class="alert alert-error">
+      Format WONUM tidak valid. <%= typeof errorMsg !== 'undefined' && errorMsg ? errorMsg : '' %>
+    </div>
+    <% } %>
+    <% if (typeof errorWonumDuplicate !== 'undefined' && errorWonumDuplicate) { %>
+    <div class="alert alert-error">
+      <%= typeof errorMsg !== 'undefined' && errorMsg ? errorMsg : 'WONUM sudah ada.' %>
+    </div>
+    <% } %>
     <% if (typeof errorWonumKosong !== 'undefined' && errorWonumKosong) { %>
     <div class="alert alert-error">WONUM tidak boleh kosong.</div>
     <% } %>
@@ -120,11 +137,8 @@
       <div class="form-row form-row-inline">
         <div class="form-group">
           <label>WONUM</label>
-          <input type="text" name="wonum" placeholder="Masukkan WONUM" required>
-        </div>
-        <div class="form-group">
-          <label>Ticket ID</label>
-          <input type="text" name="ticket_id" placeholder="Masukkan Ticket ID">
+          <input type="text" name="wonum" placeholder="Contoh: WO0334000001" required>
+          <small style="color: #666; margin-top: 4px;">Format: WO diikuti 10 digit angka</small>
         </div>
         <div class="form-group">
           <label>STO</label>
@@ -150,7 +164,6 @@
           <select name="status_hi">
             <option value="PROGRESS">PROGRESS</option>
             <option value="REJECT">REJECT</option>
-            <option value="CLOSED">CLOSED</option>
           </select>
         </div>
         <div class="form-group">
@@ -186,6 +199,11 @@
 
   <% if (mode === 'edit') { %>
   <h3 class="section-title">Detail Data Kendala</h3>
+  <% if (typeof errorMsg !== 'undefined' && errorMsg) { %>
+  <div class="alert alert-error">
+    <%= errorMsg %>
+  </div>
+  <% } %>
   <div class="form-card detail-card">
     <form method="POST" action="/kendala/edit/<%= kendala.id %>" class="kendala-form detail-form">
       <div class="detail-two-col">
@@ -200,7 +218,7 @@
           </div>
           <div class="detail-field">
             <label>TTD KB :</label>
-            <input type="text" class="detail-input" value="<%= kendala.ttd_kb || '-' %>" readonly>
+            <input type="text" class="detail-input" name="ttd_kb" value="<%= kendala.ttd_kb || '' %>" placeholder="Contoh: 90 Hari">
           </div>
           <div class="detail-field">
             <label>TTIC :</label>
@@ -219,7 +237,14 @@
         <div class="detail-col">
           <div class="detail-field">
             <label>STO :</label>
-            <input type="text" class="detail-input" value="<%= kendala.sto || '-' %>" readonly>
+            <select name="sto" class="detail-input detail-select">
+              <option value="">-- Pilih STO --</option>
+              <% if (typeof listSto !== 'undefined' && listSto && listSto.length) { %>
+                <% listSto.forEach(function(s) { %>
+              <option value="<%= s %>" <%= (kendala.sto || '') === s ? 'selected' : '' %>><%= s %></option>
+                <% }); %>
+              <% } %>
+            </select>
           </div>
           <div class="detail-field">
             <label>Nama Teknisi :</label>
@@ -234,8 +259,8 @@
             </select>
           </div>
           <div class="detail-field">
-            <label>Input Date :</label>
-            <input type="text" class="detail-input" value="<%= kendala.created_at ? new Date(kendala.created_at).toLocaleString('id-ID') : '-' %>" readonly>
+            <label>Last Updated :</label>
+            <input type="text" class="detail-input" value="<%= kendala.updated_at ? new Date(kendala.updated_at).toLocaleString('id-ID') : (kendala.created_at ? new Date(kendala.created_at).toLocaleString('id-ID') : '-') %>" readonly>
           </div>
         </div>
       </div>
@@ -243,6 +268,7 @@
         <button type="submit" class="btn-input-submit">
           <i class="fa-solid fa-pencil"></i> Simpan
         </button>
+        <a href="/kendala" class="btn-kembali"><i class="fa-solid fa-arrow-left"></i> Kembali</a>
       </div>
     </form>
   </div>
@@ -252,5 +278,28 @@
 </div>
 
 <script src="/js/kendala.js"></script>
+
+<!-- Detail Modal -->
+<div id="kendalaDetailModal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <span id="modalClose" class="modal-close">&times;</span>
+    <h3>Detail Kendala</h3>
+    <div class="detail-list">
+      <p><strong>WONUM:</strong> <span id="md-wonum"></span></p>
+      <p><strong>Ticket ID:</strong> <span id="md-ticket"></span></p>
+      <p><strong>Status HI:</strong> <span id="md-status"></span></p>
+      <p><strong>STO:</strong> <span id="md-sto"></span></p>
+      <p><strong>TTD KB:</strong> <span id="md-ttd"></span></p>
+      <p><strong>TTIC:</strong> <span id="md-ttic"></span></p>
+      <p><strong>Keterangan:</strong> <span id="md-keterangan"></span></p>
+      <p><strong>Last Updated:</strong> <span id="md-created"></span></p>
+      <p><strong>Nama Teknisi:</strong> <span id="md-nama"></span></p>
+    </div>
+    <div class="modal-actions">
+      <a id="md-edit-link" href="#" class="btn-input-data">Edit</a>
+      <button id="md-close-btn" class="btn-back">Close</button>
+    </div>
+  </div>
+</div>
 
 <%- include('layout/footer') %>

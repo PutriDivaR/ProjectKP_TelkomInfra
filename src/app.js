@@ -1,57 +1,101 @@
-const express = require('express');
-const path = require('path');
+const express  = require('express');
+const path     = require('path');
+const session  = require('express-session');
+require('dotenv').config();
+
 const app = express();
 
-// Middleware untuk parsing JSON dan URL-encoded data
+// ════════════════════════════════════════════
+// MIDDLEWARE
+// ════════════════════════════════════════════
+
+// Body parsing (50mb untuk import Excel besar)
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// Setup view engine
+// View engine
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, '../views')); // ✅ Naik 1 level ke parent
+app.set('views', path.join(__dirname, '../views'));
 
-// middleware
-// Increase body size limits to allow large Excel->JSON imports from client
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Static files
 app.use(express.static(path.join(__dirname, '../public')));
-// Setup static files
-app.use(express.static(path.join(__dirname, '../public'))); // ✅ Naik 1 level ke parent
 
-// Logging middleware (optional, untuk debugging)
+// Session
+app.use(session({
+  secret:            process.env.SESSION_SECRET || 'telkom-dev-secret',
+  resave:            false,
+  saveUninitialized: false,
+  cookie: { maxAge: 1000 * 60 * 60 * 8 } // 8 jam
+}));
+
+// Request logger
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
   next();
 });
 
-// Import routes (sekarang di folder yang sama)
-const dashboardRoutes = require('./routes/dashboard.routes'); // ✅ Path relatif
-const kendalaTeknikRoutes = require('./routes/kendalateknik.routes'); // ✅ Path relatif
-const todolistRoutes = require('./routes/todolist.routes'); // ✅ missing — mounts /todolist
+// Expose session user ke semua views (res.locals.user)
+app.use((req, res, next) => {
+  res.locals.user = req.session?.user ?? null;
+  next();
+});
+
+// ════════════════════════════════════════════
+// AUTH GUARD
+// ════════════════════════════════════════════
+
+function requireAuth(req, res, next) {
+  if (req.session?.user) return next();
+  return res.redirect('/login');
+}
+
+// ════════════════════════════════════════════
+// ROUTES
+// ════════════════════════════════════════════
+
+// Auth (login / register / logout)
+const authRoutes = require('./routes/auth.routes');
+app.use('/', authRoutes);
+
+// Dashboard
+const dashboardRoutes = require('./routes/dashboard.routes');
+app.use('/dashboard', requireAuth, dashboardRoutes);
+
+// Todolist (Kendala Teknik Sistem)
+const todolistRoutes = require('./routes/todolist.routes');
+app.use('/', requireAuth, todolistRoutes);
+
+// Kendala Pelanggan
+const kendalaRoutes = require('./routes/kendala.routes');
+app.use('/kendala', requireAuth, kendalaRoutes);
+
+// Daily Housekeeping
+const dailyRoutes = require('./routes/daily.routes');
+app.use('/dailyhouse', requireAuth, dailyRoutes);
+
+// Data Kendala (Kendala Teknik + Kendala Sistem / import file)
+const datakendalaRoutes = require('./routes/datakendala.routes');
+app.use('/datakendala', requireAuth, datakendalaRoutes);
+
+// Sumber Data — Master Activity (Kendala Teknik)
+const kendalaTeknikRoutes = require('./routes/kendalateknik.routes');
+app.use('/', requireAuth, kendalaTeknikRoutes);
+
+// Sumber Data — Wilayah Ridar
 const wilayahRidarRoutes = require('./routes/wilayahridar.routes');
+app.use('/', requireAuth, wilayahRidarRoutes);
 
-// Use routes
-// Mount dashboard under /dashboard so links like /dashboard and /dashboard/api/refresh work
-app.use('/dashboard', dashboardRoutes);
-app.use('/', kendalaTeknikRoutes);
-app.use('/', todolistRoutes); // serve /todolist and its APIs
-app.use('/', wilayahRidarRoutes); 
-
-// bot API routes 
+// Bot API
 const botRoutes = require('./routes/bot.routes');
 app.use('/api/bot', botRoutes);
 
-// kendala routes
-const kendalaRoutes = require('./routes/kendala.routes');
-app.use('/kendala', kendalaRoutes);
+// ════════════════════════════════════════════
+// ROOT REDIRECT
+// ════════════════════════════════════════════
 
-// daily routes
-const dailyRoutes = require('./routes/daily.routes');
-app.use('/dailyhouse', dailyRoutes);
-
-// Redirect root to dashboard for convenience
 app.get('/', (req, res) => {
-  res.redirect('/dashboard');
+  if (req.session?.user) return res.redirect('/dashboard');
+  return res.redirect('/login');
 });
 
 module.exports = app;
