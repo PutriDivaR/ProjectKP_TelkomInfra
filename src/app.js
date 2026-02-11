@@ -47,6 +47,10 @@ app.use('/kendala', kendalaRoutes);
 const dailyRoutes = require('./routes/daily.routes');
 app.use('/dailyhouse', dailyRoutes);
 
+// data kendala (import file - kendala pelanggan + kendala teknik)
+const datakendalaRoutes = require('./routes/datakendala.routes');
+app.use('/datakendala', datakendalaRoutes);
+
 // Redirect root to dashboard for convenience
 app.get('/', (req, res) => {
   res.redirect('/dashboard');

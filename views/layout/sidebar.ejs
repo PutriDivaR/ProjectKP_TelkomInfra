@@ -11,8 +11,8 @@
   </button>
 
   <div class="brand">
-    <i class="fa-solid fa-layer-group"></i>
-    <span class="brand-text">RIDAR Monitor</span>
+    <i class="fa-solid <%= typeof brandIcon !== 'undefined' ? brandIcon : 'fa-layer-group' %>"></i>
+    <span class="brand-text"><%= typeof brandText !== 'undefined' ? brandText : 'RIDAR Monitor' %></span>
   </div>
 
   <ul class="menu">
@@ -42,6 +42,29 @@
         <i class="fa-solid fa-users"></i>
         <span class="label">Kendala Pelanggan</span>
       </a>
+    </li>
+
+    <!-- KENDALA with Submenu (seperti Sumber Data) -->
+    <li class="has-submenu">
+      <a href="#" class="menu-toggle" data-title="Kendala" onclick="toggleSubmenu(event)">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span class="label">Kendala</span>
+        <i class="fa-solid fa-chevron-down arrow"></i>
+      </a>
+      <ul class="submenu">
+        <li>
+          <a href="/datakendala?tab=teknik" data-title="Kendala Teknik">
+            <i class="fa-solid fa-wrench"></i>
+            <span class="label">Kendala Teknik</span>
+          </a>
+        </li>
+        <li>
+          <a href="/datakendala?tab=sistem" data-title="Kendala Sistem">
+            <i class="fa-solid fa-server"></i>
+            <span class="label">Kendala Sistem</span>
+          </a>
+        </li>
+      </ul>
     </li>
     
      <!-- SUMBER DATA with Submenu -->
