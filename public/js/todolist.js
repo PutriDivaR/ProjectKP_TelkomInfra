@@ -1,8 +1,6 @@
 /* ===================================================
-   KENDALA TEKNIK - CLIENT JAVASCRIPT (WITH CHECKBOX SELECT)
-   - Import Excel berdasarkan NAMA HEADER (bukan posisi kolom)
-   - Fitur checkbox select untuk delete multiple data
-   - Delete selected & delete all functionality
+   KENDALA TEKNIK - CLIENT JAVASCRIPT (IMPROVED)
+   Fixed: Label "DONE" → "COMPLETE"
    =================================================== */
 
 // ──────────────────────────────────────
@@ -11,20 +9,26 @@
 let masterActivities = [];
 let masterSTO        = [];
 let allData          = [];
+let filteredData     = [];
 let currentEditId    = null;
-let selectedIds      = new Set(); // Track selected checkboxes
+let selectedIds      = new Set();
+
+// Pagination state
+let currentPage      = 1;
+let rowsPerPage      = 100;
+let totalPages       = 1;
 
 // ──────────────────────────────────────
 // INIT
 // ──────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async function () {
-  console.log('DOM Ready – Kendala Teknik with Checkbox Select');
+  console.log('DOM Ready – Kendala Teknik');
   await loadMasterTables();
   await loadTableData();
 });
 
 // ──────────────────────────────────────
-// 1. LOAD MASTER TABLES
+// LOAD MASTER TABLES
 // ──────────────────────────────────────
 async function loadMasterTables() {
   try {
@@ -43,7 +47,7 @@ async function loadMasterTables() {
 }
 
 // ──────────────────────────────────────
-// 2. LOAD MAIN TABLE DATA
+// LOAD MAIN TABLE DATA
 // ──────────────────────────────────────
 async function loadTableData() {
   try {
@@ -51,7 +55,9 @@ async function loadTableData() {
     const json = await res.json();
     if (json.success) {
       allData = json.data;
-      renderTable(allData);
+      filteredData = json.data;
+      currentPage = 1;
+      renderTable(filteredData);
       updateSummaryCards(allData);
     } else {
       showError('Gagal memuat data: ' + (json.message || ''));
@@ -63,7 +69,7 @@ async function loadTableData() {
 }
 
 // ──────────────────────────────────────
-// 3. RENDER TABLE (WITH CHECKBOX)
+// RENDER TABLE WITH PAGINATION
 // ──────────────────────────────────────
 function renderTable(data) {
   const tbody = document.getElementById('dataTable');
@@ -71,49 +77,53 @@ function renderTable(data) {
 
   if (!data || data.length === 0) {
     tbody.innerHTML = `
-      <tr><td colspan="10" class="loading-cell">
+      <tr><td colspan="8" class="loading-cell">
         Tidak ada data. Silakan import file Excel atau tambah data secara manual.
       </td></tr>`;
-    // Reset selection
     selectedIds.clear();
     updateDeleteButton();
+    updatePagination(0);
     const selectAll = document.getElementById('selectAll');
     if (selectAll) selectAll.checked = false;
     return;
   }
 
+  // Calculate pagination
+  totalPages = Math.ceil(data.length / rowsPerPage);
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = Math.min(startIndex + rowsPerPage, data.length);
+  const pageData = data.slice(startIndex, endIndex);
+
   tbody.innerHTML = '';
-  data.forEach((row, i) => {
+  pageData.forEach((row, i) => {
     const tr = document.createElement('tr');
     const isChecked = selectedIds.has(row.id) ? 'checked' : '';
+    const globalIndex = startIndex + i + 1;
+    
     tr.innerHTML = `
-      <td class="col-checkbox">
+      <td class="col-select">
         <input type="checkbox" class="row-checkbox" data-id="${row.id}" 
                onchange="toggleRowCheckbox(this)" ${isChecked}>
       </td>
-      <td>${i + 1}</td>
+      <td>${globalIndex}</td>
       <td>${esc(row.wonum)}</td>
       <td>${esc(row.odp_inputan)}</td>
-      <td>${esc(row.activity_teknisi)}</td>
       <td class="td-activity">${esc(row.activity)}</td>
-      <td>${esc(row.sto_inputan)}</td>
       <td>${esc(row.update_status_deen)}</td>
       <td>${statusBadge(row.status_todolist)}</td>
-      <td><button class="btn-detail" onclick="openDetail(${row.id})">Detail</button></td>
+      <td><button class="btn-detail" onclick="openDetail(${row.id})">DETAIL</button></td>
     `;
     tbody.appendChild(tr);
   });
 
-  // Update delete button & select all checkbox state
   updateDeleteButton();
   updateSelectAllCheckbox();
+  updatePagination(data.length);
 }
 
 // ──────────────────────────────────────
-// 4. CHECKBOX SELECTION FUNCTIONS
+// CHECKBOX FUNCTIONS
 // ──────────────────────────────────────
-
-// Toggle select all checkbox
 function toggleSelectAll(checkbox) {
   const checkboxes = document.querySelectorAll('.row-checkbox');
   checkboxes.forEach(cb => {
@@ -128,7 +138,6 @@ function toggleSelectAll(checkbox) {
   updateDeleteButton();
 }
 
-// Toggle individual checkbox
 function toggleRowCheckbox(checkbox) {
   const id = parseInt(checkbox.dataset.id);
   if (checkbox.checked) {
@@ -136,12 +145,10 @@ function toggleRowCheckbox(checkbox) {
   } else {
     selectedIds.delete(id);
   }
-  
   updateSelectAllCheckbox();
   updateDeleteButton();
 }
 
-// Update select all checkbox state
 function updateSelectAllCheckbox() {
   const selectAll = document.getElementById('selectAll');
   if (!selectAll) return;
@@ -164,7 +171,6 @@ function updateSelectAllCheckbox() {
   }
 }
 
-// Update delete button state
 function updateDeleteButton() {
   const btnDeleteSelected = document.getElementById('btnDeleteSelected');
   if (btnDeleteSelected) {
@@ -178,10 +184,8 @@ function updateDeleteButton() {
 }
 
 // ──────────────────────────────────────
-// 5. DELETE FUNCTIONS
+// DELETE FUNCTIONS
 // ──────────────────────────────────────
-
-// Delete selected rows
 async function deleteSelected() {
   if (selectedIds.size === 0) {
     alert('Tidak ada data yang dipilih');
@@ -189,9 +193,7 @@ async function deleteSelected() {
   }
 
   const confirmed = confirm(
-    `⚠️ PERINGATAN!\n\n` +
-    `Apakah Anda yakin ingin menghapus ${selectedIds.size} data terpilih?\n` +
-    `Tindakan ini tidak dapat dibatalkan!`
+    `⚠️ PERINGATAN!\n\nApakah Anda yakin ingin menghapus ${selectedIds.size} data terpilih?\nTindakan ini tidak dapat dibatalkan!`
   );
   
   if (!confirmed) return;
@@ -220,35 +222,18 @@ async function deleteSelected() {
   }
 }
 
-// Delete all rows
-// Delete all rows
 async function deleteAll() {
-  console.log('🔍 deleteAll() called');
-  
   const confirmed = confirm(
-    '⚠️ PERINGATAN BESAR!\n\n' +
-    'Apakah Anda yakin ingin menghapus SEMUA data?\n' +
-    'Tindakan ini tidak dapat dibatalkan!'
+    '⚠️ PERINGATAN BESAR!\n\nApakah Anda yakin ingin menghapus SEMUA data?\nTindakan ini tidak dapat dibatalkan!'
   );
   
-  if (!confirmed) {
-    console.log('❌ User cancelled first confirmation');
-    return;
-  }
+  if (!confirmed) return;
 
-  // Double confirmation
   const doubleConfirm = confirm(
-    '⚠️ KONFIRMASI TERAKHIR\n\n' +
-    'Apakah Anda BENAR-BENAR yakin ingin menghapus SEMUA data?\n' +
-    'Ketik OK di browser jika Anda yakin.'
+    '⚠️ KONFIRMASI TERAKHIR\n\nApakah Anda BENAR-BENAR yakin ingin menghapus SEMUA data?'
   );
   
-  if (!doubleConfirm) {
-    console.log('❌ User cancelled second confirmation');
-    return;
-  }
-
-  console.log('📤 Sending DELETE request to /api/todolist/delete-all');
+  if (!doubleConfirm) return;
 
   try {
     const res = await fetch('/api/todolist/delete-all', {
@@ -256,10 +241,7 @@ async function deleteAll() {
       headers: { 'Content-Type': 'application/json' }
     });
     
-    console.log('📥 Response status:', res.status);
-    
     const json = await res.json();
-    console.log('📥 Response data:', json);
     
     if (json.success) {
       alert(`✅ Berhasil menghapus semua data (${json.deletedCount} baris)`);
@@ -269,7 +251,6 @@ async function deleteAll() {
       await loadTableData();
     } else {
       alert('❌ Gagal menghapus data: ' + (json.message || 'Unknown error'));
-      console.error('Delete failed:', json);
     }
   } catch (err) {
     console.error('❌ Error deleting all:', err);
@@ -278,47 +259,42 @@ async function deleteAll() {
 }
 
 // ──────────────────────────────────────
-// 6. STATUS BADGE HELPER
+// STATUS BADGE
 // ──────────────────────────────────────
 function statusBadge(status) {
+  const statusUpper = (status || '').toUpperCase();
   const classMap = {
+    'COMPLETE':     'status-completed',
     'COMPLETED':    'status-completed',
     'OGP':          'status-ogp',
     'OPEN':         'status-open',
     'PINDAH LOKER': 'status-pindah'
   };
-  const cls = classMap[status] || 'status-default';
+  const cls = classMap[statusUpper] || 'status-default';
   return `<span class="status-badge ${cls}">${esc(status || '-')}</span>`;
 }
 
 // ──────────────────────────────────────
-// 7. UPDATE SUMMARY CARDS
+// UPDATE SUMMARY CARDS
+// ✅ CHANGED: countDone → countComplete
 // ──────────────────────────────────────
 function updateSummaryCards(data) {
-  let done = 0, ogp = 0, pindah = 0, closed = 0;
+  let completed = 0, ogp = 0, pindahLoker = 0, open = 0;
   (data || []).forEach(r => {
     const s = (r.status_todolist || '').toUpperCase();
-    if (s === 'COMPLETED') done++;
+    if (s === 'COMPLETED' || s === 'COMPLETE') completed++;
     else if (s === 'OGP')  ogp++;
-    else if (s === 'PINDAH LOKER') pindah++;
-    else if (s === 'OPEN') closed++;
+    else if (s === 'PINDAH LOKER') pindahLoker++;
+    else if (s === 'OPEN') open++;
   });
-  setVal('countDone',   done);
-  setVal('countOGP',    ogp);
-  setVal('countPindah', pindah);
-  setVal('countClosed', closed);
-}
-
-function setVal(id, val) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = val;
+  setVal('countComplete', completed);  // ✅ CHANGED: was countDone
+  setVal('countOGP',      ogp);
+  setVal('countPindah',   pindahLoker);
+  setVal('countClosed',   open);
 }
 
 // ──────────────────────────────────────
-// 8. FILTER BY STATUS
-// ──────────────────────────────────────
-// ──────────────────────────────────────
-// 8. FILTER BY STATUS (UPDATED)
+// FILTER & SEARCH
 // ──────────────────────────────────────
 function applyFilter() {
   const status = document.getElementById('filterStatus').value;
@@ -326,14 +302,12 @@ function applyFilter() {
   
   let filtered = allData;
   
-  // Apply status filter
   if (status) {
     filtered = filtered.filter(r => 
       (r.status_todolist || '').toUpperCase() === status
     );
   }
   
-  // Apply search filter
   if (searchTerm) {
     filtered = filtered.filter(r => {
       const wonum = (r.wonum || '').toLowerCase();
@@ -341,11 +315,141 @@ function applyFilter() {
     });
   }
   
+  filteredData = filtered;
+  currentPage = 1;
   renderTable(filtered);
 }
 
+function handleSearch() {
+  const searchTerm = document.getElementById('searchWonum').value.trim().toLowerCase();
+  const btnClear = document.getElementById('btnClearSearch');
+  
+  btnClear.style.display = searchTerm ? 'block' : 'none';
+  
+  const filterStatus = document.getElementById('filterStatus').value;
+  
+  let filtered = allData;
+  
+  if (filterStatus) {
+    filtered = filtered.filter(r => 
+      (r.status_todolist || '').toUpperCase() === filterStatus
+    );
+  }
+  
+  if (searchTerm) {
+    filtered = filtered.filter(r => {
+      const wonum = (r.wonum || '').toLowerCase();
+      return wonum.includes(searchTerm);
+    });
+  }
+  
+  filteredData = filtered;
+  currentPage = 1;
+  renderTable(filtered);
+}
+
+function clearSearch() {
+  document.getElementById('searchWonum').value = '';
+  document.getElementById('btnClearSearch').style.display = 'none';
+  applyFilter();
+}
+
 // ──────────────────────────────────────
-// 9. OPEN DETAIL MODAL
+// PAGINATION FUNCTIONS
+// ──────────────────────────────────────
+function updatePagination(totalRows) {
+  const paginationContainer = document.getElementById('paginationContainer');
+  if (!paginationContainer) return;
+
+  if (totalRows === 0) {
+    paginationContainer.innerHTML = '';
+    return;
+  }
+
+  totalPages = Math.ceil(totalRows / rowsPerPage);
+  
+  const startRow = (currentPage - 1) * rowsPerPage + 1;
+  const endRow = Math.min(currentPage * rowsPerPage, totalRows);
+  
+  let html = '<div class="pagination">';
+  
+  // Info text
+  html += `<div class="pagination-info">Halaman ${currentPage} dari ${totalPages} (Total: ${totalRows} data)</div>`;
+  
+  html += '<div class="pagination-buttons">';
+  
+  // First page button
+  html += `<button class="pagination-btn" onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''}>
+    « Awal
+  </button>`;
+  
+  // Previous button
+  html += `<button class="pagination-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+    ‹ Sebelumnya
+  </button>`;
+  
+  // Page numbers
+  const maxButtons = 5;
+  let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+  let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+  
+  if (endPage - startPage < maxButtons - 1) {
+    startPage = Math.max(1, endPage - maxButtons + 1);
+  }
+  
+  for (let i = startPage; i <= endPage; i++) {
+    const activeClass = i === currentPage ? 'active' : '';
+    html += `<button class="pagination-btn page-number ${activeClass}" onclick="goToPage(${i})">${i}</button>`;
+  }
+  
+  // Next button
+  html += `<button class="pagination-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+    Selanjutnya ›
+  </button>`;
+  
+  // Last page button
+  html += `<button class="pagination-btn" onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>
+    Akhir »
+  </button>`;
+  
+  html += '</div>';
+  
+  // Rows per page selector
+  html += `<div class="pagination-rows">
+    <label>Tampilkan:</label>
+    <select onchange="changeRowsPerPage(this.value)" class="rows-per-page-select">
+      <option value="50" ${rowsPerPage === 50 ? 'selected' : ''}>50</option>
+      <option value="100" ${rowsPerPage === 100 ? 'selected' : ''}>100</option>
+      <option value="200" ${rowsPerPage === 200 ? 'selected' : ''}>200</option>
+      <option value="500" ${rowsPerPage === 500 ? 'selected' : ''}>500</option>
+    </select>
+  </div>`;
+  
+  html += '</div>';
+  
+  paginationContainer.innerHTML = html;
+}
+
+function goToPage(page) {
+  if (page < 1 || page > totalPages) return;
+  currentPage = page;
+  renderTable(filteredData);
+  
+  // Scroll to top of table
+  const tableCard = document.querySelector('.card');
+  if (tableCard) {
+    tableCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+function changeRowsPerPage(newRowsPerPage) {
+  rowsPerPage = parseInt(newRowsPerPage);
+  currentPage = 1;
+  renderTable(filteredData);
+}
+
+// ──────────────────────────────────────
+// MODAL FUNCTIONS
 // ──────────────────────────────────────
 function openDetail(id) {
   const row = allData.find(r => r.id === id);
@@ -353,12 +457,9 @@ function openDetail(id) {
 
   currentEditId = id;
 
-  // Populate read-only fields
   setInput('editId',           row.id);
   setInput('wonum',            row.wonum);
   setInput('odpInputan',       row.odp_inputan);
-  setInput('activityTeknisi',  row.activity_teknisi);
-  setInput('stoInput',         row.sto_inputan);
   setInput('uicField',         row.uic);
   setInput('picField',         row.pic);
   setInput('leaderField',      row.leader);
@@ -370,17 +471,12 @@ function openDetail(id) {
   setInput('monthDate',        row.month_date);
   setInput('scOrder',          row.sc_order);
 
-  // Populate dropdowns
   populateActivityDropdown(row.activity_id);
   populateStoDropdown(row.sto);
 
-  // Show modal
   document.getElementById('modalOverlay').classList.add('active');
 }
 
-// ──────────────────────────────────────
-// 10. POPULATE ACTIVITY DROPDOWN
-// ──────────────────────────────────────
 function populateActivityDropdown(selectedId) {
   const sel = document.getElementById('activitySelect');
   sel.innerHTML = '<option value="">-- Pilih Activity --</option>';
@@ -390,9 +486,6 @@ function populateActivityDropdown(selectedId) {
   });
 }
 
-// ──────────────────────────────────────
-// 11. POPULATE STO DROPDOWN
-// ──────────────────────────────────────
 function populateStoDropdown(selectedSto) {
   const sel = document.getElementById('stoSelect');
   sel.innerHTML = '<option value="">-- Pilih STO --</option>';
@@ -402,9 +495,6 @@ function populateStoDropdown(selectedSto) {
   });
 }
 
-// ──────────────────────────────────────
-// 12. ACTIVITY CHANGE → AUTO-FILL
-// ──────────────────────────────────────
 function onActivityChange() {
   const actId = document.getElementById('activitySelect').value;
   const act   = masterActivities.find(a => a.id == actId);
@@ -420,9 +510,6 @@ function onActivityChange() {
   }
 }
 
-// ──────────────────────────────────────
-// 13. STO CHANGE → AUTO-FILL
-// ──────────────────────────────────────
 function onStoChange() {
   const stoVal = document.getElementById('stoSelect').value;
   const sto    = masterSTO.find(s => s.sto === stoVal);
@@ -438,9 +525,6 @@ function onStoChange() {
   }
 }
 
-// ──────────────────────────────────────
-// 14. SAVE DETAIL
-// ──────────────────────────────────────
 async function saveDetail() {
   const id = document.getElementById('editId').value;
   if (!id) return;
@@ -454,9 +538,6 @@ async function saveDetail() {
   const payload = {
     activity_id:         activityId,
     sto:                 stoVal,
-    uic:                 getVal('uicField'),
-    pic:                 getVal('picField'),
-    leader:              getVal('leaderField'),
     status_todolist:     getVal('statusField'),
     solusi_progress:     getVal('solusiProgress')
   };
@@ -481,9 +562,6 @@ async function saveDetail() {
   }
 }
 
-// ──────────────────────────────────────
-// 15. CLOSE MODAL
-// ──────────────────────────────────────
 function closeModal() {
   document.getElementById('modalOverlay').classList.remove('active');
   currentEditId = null;
@@ -494,23 +572,81 @@ function closeModalOnOverlay(e) {
 }
 
 // ──────────────────────────────────────
-// 16. EXCEL IMPORT - HEADER-BASED
+// LOADING OVERLAY
+// ──────────────────────────────────────
+function showLoading(text = 'Memproses data...', subtext = 'Mohon tunggu, jangan tutup halaman') {
+  const overlay = document.getElementById('loadingOverlay');
+  const loadingText = document.getElementById('loadingText');
+  const loadingSubtext = document.getElementById('loadingSubtext');
+  const loadingProgress = document.getElementById('loadingProgress');
+  
+  if (loadingText) loadingText.textContent = text;
+  if (loadingSubtext) loadingSubtext.textContent = subtext;
+  if (loadingProgress) loadingProgress.textContent = '';
+  
+  if (overlay) overlay.classList.add('active');
+}
+
+function updateLoadingProgress(progress) {
+  const loadingProgress = document.getElementById('loadingProgress');
+  if (loadingProgress) loadingProgress.textContent = progress;
+}
+
+function hideLoading() {
+  const overlay = document.getElementById('loadingOverlay');
+  if (overlay) overlay.classList.remove('active');
+}
+
+// ──────────────────────────────────────
+// EXCEL IMPORT/EXPORT
 // ──────────────────────────────────────
 function triggerUpload() {
   document.getElementById('excelFileInput').click();
+}
+
+// Convert Excel serial date to month name
+function convertExcelDateToMonth(value) {
+  if (!value) return '';
+  
+  if (typeof value === 'string') {
+    const monthNames = ['january', 'february', 'march', 'april', 'may', 'june',
+                        'july', 'august', 'september', 'october', 'november', 'december'];
+    const lowerValue = value.toLowerCase().trim();
+    
+    if (monthNames.some(m => lowerValue.includes(m))) {
+      return value;
+    }
+  }
+  
+  if (typeof value === 'number') {
+    try {
+      const excelEpoch = new Date(1899, 11, 30);
+      const date = new Date(excelEpoch.getTime() + value * 86400000);
+      
+      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'];
+      
+      return monthNames[date.getMonth()];
+    } catch (err) {
+      console.warn('⚠️ Failed to convert Excel date:', value, err);
+      return String(value);
+    }
+  }
+  
+  return String(value);
 }
 
 async function handleFileUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
 
-  // Check SheetJS library
   if (typeof XLSX === 'undefined') {
     try {
+      showLoading('Memuat library Excel...', 'Mohon tunggu sebentar');
       await loadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
-      console.log('✅ SheetJS library loaded');
+      hideLoading();
     } catch (err) {
-      console.error('❌ Failed to load SheetJS:', err);
+      hideLoading();
       alert('Gagal memuat library Excel. Silakan refresh halaman dan coba lagi.');
       event.target.value = '';
       return;
@@ -518,79 +654,80 @@ async function handleFileUpload(event) {
   }
 
   try {
+    showLoading('Membaca file Excel...', 'Sedang memproses file');
+    
     const arrayBuffer = await file.arrayBuffer();
-    const workbook    = XLSX.read(arrayBuffer, { type: 'array' });
+    const workbook    = XLSX.read(arrayBuffer, { type: 'array', cellDates: false });
     const sheetName   = workbook.SheetNames[0];
     const sheet       = workbook.Sheets[sheetName];
     
-    // Read as JSON with headers
-    const jsonData = XLSX.utils.sheet_to_json(sheet);
-
-    console.log('📊 Excel data (first row):', jsonData[0]);
-    console.log('📊 Total rows:', jsonData.length);
+    const jsonData = XLSX.utils.sheet_to_json(sheet, { raw: true });
 
     if (jsonData.length === 0) {
+      hideLoading();
       alert('File kosong atau tidak ada data.');
       event.target.value = '';
       return;
     }
 
-    // Map based on header names
+    updateLoadingProgress(`Memproses ${jsonData.length} baris...`);
+
     const payload = jsonData.map(row => {
-      // Normalize header names
       const normalizedRow = {};
       Object.keys(row).forEach(key => {
         const normalizedKey = key.trim().toUpperCase().replace(/\s+/g, ' ');
         normalizedRow[normalizedKey] = row[key];
       });
 
-      // Extract data
-      const wonum = normalizedRow['WO / SC ID'] 
-                 || normalizedRow['WONUM']
-                 || normalizedRow['WO']
-                 || normalizedRow['SC ID']
-                 || '';
+      if (jsonData.indexOf(row) < 3) {
+        console.log(`\n📋 Row ${jsonData.indexOf(row) + 1} - Available headers:`, Object.keys(normalizedRow));
+        console.log('   Raw row data:', row);
+      }
 
-      const odp_inputan = normalizedRow['ODP INPUTAN']
-                       || normalizedRow['ODP']
-                       || '';
+      const bulanRaw = normalizedRow['BULAN'] || normalizedRow['MONTH'] || '';
+      const bulanConverted = convertExcelDateToMonth(bulanRaw);
 
-      const activity_teknisi = normalizedRow['KENDALA PT 1']
-                            || normalizedRow['KENDALA PT1']
-                            || normalizedRow['KENDALA']
-                            || '';
+      const activityTeknisi = 
+        normalizedRow['KATEGORI SOLUSI'] ||
+        normalizedRow['KENDALA PT 1'] || 
+        normalizedRow['KENDALA PT1'] ||
+        normalizedRow['KENDALA'] || 
+        '';
 
-      const month_date = normalizedRow['BULAN']
-                      || normalizedRow['TANGGAL']
-                      || normalizedRow['MONTH DATE']
-                      || '';
+      if (jsonData.indexOf(row) < 3) {
+        console.log('   🔍 KATEGORI SOLUSI value:', normalizedRow['KATEGORI SOLUSI']);
+        console.log('   🔍 Final activity_teknisi:', activityTeknisi);
+        console.log('   📅 BULAN:', bulanRaw, '→', bulanConverted);
+      }
 
-      const sto_inputan = normalizedRow['STO INPUT']
-                       || normalizedRow['STOINPUT']
-                       || normalizedRow['STO_INPUT']
-                       || normalizedRow['STO']
-                       || normalizedRow['STO INPUTAN']
-                       || normalizedRow['STOINPUTAN']
-                       || '';
-
-      return {
-        wonum,
-        odp_inputan,
-        activity_teknisi,
-        month_date,
-        sto_inputan
+      const result = {
+        wonum: normalizedRow['WO / SC ID'] || normalizedRow['WONUM'] || normalizedRow['WO'] || normalizedRow['WO / SC'] || '',
+        odp_inputan: normalizedRow['ODP INPUTAN'] || normalizedRow['ODP'] || '',
+        activity_teknisi: activityTeknisi,
+        month_date: bulanConverted,
+        sto: normalizedRow['STO'] || ''
       };
+
+      if (jsonData.indexOf(row) < 3) {
+        console.log('   ✅ Final payload:', result);
+        console.log('---');
+      }
+
+      return result;
     }).filter(r => r.wonum || r.activity_teknisi);
 
     if (payload.length === 0) {
-      alert('Tidak ada data valid di file. Pastikan header kolom sesuai:\n• WO / SC ID\n• ODP INPUTAN\n• KENDALA PT 1\n• BULAN\n• STO INPUT');
+      hideLoading();
+      alert('Tidak ada data valid di file.');
       event.target.value = '';
       return;
     }
 
-    console.log('📤 Sending import data:', payload.length, 'rows');
+    console.log('\n📤 Sample payload being sent to backend (first 3):');
+    console.log(payload.slice(0, 3));
 
-    // Send to backend
+    updateLoadingProgress(`Mengirim ${payload.length} baris ke server...`);
+
     const res = await fetch('/api/todolist/import', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -598,50 +735,35 @@ async function handleFileUpload(event) {
     });
     const json = await res.json();
 
+    hideLoading();
+
     if (json.success) {
-      alert(`✅ Import berhasil!\n\n` +
-            `• ${json.count || payload.length} baris ditambahkan\n` +
-            `• ${json.insertedToMasterWo || 0} wonum baru di master_wo\n` +
-            `• ${json.updatedMasterWo || 0} wonum di-update\n` +
-            `• Durasi: ${json.duration || 'N/A'}`);
+      alert(`✅ Import berhasil!\n\n• ${json.count} baris ditambahkan\n• Durasi: ${json.duration}`);
       await loadTableData();
     } else {
       alert('❌ Import gagal: ' + (json.message || 'Unknown error'));
     }
   } catch (err) {
-    console.error('❌ Error during import:', err);
+    hideLoading();
     alert('Kesalahan saat import: ' + err.message);
   }
 
   event.target.value = '';
 }
 
-// ──────────────────────────────────────
-// 17. EXPORT EXCEL
-// ──────────────────────────────────────
 async function exportExcel() {
   if (typeof XLSX === 'undefined') {
-    try {
-      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
-      console.log('✅ SheetJS library loaded for export');
-    } catch (err) {
-      console.error('❌ Failed to load SheetJS:', err);
-      alert('Gagal memuat library Excel. Silakan refresh halaman dan coba lagi.');
-      return;
-    }
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
   }
 
   const headers = [
-    'No', 'WO / SC ID', 'ODP Inputan', 'Kendala PT 1', 'Activity',
-    'STO Input', 'Update Status Deen', 'Status', 'Progress', 'Solusi Progress',
-    'STO', 'UIC', 'PIC', 'Leader', 'Bulan', 'SC Order'
+    'No', 'WO / SC ID', 'ODP Inputan', 'Activity',
+    'Update Status', 'Status', 'Bulan'
   ];
 
   const rows = allData.map((r, i) => [
-    i + 1,
-    r.wonum, r.odp_inputan, r.activity_teknisi, r.activity,
-    r.sto_inputan, r.update_status_deen, r.status_todolist, r.progress, r.solusi_progress,
-    r.sto, r.uic, r.pic, r.leader, r.month_date, r.sc_order
+    i + 1, r.wonum, r.odp_inputan, r.activity,
+    r.update_status_deen, r.status_todolist, r.month_date
   ]);
 
   const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
@@ -670,13 +792,17 @@ function getVal(id) {
   return el ? el.value : '';
 }
 
+function setVal(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
 function showError(msg) {
   const tbody = document.getElementById('dataTable');
   if (tbody) {
     tbody.innerHTML = `
-      <tr><td colspan="10" class="loading-cell" style="color:#e53935;">
-        ⚠️ ${esc(msg)}<br><br>
-        <small style="color:#999;">Pastikan server backend dan database sudah berjalan.</small>
+      <tr><td colspan="8" class="loading-cell" style="color:#e53935;">
+        ⚠️ ${esc(msg)}
       </td></tr>`;
   }
 }
@@ -685,14 +811,8 @@ function loadScript(url) {
   return new Promise((resolve, reject) => {
     const s = document.createElement('script');
     s.src = url;
-    s.onload = () => {
-      console.log('✅ Script loaded:', url);
-      resolve();
-    };
-    s.onerror = (err) => {
-      console.error('❌ Script failed to load:', url, err);
-      reject(new Error(`Failed to load script: ${url}`));
-    };
+    s.onload = () => resolve();
+    s.onerror = (err) => reject(new Error(`Failed to load script: ${url}`));
     document.head.appendChild(s);
   });
 }
@@ -704,45 +824,3 @@ document.addEventListener('keydown', function (e) {
     if (m1 && m1.classList.contains('active')) { closeModal(); }
   }
 });
-
-
-// ──────────────────────────────────────
-// SEARCH FUNCTIONALITY
-// ──────────────────────────────────────
-function handleSearch() {
-  const searchTerm = document.getElementById('searchWonum').value.trim().toLowerCase();
-  const btnClear = document.getElementById('btnClearSearch');
-  
-  // Show/hide clear button
-  btnClear.style.display = searchTerm ? 'block' : 'none';
-  
-  // Get current filter
-  const filterStatus = document.getElementById('filterStatus').value;
-  
-  // Apply both search and filter
-  let filtered = allData;
-  
-  // Apply status filter first
-  if (filterStatus) {
-    filtered = filtered.filter(r => 
-      (r.status_todolist || '').toUpperCase() === filterStatus
-    );
-  }
-  
-  // Apply search filter
-  if (searchTerm) {
-    filtered = filtered.filter(r => {
-      const wonum = (r.wonum || '').toLowerCase();
-      return wonum.includes(searchTerm);
-    });
-  }
-  
-  renderTable(filtered);
-}
-
-function clearSearch() {
-  document.getElementById('searchWonum').value = '';
-  document.getElementById('btnClearSearch').style.display = 'none';
-  applyFilter(); // Re-apply only status filter
-}
-

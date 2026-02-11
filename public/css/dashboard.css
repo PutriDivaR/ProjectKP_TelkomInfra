@@ -24,7 +24,6 @@ html, body {
 .main {
   max-width: 1920px;
   padding: 25px;
-  /* Tambah sedikit jarak agar tidak terlalu menempel ke sidebar */
   padding-left: 32px;
 }
 
@@ -242,7 +241,7 @@ html, body {
 
 .chart-wrapper {
   width: 100%;
-  height: 300px; /* sedikit diperkecil agar proporsional */
+  height: 300px; 
   display: flex;
   align-items: center;
   justify-content: center;
@@ -250,7 +249,7 @@ html, body {
 }
 
 .chart-wrapper.tall {
-  height: 360px; /* kurangi tinggi chart besar */
+  height: 360px; 
 }
 
 .chart-wrapper canvas {
@@ -259,7 +258,7 @@ html, body {
   display: block;
 }
 
-/* ============ TABLES ============ */
+
 .table-container {
   background: white;
   padding: 30px;
@@ -376,15 +375,14 @@ table tbody tr:last-child td {
   border-bottom: none;
 }
 
-/* Work Full Process Table */
 .table-work-full thead th {
   text-align: center;
   vertical-align: middle;
 }
 .table-work-full thead th,
 .table-work-full tbody td {
-  padding: 7px 7px; /* rapatkan */
-  font-size: 12px;    /* lebih kecil */
+  padding: 7px 7px;
+  font-size: 12px;   
 }
 
 .table-work-full tbody td:first-child {
@@ -392,16 +390,16 @@ table tbody tr:last-child td {
 }
 
 .table-work-full .progress-bar {
-  height: 8px; /* lebih tipis */
+  height: 8px; 
 }
 
 .table-work-full tbody tr:hover {
-  background: #f8fafc; /* hilangkan scale hover */
+  background: #f8fafc; 
   transform: none;
 }
 
 .table-container.compact {
-  padding: 20px; /* kurangi padding container */
+  padding: 20px; 
 }
 
 .table-work-full tbody td:first-child {
@@ -669,7 +667,7 @@ table tbody tr:last-child td {
 @media (max-width: 768px) {
   .main {
     padding: 15px;
-    padding-left: 20px; /* tetap beri jarak di mobile */
+    padding-left: 20px; 
   }
 
   .header {
@@ -743,4 +741,247 @@ table tbody tr:last-child td {
   font-size: 16px;
   color: #64748b;
   font-weight: 500;
+}
+/* ============ FILTER PANEL ============ */
+.filter-panel {
+  background: white;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 30px;
+  overflow: hidden;
+}
+
+.filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 30px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 2px solid #e2e8f0;
+  cursor: pointer;
+  user-select: none;
+}
+
+.filter-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-toggle-filter {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 700;
+  color: #64748b;
+  transition: all 0.2s;
+}
+
+.btn-toggle-filter:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.filter-content {
+  padding: 25px 30px;
+  display: block;
+}
+
+.filter-form {
+  margin-bottom: 25px;
+}
+
+.filter-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-group label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filter-input,
+.filter-select {
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1e293b;
+  transition: all 0.2s;
+  background: white;
+}
+
+.filter-input:focus,
+.filter-select:focus {
+  outline: none;
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.filter-select {
+  cursor: pointer;
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-apply-filter,
+.btn-clear-filter {
+  flex: 1;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-apply-filter {
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.btn-apply-filter:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4);
+}
+
+.btn-clear-filter {
+  background: white;
+  color: #64748b;
+  border: 2px solid #e2e8f0;
+}
+
+.btn-clear-filter:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+/* Export Section */
+.export-section {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding-top: 20px;
+  border-top: 2px solid #e2e8f0;
+}
+
+.export-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.export-buttons {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+}
+
+.btn-export {
+  flex: 1;
+  padding: 14px 24px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: none;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-export-pdf {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.btn-export-pdf:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.3);
+}
+
+.btn-export-excel {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.btn-export-excel:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
+}
+
+.btn-export:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Active Filters Display */
+.active-filters {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 2px solid #fbbf24;
+  border-radius: 12px;
+  padding: 16px 24px;
+  margin-bottom: 25px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.active-filters-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #92400e;
+}
+
+.active-filters-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  flex: 1;
+}
+
+.filter-tag {
+  background: white;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #92400e;
+  border: 1px solid #fbbf24;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }

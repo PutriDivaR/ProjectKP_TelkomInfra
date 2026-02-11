@@ -52,6 +52,7 @@ router.get('/api/wilayah-ridar', async (req, res) => {
 router.get('/api/todolist', async (req, res) => {
   try {
     console.log('🔍 Fetching todolist data...');
+    
     const [rows] = await db.query(`
       SELECT
         kt.*,
@@ -64,7 +65,8 @@ router.get('/api/todolist', async (req, res) => {
       LEFT JOIN master_activity ma ON kt.activity_id = ma.id
       LEFT JOIN wilayah_ridar wr ON kt.sto = wr.sto
       LEFT JOIN master_wo mw ON kt.wonum = mw.wonum
-      WHERE kt.wonum IS NOT NULL AND kt.wonum != ''
+      WHERE kt.wonum IS NOT NULL 
+        AND kt.wonum != ''
       ORDER BY kt.id DESC
     `);
 
@@ -132,7 +134,8 @@ router.post('/api/todolist/delete-selected', async (req, res) => {
   }
 });
 
-// POST import
+// POST import - BATCH PROCESSING VERSION
+// POST import - BATCH PROCESSING WITH DUPLICATE PREVENTION
 router.post('/api/todolist/import', async (req, res) => {
   const { rows } = req.body;
 
@@ -144,17 +147,24 @@ router.post('/api/todolist/import', async (req, res) => {
     return res.status(400).json({ success: false, message: 'Semua baris kosong' });
 
   const startTime = Date.now();
-  console.log(`⚡ Starting import for ${validRows.length} rows...`);
+  console.log(`⚡ Starting BATCH import for ${validRows.length} rows...`);
 
   let connection;
   try {
     connection = await db.getConnection();
+    
+    await connection.query('SET SESSION wait_timeout = 300');
+    await connection.query('SET SESSION interactive_timeout = 300');
+    
     await connection.beginTransaction();
 
+    // ============================================================
+    // STEP 1: BULK FETCH existing wonum from master_wo
+    // ============================================================
     const wonumList = validRows
       .map(r => r.wonum)
-      .filter(w => w && w.trim())
-      .map(w => w.trim());
+      .filter(w => w != null && w !== '')
+      .map(w => String(w).trim());
 
     const uniqueWonums = [...new Set(wonumList)];
     
@@ -162,24 +172,60 @@ router.post('/api/todolist/import', async (req, res) => {
     let wonumOdpMap = new Map();
 
     if (uniqueWonums.length > 0) {
-      const placeholders = uniqueWonums.map(() => '?').join(',');
-      const [existing] = await connection.query(
-        `SELECT wonum, odp_inputan FROM master_wo WHERE wonum IN (${placeholders})`,
-        uniqueWonums
-      );
+      console.log(`🔍 Checking ${uniqueWonums.length} unique wonum in master_wo...`);
+      
+      const FETCH_BATCH_SIZE = 1000;
+      for (let i = 0; i < uniqueWonums.length; i += FETCH_BATCH_SIZE) {
+        const batch = uniqueWonums.slice(i, i + FETCH_BATCH_SIZE);
+        const placeholders = batch.map(() => '?').join(',');
+        const [existing] = await connection.query(
+          `SELECT wonum, odp_inputan FROM master_wo WHERE wonum IN (${placeholders})`,
+          batch
+        );
 
-      existing.forEach(row => {
-        existingWonums.add(row.wonum);
-        wonumOdpMap.set(row.wonum, row.odp_inputan);
-      });
+        existing.forEach(row => {
+          existingWonums.add(row.wonum);
+          wonumOdpMap.set(row.wonum, row.odp_inputan);
+        });
+      }
+
+      console.log(`✅ Found ${existingWonums.size} existing wonum in master_wo`);
     }
 
+    // ============================================================
+    // STEP 1.5: CHECK existing wonum in kendala_teknisi_sistem
+    // ============================================================
+    let existingKendalaWonums = new Map(); // wonum -> id mapping
+
+    if (uniqueWonums.length > 0) {
+      console.log(`🔍 Checking existing wonum in kendala_teknisi_sistem...`);
+      
+      const FETCH_BATCH_SIZE = 1000;
+      for (let i = 0; i < uniqueWonums.length; i += FETCH_BATCH_SIZE) {
+        const batch = uniqueWonums.slice(i, i + FETCH_BATCH_SIZE);
+        const placeholders = batch.map(() => '?').join(',');
+        const [existing] = await connection.query(
+          `SELECT id, wonum FROM kendala_teknisi_sistem WHERE wonum IN (${placeholders})`,
+          batch
+        );
+
+        existing.forEach(row => {
+          existingKendalaWonums.set(row.wonum, row.id);
+        });
+      }
+
+      console.log(`✅ Found ${existingKendalaWonums.size} existing wonum in kendala_teknisi_sistem`);
+    }
+
+    // ============================================================
+    // STEP 2: PREPARE BULK INSERT/UPDATE for master_wo
+    // ============================================================
     const toInsertMasterWo = [];
     const toUpdateMasterWo = [];
 
     validRows.forEach(row => {
-      const wonum = (row.wonum || '').trim();
-      const odpInputan = (row.odp_inputan || '').trim();
+      const wonum = row.wonum != null ? String(row.wonum).trim() : '';
+      const odpInputan = row.odp_inputan != null ? String(row.odp_inputan).trim() : '';
 
       if (!wonum) return;
 
@@ -193,48 +239,194 @@ router.post('/api/todolist/import', async (req, res) => {
       }
     });
 
+    // ============================================================
+    // STEP 3: BATCH INSERT to master_wo
+    // ============================================================
     if (toInsertMasterWo.length > 0) {
-      const insertQuery = `INSERT INTO master_wo (wonum, odp_inputan, created_at, updated_at) VALUES ?`;
-      const insertValues = toInsertMasterWo.map(([wonum, odp]) => [wonum, odp, new Date(), new Date()]);
-      await connection.query(insertQuery, [insertValues]);
+      console.log(`📥 Inserting ${toInsertMasterWo.length} new wonum to master_wo...`);
+      
+      const INSERT_BATCH_SIZE = 500;
+      for (let i = 0; i < toInsertMasterWo.length; i += INSERT_BATCH_SIZE) {
+        const batch = toInsertMasterWo.slice(i, i + INSERT_BATCH_SIZE);
+        
+        const insertQuery = `
+          INSERT IGNORE INTO master_wo 
+            (wonum, odp_inputan, created_at, updated_at) 
+          VALUES ?
+        `;
+        
+        const insertValues = batch.map(([wonum, odp]) => [
+          wonum, 
+          odp, 
+          new Date(), 
+          new Date()
+        ]);
+        
+        await connection.query(insertQuery, [insertValues]);
+        
+        const progress = Math.min(i + INSERT_BATCH_SIZE, toInsertMasterWo.length);
+        console.log(`  ✓ Progress: ${progress}/${toInsertMasterWo.length} wonum inserted`);
+      }
+      
+      console.log(`✅ Bulk inserted ${toInsertMasterWo.length} new wonum to master_wo`);
     }
 
+    // ============================================================
+    // STEP 4: BATCH UPDATE to master_wo
+    // ============================================================
     if (toUpdateMasterWo.length > 0) {
-      const wonumList = toUpdateMasterWo.map(([_, wonum]) => `'${wonum}'`).join(',');
-      const caseStatements = toUpdateMasterWo.map(([odp, wonum]) => `WHEN '${wonum}' THEN '${odp}'`).join(' ');
-      const updateQuery = `UPDATE master_wo SET odp_inputan = CASE wonum ${caseStatements} END, updated_at = NOW() WHERE wonum IN (${wonumList})`;
-      await connection.query(updateQuery);
+      console.log(`🔄 Updating ${toUpdateMasterWo.length} wonum in master_wo...`);
+      
+      const UPDATE_BATCH_SIZE = 100;
+      for (let i = 0; i < toUpdateMasterWo.length; i += UPDATE_BATCH_SIZE) {
+        const batch = toUpdateMasterWo.slice(i, i + UPDATE_BATCH_SIZE);
+        
+        for (const [odp, wonum] of batch) {
+          await connection.query(
+            'UPDATE master_wo SET odp_inputan = ?, updated_at = NOW() WHERE wonum = ?',
+            [odp, wonum]
+          );
+        }
+        
+        const progress = Math.min(i + UPDATE_BATCH_SIZE, toUpdateMasterWo.length);
+        console.log(`  ✓ Progress: ${progress}/${toUpdateMasterWo.length} wonum updated`);
+      }
+      
+      console.log(`✅ Bulk updated ${toUpdateMasterWo.length} wonum in master_wo`);
     }
 
-    const insertKendalaQuery = `INSERT INTO kendala_teknisi_sistem (wonum, activity_teknisi, month_date, sto_inputan, created_at, updated_at) VALUES ?`;
-    const kendalaValues = validRows.map(row => [
-      (row.wonum || '').trim(),
-      (row.activity_teknisi || '').trim(),
-      (row.month_date || '').trim(),
-      (row.sto_inputan || '').trim(),
-      new Date(),
-      new Date()
-    ]);
+    // ============================================================
+    // STEP 5: BATCH INSERT/UPDATE to kendala_teknisi_sistem
+    // ============================================================
+    console.log(`📥 Processing ${validRows.length} rows to kendala_teknisi_sistem...`);
 
-    await connection.query(insertKendalaQuery, [kendalaValues]);
+    const KENDALA_BATCH_SIZE = 500;
+    let insertedCount = 0;
+    let updatedCount = 0;
+
+    // Separate rows into INSERT and UPDATE
+    const rowsToInsert = [];
+    const rowsToUpdate = [];
+
+    validRows.forEach(row => {
+      const wonum = row.wonum != null ? String(row.wonum).trim() : '';
+      
+      if (!wonum) return;
+
+      if (existingKendalaWonums.has(wonum)) {
+        // UPDATE existing record
+        rowsToUpdate.push({
+          id: existingKendalaWonums.get(wonum),
+          wonum,
+          activity_teknisi: row.activity_teknisi != null ? String(row.activity_teknisi).trim() : '',
+          month_date: row.month_date != null ? String(row.month_date).trim() : '',
+          sto: row.sto != null ? String(row.sto).trim() : ''
+        });
+      } else {
+        // INSERT new record
+        rowsToInsert.push({
+          wonum,
+          activity_teknisi: row.activity_teknisi != null ? String(row.activity_teknisi).trim() : '',
+          month_date: row.month_date != null ? String(row.month_date).trim() : '',
+          sto: row.sto != null ? String(row.sto).trim() : ''
+        });
+      }
+    });
+
+    // BATCH INSERT
+    if (rowsToInsert.length > 0) {
+      console.log(`📥 Inserting ${rowsToInsert.length} NEW rows...`);
+      
+      for (let i = 0; i < rowsToInsert.length; i += KENDALA_BATCH_SIZE) {
+        const batch = rowsToInsert.slice(i, i + KENDALA_BATCH_SIZE);
+        
+        const insertKendalaQuery = `
+          INSERT INTO kendala_teknisi_sistem 
+            (wonum, activity_teknisi, month_date, sto, created_at, updated_at) 
+          VALUES ?
+        `;
+
+        const kendalaValues = batch.map(row => [
+          row.wonum,
+          row.activity_teknisi,
+          row.month_date,
+          row.sto,
+          new Date(),
+          new Date()
+        ]);
+
+        await connection.query(insertKendalaQuery, [kendalaValues]);
+        
+        insertedCount += batch.length;
+        console.log(`  ✓ Progress: ${insertedCount}/${rowsToInsert.length} rows inserted`);
+      }
+    }
+
+    // BATCH UPDATE
+    if (rowsToUpdate.length > 0) {
+      console.log(`🔄 Updating ${rowsToUpdate.length} EXISTING rows...`);
+      
+      const UPDATE_BATCH_SIZE = 100;
+      for (let i = 0; i < rowsToUpdate.length; i += UPDATE_BATCH_SIZE) {
+        const batch = rowsToUpdate.slice(i, i + UPDATE_BATCH_SIZE);
+        
+        for (const row of batch) {
+          await connection.query(`
+            UPDATE kendala_teknisi_sistem 
+            SET activity_teknisi = ?, month_date = ?, sto = ?, updated_at = NOW()
+            WHERE id = ?
+          `, [row.activity_teknisi, row.month_date, row.sto, row.id]);
+        }
+        
+        updatedCount += batch.length;
+        console.log(`  ✓ Progress: ${updatedCount}/${rowsToUpdate.length} rows updated`);
+      }
+    }
+
+    console.log(`✅ Total: ${insertedCount} inserted, ${updatedCount} updated`);
+
     await connection.commit();
 
     const duration = Date.now() - startTime;
+    console.log(`⚡ BATCH import completed in ${duration}ms (${(duration/1000).toFixed(2)}s)`);
 
     res.json({ 
       success: true, 
-      message: `Import berhasil: ${validRows.length} baris dalam ${(duration/1000).toFixed(2)} detik`, 
+      message: `Import berhasil: ${insertedCount} baris baru, ${updatedCount} baris di-update dalam ${(duration/1000).toFixed(2)} detik`, 
       count: validRows.length,
+      inserted: insertedCount,
+      updated: updatedCount,
       insertedToMasterWo: toInsertMasterWo.length,
       updatedMasterWo: toUpdateMasterWo.length,
       duration: `${(duration/1000).toFixed(2)}s`
     });
+
   } catch (err) {
-    if (connection) await connection.rollback();
     console.error('❌ todolist import ERROR:', err);
-    res.status(500).json({ success: false, message: 'Gagal import data', error: err.message });
+    
+    if (connection) {
+      try {
+        await connection.rollback();
+        console.log('🔄 Transaction rolled back');
+      } catch (rollbackErr) {
+        console.error('❌ Rollback error:', rollbackErr.message);
+      }
+    }
+    
+    res.status(500).json({ 
+      success: false, 
+      message: 'Gagal import data: ' + err.message, 
+      error: err.message 
+    });
   } finally {
-    if (connection) connection.release();
+    if (connection) {
+      try {
+        connection.release();
+        console.log('✅ Connection released');
+      } catch (releaseErr) {
+        console.error('❌ Release error:', releaseErr.message);
+      }
+    }
   }
 });
 

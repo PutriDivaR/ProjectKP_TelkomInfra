@@ -96,8 +96,12 @@
   <div class="sidebar-footer">
     <div class="user-info">
       <i class="fa-solid fa-user-circle"></i>
-      <span class="user-name">Admin User</span>
+      <span class="user-name"><%= (user && user.username) ? user.username : 'Pengguna' %></span>
     </div>
+    <a href="/logout" class="logout-btn" title="Keluar">
+      <i class="fa-solid fa-right-from-bracket"></i>
+      <span>Logout</span>
+    </a>
   </div>
 
 </div>
