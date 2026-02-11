@@ -28,12 +28,14 @@ app.use((req, res, next) => {
 const dashboardRoutes = require('./routes/dashboard.routes'); // ✅ Path relatif
 const kendalaTeknikRoutes = require('./routes/kendalateknik.routes'); // ✅ Path relatif
 const todolistRoutes = require('./routes/todolist.routes'); // ✅ missing — mounts /todolist
+const wilayahRidarRoutes = require('./routes/wilayahridar.routes');
 
 // Use routes
 // Mount dashboard under /dashboard so links like /dashboard and /dashboard/api/refresh work
 app.use('/dashboard', dashboardRoutes);
 app.use('/', kendalaTeknikRoutes);
 app.use('/', todolistRoutes); // serve /todolist and its APIs
+app.use('/', wilayahRidarRoutes); 
 
 // bot API routes 
 const botRoutes = require('./routes/bot.routes');
