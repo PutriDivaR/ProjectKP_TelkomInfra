@@ -50,12 +50,65 @@
       </div>
     </div>
 
-    <div class="rekap-toolbar">
-      <form method="GET" action="/kendala" class="search-form">
-        <i class="fa-solid fa-magnifying-glass search-icon"></i>
-        <input type="text" name="q" placeholder="Cari Wonum" value="<%= typeof q !== 'undefined' ? (q || '') : '' %>" class="search-input" id="searchWonum">
-      </form>
+
+    <!-- *Perubahan*-->
+<div class="rekap-toolbar">
+  <form method="GET" action="/kendala" class="filter-form">
+    <div class="filter-field search-field">
+      <i class="fa-solid fa-magnifying-glass search-icon"></i>
+      <input type="text" name="q" placeholder="Cari WONUM / Ticket ID" value="<%= typeof q !== 'undefined' ? (q || '') : '' %>" class="search-input" id="searchWonum">
     </div>
+
+    <select name="status" class="filter-input">
+      <option value="">Status HI (All)</option>
+      <option value="PROGRESS" <%= status === 'PROGRESS' ? 'selected' : '' %>>PROGRESS</option>
+      <option value="REJECT" <%= status === 'REJECT' ? 'selected' : '' %>>REJECT</option>
+      <option value="CLOSED" <%= status === 'CLOSED' ? 'selected' : '' %>>CLOSED</option>
+    </select>
+
+    <select name="sto" class="filter-input">
+      <option value="">STO (All)</option>
+      <% if (typeof listSto !== 'undefined' && listSto && listSto.length) { %>
+        <% listSto.forEach(function(s) { %>
+          <option value="<%= s %>" <%= sto === s ? 'selected' : '' %>><%= s %></option>
+        <% }); %>
+      <% } %>
+    </select>
+
+    <select name="ttic" class="filter-input">
+      <option value="">TTIC (All)</option>
+      <% if (typeof listTtic !== 'undefined' && listTtic && listTtic.length) { %>
+        <% listTtic.forEach(function(t) { %>
+          <option value="<%= t %>" <%= ttic === t ? 'selected' : '' %>><%= t %></option>
+        <% }); %>
+      <% } %>
+    </select>
+
+    <input type="date" name="date" class="filter-input" value="<%= date || '' %>" title="Tanggal">
+
+    <select name="per_page" class="filter-input">
+      <option value="25" <%= perPage === 25 ? 'selected' : '' %>>25 / page</option>
+      <option value="50" <%= perPage === 50 ? 'selected' : '' %>>50 / page</option>
+      <option value="100" <%= perPage === 100 ? 'selected' : '' %>>100 / page</option>
+    </select>
+
+    <button type="submit" class="btn-input-data"><i class="fa-solid fa-filter"></i> Filter</button>
+    <a href="/kendala" class="btn-kembali">Reset</a>
+  </form>
+
+  <!-- EXPORT SECTION -->
+  <div class="export-controls">
+    <select id="exportType" class="filter-input">
+      <option value="">Export</option>
+      <option value="pdf">PDF</option>
+      <option value="excel">Excel</option>
+    </select>
+    <button type="button" id="btnExport" class="btn-input-data">
+      <i class="fa-solid fa-file-export"></i> Export
+    </button>
+  </div>
+</div>
+
 
     <div class="table-wrapper">
       <table class="kendala-table rekap-table">
@@ -63,37 +116,31 @@
           <tr>
             <th>NO</th>
             <th>WONUM</th>
-            <th>TICKET ID</th>
             <th>STATUS HI</th>
             <th>STO</th>
             <th>TTD KB</th>
             <th>TTIC</th>
-            <th>KETERANGAN</th>
             <th>INPUT DATE</th>
-            <th>NAMA TEKNISI</th>
             <th>AKSI</th>
-            <th></th>
           </tr>
         </thead>
         <tbody>
           <% const list = typeof filteredData !== 'undefined' ? filteredData : data; %>
           <% if (!list || list.length === 0) { %>
             <tr>
-              <td colspan="11" class="empty-row">Tidak ada data</td>
+              <td colspan="8" class="empty-row">Tidak ada data</td>
             </tr>
           <% } else { %>
             <% list.forEach((d, i) => { %>
               <tr data-id="<%= d.id %>" data-wonum="<%= d.wonum %>" data-ticket_id="<%= d.ticket_id || '' %>" data-status_hi="<%= d.status_hi || '' %>" data-sto="<%= d.sto || '' %>" data-ttd_kb="<%= d.ttd_kb || '' %>" data-ttic="<%= d.ttic || '' %>" data-keterangan="<%= (d.keterangan || '').replace(/"/g, '&quot;') %>" data-created_at="<%= d.created_at ? new Date(d.created_at).toISOString() : '' %>" data-updated_at="<%= d.updated_at ? new Date(d.updated_at).toISOString() : '' %>" data-nama_teknis="<%= d.nama_teknis || '' %>">
-                <td><%= i + 1 %></td>
+                <td><%= (currentPage - 1) * (perPage || 50) + i + 1 %></td>
+
                 <td><%= d.wonum %></td>
-                <td><%= d.ticket_id || '-' %></td>
                 <td><%= d.status_hi %></td>
                 <td><%= d.sto || '-' %></td>
                 <td><%= d.ttd_kb || '-' %></td>
                 <td><%= d.ttic || '-' %></td>
-                <td><%= d.keterangan || '-' %></td>
                 <td><%= d.updated_at ? new Date(d.updated_at).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'medium' }).replace(/\./g, '-') : (d.created_at ? new Date(d.created_at).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'medium' }).replace(/\./g, '-') : '-') %></td>
-                <td><%= d.nama_teknis || '-' %></td>
                 <td>
                   <button type="button" class="btn-view btn-detail" title="Detail"><i class="fa-solid fa-eye"></i></button>
                   <button type="button" class="btn-delete" title="Hapus"><i class="fa-solid fa-trash"></i></button>
@@ -104,6 +151,35 @@
         </tbody>
       </table>
     </div>
+
+    <!-- *tambahan* -->
+    <!-- PAGINATION -->
+<% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+<div style="margin-top:20px; display:flex; justify-content:center; gap:5px; flex-wrap:wrap;">
+
+  <% if (currentPage > 1) { %>
+    <a class="page-link btn-kembali" href="/kendala?page=<%= currentPage - 1 %><%= queryString ? '&' + queryString : '' %>">
+      &laquo;
+    </a>
+  <% } %>
+
+  <% for (let p = 1; p <= totalPages; p++) { %>
+    <a class="page-link <%= p === currentPage ? 'btn-input-data' : 'btn-kembali' %>"
+       href="/kendala?page=<%= p %><%= queryString ? '&' + queryString : '' %>">
+       <%= p %>
+    </a>
+  <% } %>
+
+  <% if (currentPage < totalPages) { %>
+    <a class="page-link btn-kembali" href="/kendala?page=<%= currentPage + 1 %><%= queryString ? '&' + queryString : '' %>">
+      &raquo;
+    </a>
+  <% } %>
+
+</div>
+<% } %>
+ 
+
   <% } %>
 
   <% if (mode === 'input') { %>
@@ -190,15 +266,15 @@
         </div>
       </div>
       <div class="form-action">
-        <button type="submit" class="btn-simpan">Simpan</button>
-        <a href="/kendala" class="btn-kembali">Kembali</a>
+        <button type="submit" class="btn-simpan"><i class="fa-solid fa-pencil"></i> Simpan</button>
+        <a href="/kendala" class="btn-kembali"><i class="fa-solid fa-arrow-left"></i> Kembali</a>
       </div>
     </form>
   </div>
   <% } %>
 
   <% if (mode === 'edit') { %>
-  <h3 class="section-title">Detail Data Kendala</h3>
+  <h3 class="section-title">Edit Data Kendala</h3>
   <% if (typeof errorMsg !== 'undefined' && errorMsg) { %>
   <div class="alert alert-error">
     <%= errorMsg %>
@@ -280,7 +356,7 @@
 <script src="/js/kendala.js"></script>
 
 <!-- Detail Modal -->
-<div id="kendalaDetailModal" class="modal" style="display:none;">
+<div id="kendalaDetailModal" class="modal">
   <div class="modal-content">
     <span id="modalClose" class="modal-close">&times;</span>
     <h3>Detail Kendala</h3>
@@ -296,8 +372,8 @@
       <p><strong>Nama Teknisi:</strong> <span id="md-nama"></span></p>
     </div>
     <div class="modal-actions">
-      <a id="md-edit-link" href="#" class="btn-input-data">Edit</a>
-      <button id="md-close-btn" class="btn-back">Close</button>
+      <a id="md-edit-link" href="#" class="btn-input-data"><i class="fa-solid fa-pen"></i> Edit</a>
+      <button id="md-close-btn" class="btn-back"><i class="fa-solid fa-xmark"></i> Close</button>
     </div>
   </div>
 </div>

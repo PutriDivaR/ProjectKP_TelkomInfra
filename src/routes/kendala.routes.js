@@ -2,6 +2,11 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 
+const ExcelJS = require('exceljs');
+const PDFDocument = require('pdfkit');
+
+
+
 // Daftar STO (kata pertama tiap baris) untuk dropdown & validasi
 const STO_LIST = [
   'PBB', 'BKR', 'MIS', 'PKR', 'PWG', 'RBI', 'SOK', 'AMK', 'BLS', 'KLE', 'PMB', 'PNP', 'RGT', 'TAK', 'TBH',
@@ -31,38 +36,121 @@ const formatTtdKb = (input) => {
   return `${days} Hari`;
 };
 
+const normalizeDate = (value) => {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  date.setHours(0, 0, 0, 0);
+  return date;
+};
+
+const applyFilters = (rows, filters) => {
+  const qLower = (filters.q || '').toLowerCase();
+  const status = filters.status || '';
+  const sto = filters.sto || '';
+  const ttic = filters.ttic || '';
+  const dateFilter = normalizeDate(filters.date);
+
+  return rows.filter((row) => {
+    if (qLower) {
+      const wonum = (row.wonum || '').toLowerCase();
+      const ticket = (row.ticket_id || '').toLowerCase();
+      if (!wonum.includes(qLower) && !ticket.includes(qLower)) return false;
+    }
+
+    if (status && status !== 'ALL' && (row.status_hi || '') !== status) return false;
+    if (sto && (row.sto || '') !== sto) return false;
+    if (ttic && (row.ttic || '') !== ttic) return false;
+
+    if (dateFilter) {
+      const rowDate = normalizeDate(row.tanggal_input || row.updated_at || row.created_at);
+      if (!rowDate) return false;
+      if (rowDate.getTime() !== dateFilter.getTime()) return false;
+    }
+
+    return true;
+  });
+};
+
+const buildQueryString = (filters) => {
+  const params = new URLSearchParams();
+  if (filters.q) params.set('q', filters.q);
+  if (filters.status) params.set('status', filters.status);
+  if (filters.sto) params.set('sto', filters.sto);
+  if (filters.ttic) params.set('ttic', filters.ttic);
+  if (filters.date) params.set('date', filters.date);
+  if (filters.perPage) params.set('per_page', String(filters.perPage));
+  return params.toString();
+};
+
 // ============================
 // REKAP DATA
 // ============================
 router.get('/', async (req, res) => {
   const q = (req.query.q || '').trim();
+  const status = (req.query.status || '').trim();
+  const sto = (req.query.sto || '').trim();
+  const ttic = (req.query.ttic || '').trim();
+  const date = (req.query.date || '').trim();
+  const perPage = parseInt(req.query.per_page, 10) || 50;
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = perPage;
+  const offset = (page - 1) * limit;
 
-  const [data] = await db.query(`
+  const [allData] = await db.query(`
     SELECT kp.*, mw.ticket_id
     FROM kendala_pelanggan kp
     LEFT JOIN master_wo mw ON kp.wonum = mw.wonum
     ORDER BY kp.created_at DESC
   `);
 
+  const data = allData;
+
   const countProgress = data.filter(d => d.status_hi === 'PROGRESS').length;
   const countReject = data.filter(d => d.status_hi === 'REJECT').length;
   const countClosed = data.filter(d => d.status_hi === 'CLOSED').length;
 
-  let filteredData = data;
-  if (q) {
-    const lower = q.toLowerCase();
-    filteredData = data.filter(d => (d.wonum || '').toLowerCase().includes(lower));
-  }
+  const filters = {
+    q,
+    status,
+    sto,
+    ttic,
+    date,
+    perPage
+  };
+
+  let filteredData = applyFilters(data, filters);
+
+  const totalRows = filteredData.length;
+  const totalPages = Math.max(1, Math.ceil(totalRows / limit));
+  const currentPage = Math.min(Math.max(page, 1), totalPages);
+  const safeOffset = (currentPage - 1) * limit;
+
+  const paginatedData = filteredData.slice(safeOffset, safeOffset + limit);
+
+  const listSto = STO_LIST;
+  const listTtic = Array.from(new Set(data.map(d => d.ttic).filter(Boolean)));
+  const queryString = buildQueryString(filters);
 
   res.render('kendala', {
     title: 'Rekap Kendala Pelanggan',
     mode: 'rekap',
-    data,
-    filteredData,
+    data: paginatedData,
+    filteredData: paginatedData,
     countProgress,
     countReject,
     countClosed,
+    currentPage,
+    totalPages,
     q: req.query.q || '',
+    status,
+    sto,
+    ttic,
+    date,
+    perPage,
+    listSto,
+    listTtic,
+    queryString,
     saved: req.query.saved === '1',
     warningWonum: req.query.warning === 'wonum'
   });
@@ -299,6 +387,168 @@ router.post('/edit/:id', async (req, res) => {
 });
 
 // ============================
+// EXPORT DATA
+// ============================
+router.get('/export/excel', async (req, res) => {
+  try {
+    const filters = {
+      q: (req.query.q || '').trim(),
+      status: (req.query.status || '').trim(),
+      sto: (req.query.sto || '').trim(),
+      ttic: (req.query.ttic || '').trim(),
+      date: (req.query.date || '').trim(),
+      perPage: null
+    };
+
+    const [allData] = await db.query(`
+      SELECT kp.*, mw.ticket_id
+      FROM kendala_pelanggan kp
+      LEFT JOIN master_wo mw ON kp.wonum = mw.wonum
+      ORDER BY kp.created_at DESC
+    `);
+
+    const rows = applyFilters(allData, filters);
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Kendala Pelanggan');
+
+    worksheet.columns = [
+      { header: 'WONUM', key: 'wonum', width: 16 },
+      { header: 'TICKET ID', key: 'ticket_id', width: 16 },
+      { header: 'STATUS HI', key: 'status_hi', width: 12 },
+      { header: 'STO', key: 'sto', width: 10 },
+      { header: 'TTD KB', key: 'ttd_kb', width: 10 },
+      { header: 'TTIC', key: 'ttic', width: 12 },
+      { header: 'KETERANGAN', key: 'keterangan', width: 30 },
+      { header: 'INPUT DATE', key: 'input_date', width: 18 },
+      { header: 'NAMA TEKNISI', key: 'nama_teknis', width: 16 }
+    ];
+
+    rows.forEach((row) => {
+      const rawDate = row.updated_at || row.created_at || row.tanggal_input || null;
+      const dateStr = rawDate ? new Date(rawDate).toLocaleString('id-ID') : '-';
+      worksheet.addRow({
+        wonum: row.wonum || '-',
+        ticket_id: row.ticket_id || '-',
+        status_hi: row.status_hi || '-',
+        sto: row.sto || '-',
+        ttd_kb: row.ttd_kb || '-',
+        ttic: row.ttic || '-',
+        keterangan: row.keterangan || '-',
+        input_date: dateStr,
+        nama_teknis: row.nama_teknis || '-'
+      });
+    });
+
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
+    res.setHeader('Content-Disposition', 'attachment; filename="kendala_pelanggan.xlsx"');
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    console.error('Export excel error:', err);
+    res.status(500).send('Export excel failed');
+  }
+});
+
+router.get('/export/pdf', async (req, res) => {
+  try {
+    const filters = {
+      q: (req.query.q || '').trim(),
+      status: (req.query.status || '').trim(),
+      sto: (req.query.sto || '').trim(),
+      ttic: (req.query.ttic || '').trim(),
+      date: (req.query.date || '').trim(),
+      perPage: null
+    };
+
+    const [allData] = await db.query(`
+      SELECT kp.*, mw.ticket_id
+      FROM kendala_pelanggan kp
+      LEFT JOIN master_wo mw ON kp.wonum = mw.wonum
+      ORDER BY kp.created_at DESC
+    `);
+
+    const rows = applyFilters(allData, filters);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename="kendala_pelanggan.pdf"');
+
+    const doc = new PDFDocument({ size: 'A4', layout: 'landscape', margin: 24 });
+    doc.pipe(res);
+
+    doc.fontSize(14).text('Kendala Pelanggan', { align: 'center' });
+    doc.moveDown(0.5);
+
+    const columns = [
+      { header: 'WONUM', width: 90 },
+      { header: 'TICKET ID', width: 90 },
+      { header: 'STATUS', width: 70 },
+      { header: 'STO', width: 50 },
+      { header: 'TTD', width: 50 },
+      { header: 'TTIC', width: 70 },
+      { header: 'KETERANGAN', width: 170 },
+      { header: 'INPUT DATE', width: 90 },
+      { header: 'TEKNISI', width: 90 }
+    ];
+
+    const startX = doc.page.margins.left;
+    let y = doc.y + 6;
+
+    const drawHeader = () => {
+      let x = startX;
+      doc.fontSize(9).font('Helvetica-Bold');
+      columns.forEach((col) => {
+        doc.text(col.header, x, y, { width: col.width, ellipsis: true });
+        x += col.width;
+      });
+      doc.moveTo(startX, y + 12).lineTo(startX + columns.reduce((a, c) => a + c.width, 0), y + 12).stroke('#cccccc');
+      y += 18;
+      doc.font('Helvetica');
+    };
+
+    drawHeader();
+
+    rows.forEach((row) => {
+      let x = startX;
+      const rawDate = row.updated_at || row.created_at || row.tanggal_input || null;
+      const dateStr = rawDate ? new Date(rawDate).toLocaleDateString('id-ID') : '-';
+      const values = [
+        row.wonum || '-',
+        row.ticket_id || '-',
+        row.status_hi || '-',
+        row.sto || '-',
+        row.ttd_kb || '-',
+        row.ttic || '-',
+        row.keterangan || '-',
+        dateStr,
+        row.nama_teknis || '-'
+      ];
+
+      if (y > doc.page.height - 40) {
+        doc.addPage();
+        y = doc.page.margins.top;
+        drawHeader();
+      }
+
+      doc.fontSize(8);
+      values.forEach((val, idx) => {
+        doc.text(String(val), x, y, { width: columns[idx].width, ellipsis: true });
+        x += columns[idx].width;
+      });
+      y += 14;
+    });
+
+    doc.end();
+  } catch (err) {
+    console.error('Export pdf error:', err);
+    res.status(500).send('Export pdf failed');
+  }
+});
+
+// ============================
 // DELETE DATA (via POST)
 // ============================
 router.post('/delete/:id', async (req, res) => {
@@ -310,5 +560,77 @@ router.post('/delete/:id', async (req, res) => {
     res.status(500).json({ ok: false, error: err.message || 'delete_failed' });
   }
 });
+
+
+// ============================
+// EXPORT EXCEL
+// ============================
+router.get('/export/excel', async (req, res) => {
+  const [data] = await db.query(`
+    SELECT kp.*, mw.ticket_id
+    FROM kendala_pelanggan kp
+    LEFT JOIN master_wo mw ON kp.wonum = mw.wonum
+    ORDER BY kp.created_at DESC
+  `);
+
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Kendala');
+
+  worksheet.columns = [
+    { header: 'WONUM', key: 'wonum', width: 20 },
+    { header: 'TICKET ID', key: 'ticket_id', width: 20 },
+    { header: 'STATUS HI', key: 'status_hi', width: 15 },
+    { header: 'STO', key: 'sto', width: 15 },
+    { header: 'TTD KB', key: 'ttd_kb', width: 15 },
+    { header: 'TTIC', key: 'ttic', width: 15 },
+    { header: 'KETERANGAN', key: 'keterangan', width: 30 },
+    { header: 'NAMA TEKNISI', key: 'nama_teknis', width: 20 }
+  ];
+
+  data.forEach(row => worksheet.addRow(row));
+
+  res.setHeader(
+    'Content-Type',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  );
+  res.setHeader(
+    'Content-Disposition',
+    'attachment; filename=kendala.xlsx'
+  );
+
+  await workbook.xlsx.write(res);
+  res.end();
+});
+
+// ============================
+// EXPORT PDF
+// ============================
+router.get('/export/pdf', async (req, res) => {
+  const [data] = await db.query(`
+    SELECT kp.*, mw.ticket_id
+    FROM kendala_pelanggan kp
+    LEFT JOIN master_wo mw ON kp.wonum = mw.wonum
+    ORDER BY kp.created_at DESC
+  `);
+
+  const doc = new PDFDocument({ margin: 30, size: 'A4' });
+
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', 'attachment; filename=kendala.pdf');
+
+  doc.pipe(res);
+
+  doc.fontSize(14).text('Laporan Kendala Pelanggan', { align: 'center' });
+  doc.moveDown();
+
+  data.forEach((d, i) => {
+    doc.fontSize(8).text(
+      `${i + 1}. ${d.wonum} | ${d.ticket_id || '-'} | ${d.status_hi} | ${d.sto || '-'}`
+    );
+  });
+
+  doc.end();
+});
+
 
 module.exports = router;
