@@ -76,14 +76,25 @@
   </div>
 
   <h3>Riwayat Update</h3>
-  <ul class="log-list">
-    <% logs.forEach(l => { %>
-      <li>
-        <b><%= l.status_todolist %></b> - <%= l.solusi_progress %>
-        (<%= l.updated_at %>)
-      </li>
-    <% }) %>
-  </ul>
+  <div class="log-container">
+    <% if (!logs || logs.length === 0) { %>
+      <p class="log-empty">Belum ada riwayat update</p>
+    <% } else { %>
+      <% logs.forEach((l, idx) => { %>
+        <div class="log-item">
+          <div class="log-header">
+            <span class="log-index">#<%= logs.length - idx %></span>
+            <span class="log-status"><%= l.status_todolist %></span>
+            <span class="log-date"><%= new Date(l.updated_at).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'long' }) %></span>
+          </div>
+          <div class="log-content">
+            <p class="log-activity"><strong><%= l.activity_teknisi %></strong></p>
+            <p class="log-message"><%= l.solusi_progress %></p>
+          </div>
+        </div>
+      <% }) %>
+    <% } %>
+  </div>
 </div>
 
 <script src="/js/daily-detail.js"></script>

@@ -1,0 +1,130 @@
+/* Data Kendala - Red theme seperti daily (extends daily.css) */
+
+/* Tabs - Red theme */
+.datakendala-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 20px;
+  background: white;
+  padding: 6px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  width: fit-content;
+}
+
+.tab-btn {
+  padding: 12px 24px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-btn:hover {
+  background: #fff5f5;
+  color: #dc2626;
+}
+
+.tab-btn.active {
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+}
+
+.tab-panel {
+  display: none;
+}
+
+.tab-panel.active {
+  display: block;
+}
+
+/* Column sizing */
+.col-no { 
+  width: 45px; 
+  text-align: center;
+}
+
+.col-wonum { 
+  min-width: 110px; 
+  max-width: 140px;
+}
+
+.col-ticket { 
+  min-width: 110px; 
+  max-width: 140px;
+}
+
+.col-sto { 
+  min-width: 80px; 
+  max-width: 100px;
+}
+
+.col-bulan { 
+  min-width: 100px; 
+  max-width: 130px;
+}
+
+.col-created { 
+  min-width: 110px; 
+  max-width: 140px;
+}
+
+.col-manja { 
+  min-width: 110px; 
+  max-width: 140px;
+}
+
+.col-status { 
+  min-width: 120px; 
+  max-width: 150px;
+}
+
+.col-kendala { 
+  min-width: 140px; 
+  max-width: 180px;
+}
+
+.col-kategori { 
+  min-width: 95px; 
+  max-width: 120px;
+}
+
+.col-catatan { 
+  min-width: 150px; 
+  max-width: 200px;
+}
+
+.col-progress { 
+  min-width: 140px; 
+  max-width: 180px;
+}
+
+/* Search form inline */
+.search-form-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.search-form-inline .search-container { margin: 0; }
+.search-form-inline .btn-small { flex-shrink: 0; }
+
+/* Kategori select di tabel */
+.kategori-select {
+  padding: 6px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 13px;
+  min-width: 100px;
+  background: #fff;
+  cursor: pointer;
+}
+.kategori-select:focus {
+  outline: none;
+  border-color: #dc2626;
+}
