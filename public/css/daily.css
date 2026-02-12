@@ -291,23 +291,27 @@
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: 13px;
+  table-layout: auto;
 }
 
 .data-table thead th {
   background: linear-gradient(135deg, #b91c1c 0%, #dc2626 50%, #ef4444 100%);
   color: white;
-  padding: 12px 16px;
+  padding: 15px 12px;
   text-align: left;
   font-weight: 700;
   border: none;
+  white-space: nowrap;
+  font-size: 13px;
 }
 
 .data-table tbody td {
-  padding: 12px 16px;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 14px 12px;
+  border-bottom: 1px solid #e8eef7;
   color: #475569;
   vertical-align: middle;
+  word-break: break-word;
 }
 
 .data-table tbody tr {
@@ -318,10 +322,19 @@
   background: #fff5f5;
 }
 
+.data-table tbody tr:nth-child(even) {
+  background: #f8f9fc;
+}
+
+.data-table tbody tr:nth-child(even):hover {
+  background: #fff5f5;
+}
+
 .loading-cell {
   text-align: center;
   color: #94a3b8;
-  padding: 28px !important;
+  padding: 40px 12px !important;
+  font-size: 14px;
 }
 
 .btn-detail {
@@ -343,45 +356,85 @@
 
 /* Column sizing */
 .col-no {
-  width: 50px;
+  width: 45px;
+  text-align: center;
 }
 
 .col-wonum {
-  width: 120px;
+  min-width: 110px;
+  max-width: 140px;
 }
 
 .col-nama {
-  width: 150px;
+  min-width: 140px;
+  max-width: 180px;
 }
 
 .col-sto {
-  width: 100px;
+  min-width: 80px;
+  max-width: 100px;
 }
 
 .col-ticket {
-  width: 120px;
+  min-width: 110px;
+  max-width: 140px;
 }
 
 .col-package {
-  width: 150px;
+  min-width: 140px;
+  max-width: 180px;
 }
 
 .col-status {
-  width: 150px;
+  min-width: 130px;
+  max-width: 160px;
 }
 
 .col-lat,
 .col-lang {
-  width: 100px;
+  min-width: 95px;
+  max-width: 120px;
 }
 
 .col-created {
-  width: 120px;
+  min-width: 110px;
+  max-width: 140px;
+}
+
+.col-bulan {
+  min-width: 100px;
+  max-width: 130px;
+}
+
+.col-manja {
+  min-width: 110px;
+  max-width: 140px;
+}
+
+.col-kendala {
+  min-width: 140px;
+  max-width: 180px;
+}
+
+.col-kategori {
+  min-width: 95px;
+  max-width: 120px;
+}
+
+.col-catatan {
+  min-width: 150px;
+  max-width: 200px;
+}
+
+.col-progress {
+  min-width: 140px;
+  max-width: 180px;
 }
 
 .col-aksi {
-  width: 100px;
+  width: 90px;
   text-align: center;
+  min-width: 90px;
 }
 
 /* ============ PAGINATION ============ */
@@ -691,3 +744,111 @@
   .field-row label { width:120px; }
   .search-wrap input { width: 100%; }
 }
+
+/* ============ LOG/HISTORY SECTION ============ */
+.log-container {
+  margin-top: 20px;
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border: 1px solid #e6e6e6;
+}
+
+.log-item {
+  padding: 16px;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-left: 4px solid #dc2626;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.log-item:last-child {
+  margin-bottom: 0;
+}
+
+.log-item:hover {
+  box-shadow: 0 4px 12px rgba(185, 28, 28, 0.1);
+  transform: translateX(2px);
+}
+
+.log-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+
+.log-index {
+  background: #dc2626;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  min-width: 30px;
+  text-align: center;
+}
+
+.log-status {
+  background: #ef4444;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 12px;
+  flex: 0 0 auto;
+}
+
+.log-date {
+  color: #64748b;
+  font-size: 12px;
+  margin-left: auto;
+}
+
+.log-content {
+  margin-top: 8px;
+}
+
+.log-activity {
+  margin: 0 0 6px 0;
+  color: #1e293b;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.log-message {
+  margin: 0;
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.log-empty {
+  text-align: center;
+  color: #94a3b8;
+  padding: 20px;
+  font-size: 14px;
+  font-style: italic;
+}
+
+@media (max-width:768px) {
+  .log-item {
+    padding: 12px;
+  }
+
+  .log-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .log-date {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+

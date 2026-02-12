@@ -25,7 +25,7 @@
 
     <li>
       <a href="/todolist" data-title="Kendala Teknik Sistem">
-        <i class="fa-solid fa-clipboard-list"></i>
+        <i class="fa-solid fa-gears"></i>
         <span class="label">Kendala Teknik Sistem</span>
       </a>
     </li>
@@ -44,22 +44,22 @@
       </a>
     </li>
 
-    <!-- KENDALA with Submenu (seperti Sumber Data) -->
-    <li class="has-submenu">
-      <a href="#" class="menu-toggle" data-title="Kendala" onclick="toggleSubmenu(event)">
-        <i class="fa-solid fa-triangle-exclamation"></i>
+    <!-- KENDALA with Submenu -->
+    <li class="has-submenu <%= typeof activePage !== 'undefined' && activePage === 'datakendala' ? 'active' : '' %>">
+      <a href="#" class="menu-toggle <%= typeof activePage !== 'undefined' && activePage === 'datakendala' ? 'active' : '' %>" data-title="Kendala" onclick="toggleSubmenu(event)">
+        <i class="fa-solid fa-table"></i>
         <span class="label">Kendala</span>
         <i class="fa-solid fa-chevron-down arrow"></i>
       </a>
       <ul class="submenu">
         <li>
-          <a href="/datakendala?tab=teknik" data-title="Kendala Teknik">
+          <a href="/datakendala?tab=teknik" data-title="Kendala Teknik" class="<%= typeof activePage !== 'undefined' && activePage === 'datakendala' && typeof activeTab !== 'undefined' && activeTab === 'teknik' ? 'active' : '' %>">
             <i class="fa-solid fa-wrench"></i>
             <span class="label">Kendala Teknik</span>
           </a>
         </li>
         <li>
-          <a href="/datakendala?tab=sistem" data-title="Kendala Sistem">
+          <a href="/datakendala?tab=sistem" data-title="Kendala Sistem" class="<%= typeof activePage !== 'undefined' && activePage === 'datakendala' && typeof activeTab !== 'undefined' && activeTab === 'sistem' ? 'active' : '' %>">
             <i class="fa-solid fa-server"></i>
             <span class="label">Kendala Sistem</span>
           </a>

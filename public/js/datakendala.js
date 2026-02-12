@@ -245,10 +245,10 @@ document.addEventListener('DOMContentLoaded', () => {
     { field: 'wonum', label: 'Wonum' },
     { field: 'sto', label: 'Sto' },
     { field: 'ticket_id', label: 'Track id' },
-    { field: 'created_at', label: 'date created' },
+    { field: 'created_at', label: 'Date created' },
     { field: 'tgl_manja', label: 'Tgl manja' },
     { field: 'status_kpro', label: 'Status kpro' },
-    { field: 'kendala', label: 'Errorcode' },
+    { field: 'kendala', label: 'Kendala' },
     { field: 'catatan_teknisi', label: 'Catatan teknisi' },
     { field: 'status_akhir', label: 'Progress akhir' }
   ];

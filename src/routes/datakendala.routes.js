@@ -1,12 +1,11 @@
 // Helper: konversi serial Excel ke yyyy-mm-dd
-function excelSerialToDate(serial) {
-  if (!serial || isNaN(serial)) return serial;
-  const utc_days = Math.floor(serial - 25569);
-  const utc_value = utc_days * 86400;
-  const date_info = new Date(utc_value * 1000);
-  if (date_info.getFullYear() < 1970) return serial;
-  return date_info.toISOString().slice(0, 10);
+function excelSerialToDate(serial) { 
+  if (!serial || isNaN(serial)) return serial; const utc_days = Math.floor(serial - 25569); 
+  const utc_value = utc_days * 86400; const date_info = new Date(utc_value * 1000); 
+  if (date_info.getFullYear() < 1970) return serial; 
+  return date_info.toISOString().slice(0, 10); 
 }
+
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
@@ -69,8 +68,8 @@ router.get('/', async (req, res) => {
         bulan,
         created_at,
         tgl_manja,
-        status_daily as status_kpro,
-        kendala as errorcode,
+        status_kpro,
+        kendala,
         kategori,
         catatan_teknisi,
         status_akhir
@@ -82,9 +81,9 @@ router.get('/', async (req, res) => {
     dataSistem = dataTeknik;
 
     res.render('datakendala', {
-      title: 'Data Kendala - Import File',
-      brandText: 'Data Kendala',
-      brandIcon: 'fa-file-excel',
+      title: 'Data Kendala',
+      brandText: 'RIDAR Monitor',
+      brandIcon: 'fa-layer-group',
       dataTeknik: dataTeknik || [],
       dataSistem: dataSistem || [],
       activeTab,
@@ -95,9 +94,9 @@ router.get('/', async (req, res) => {
   } catch (err) {
     console.error('Data Kendala page error:', err.message);
     res.render('datakendala', {
-      title: 'Data Kendala - Import File',
-      brandText: 'Data Kendala',
-      brandIcon: 'fa-file-excel',
+      title: 'Data Kendala',
+      brandText: 'RIDAR Monitor',
+      brandIcon: 'fa-layer-group',
       dataTeknik: [],
       dataSistem: [],
       activeTab: req.query.tab || 'teknik',
@@ -155,13 +154,13 @@ router.post('/upload-preview', upload.single('file'), async (req, res) => {
   }
 });
 
-// Cek duplikat: sama wonum + tgl_manja (date) + status_akhir + errorcode -> skip di master_wo
-async function isDuplicateKendala(wonum, tgl_manja, status_akhir, errorcode) {
+// Cek duplikat: sama wonum + tgl_manja (date) + status_akhir -> skip di master_wo
+async function isDuplicateKendala(wonum, tgl_manja, status_akhir) {
   try {
     const tglNorm = tgl_manja ? new Date(tgl_manja).toISOString().split('T')[0] : null;
     const [rows] = await db.query(
-      `SELECT 1 FROM master_wo WHERE wonum = ? AND (tgl_manja = ? OR (tgl_manja IS NULL AND ? IS NULL)) AND (status_akhir <=> ?) AND (kendala <=> ?) LIMIT 1`,
-      [wonum, tglNorm, tglNorm, status_akhir || null, errorcode || null]
+      `SELECT 1 FROM master_wo WHERE wonum = ? AND (tgl_manja = ? OR (tgl_manja IS NULL AND ? IS NULL)) AND (status_akhir <=> ?) LIMIT 1`,
+      [wonum, tglNorm, tglNorm, status_akhir || null]
     );
     return rows && rows.length > 0;
   } catch (e) {
@@ -192,7 +191,6 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     // Ambil urutan kolom dari file CSV
     const csvColumns = results.length > 0 ? Object.keys(results[0]) : [];
 
-
     // Debug log mapping dan contoh row
     console.log('mapping:', mapping);
     console.log('csvColumns:', csvColumns);
@@ -219,7 +217,12 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     for (const [i, row] of results.entries()) {
       try {
         const wonum = (getMappedValue(row, mapping.wonum || 'wonum') || '').toString().trim();
-        if (!wonum) { importedCount.failed++; errorDetails.push({row: i+1, error: 'WONUM kosong'}); continue; }
+        if (!wonum) { 
+          importedCount.failed++; 
+          errorDetails.push({row: i+1, error: 'WONUM kosong'}); 
+          console.log(`Row ${i+1} WONUM kosong. mapping.wonum=${mapping.wonum}, row keys:`, Object.keys(row));
+          continue; 
+        }
 
         const ticket_id = (getMappedValue(row, mapping.ticket_id || 'track id') || '').toString().trim() || null;
         let sto = (getMappedValue(row, mapping.sto || 'sto') || '').toString().trim() || null;
@@ -231,12 +234,12 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         if (tgl_manja && !isNaN(tgl_manja)) tgl_manja = excelSerialToDate(Number(tgl_manja));
         if (created_at && /^\d{4}-\d{2}-\d{2}$/.test(created_at)) created_at = created_at + ' 00:00:00';
         const status_kpro = getMappedValue(row, mapping.status_kpro || 'status kpro') || null;
-        const errorcode = getMappedValue(row, mapping.errorcode || 'errorcode') || getMappedValue(row, mapping.kendala || 'kendala') || null;
-        const kategori = getMappedValue(row, mapping.kategori || 'kategori') || null;
+        const kendala = getMappedValue(row, mapping.kendala || 'kendala') || null;
+        const kategori = (getMappedValue(row, mapping.kategori || 'kategori') || '').toString().trim() || 'cancel';
         const catatan_teknisi = getMappedValue(row, mapping.catatan_teknisi || 'catatan teknisi') || null;
         const status_akhir = getMappedValue(row, mapping.status_akhir || 'progress akhir') || null;
 
-        const isDup = await isDuplicateKendala(wonum, tgl_manja, status_akhir, errorcode);
+        const isDup = await isDuplicateKendala(wonum, tgl_manja, status_akhir);
         if (isDup) { importedCount.skipped++; continue; }
 
         if (sto && !validStoSet.has(sto) && STO_LIST.includes(sto)) {
@@ -253,8 +256,8 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         if (!woRows || woRows.length === 0) {
           try {
             await db.query(
-              'INSERT INTO master_wo (wonum, sto, ticket_id, bulan, created_at, tgl_manja, status_daily, kendala, kategori, catatan_teknisi, status_akhir, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())',
-              [wonum, sto, ticket_id, bulan, created_at || null, tgl_manja || null, status_kpro, errorcode, kategori, catatan_teknisi, status_akhir]
+              'INSERT INTO master_wo (wonum, sto, ticket_id, bulan, created_at, tgl_manja, status_kpro, kendala, kategori, catatan_teknisi, status_akhir, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())',
+              [wonum, sto, ticket_id, bulan, created_at || null, tgl_manja || null, status_kpro, kendala, kategori, catatan_teknisi, status_akhir]
             );
             importedCount.success++;
           } catch (e) {
@@ -263,8 +266,8 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         } else {
           try {
             await db.query(
-              'UPDATE master_wo SET sto=COALESCE(?, sto), ticket_id=COALESCE(?, ticket_id), bulan=COALESCE(?, bulan), created_at=COALESCE(?, created_at), tgl_manja=COALESCE(?, tgl_manja), status_daily=COALESCE(?, status_daily), kendala=COALESCE(?, kendala), kategori=COALESCE(?, kategori), catatan_teknisi=COALESCE(?, catatan_teknisi), status_akhir=COALESCE(?, status_akhir), updated_at=NOW() WHERE wonum=?',
-              [sto, ticket_id, bulan, created_at, tgl_manja, status_kpro, errorcode, kategori, catatan_teknisi, status_akhir, wonum]
+              'UPDATE master_wo SET sto=COALESCE(?, sto), ticket_id=COALESCE(?, ticket_id), bulan=COALESCE(?, bulan), created_at=COALESCE(?, created_at), tgl_manja=COALESCE(?, tgl_manja), status_kpro=COALESCE(?, status_kpro), kendala=COALESCE(?, kendala), kategori=COALESCE(?, kategori), catatan_teknisi=COALESCE(?, catatan_teknisi), status_akhir=COALESCE(?, status_akhir), updated_at=NOW() WHERE wonum=?',
+              [sto, ticket_id, bulan, created_at, tgl_manja, status_kpro, kendala, kategori, catatan_teknisi, status_akhir, wonum]
             );
             importedCount.success++;
           } catch (e) {
@@ -275,6 +278,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
       } catch (rowErr) {
         importedCount.failed++;
         errorDetails.push({row: i+1, error: rowErr.message});
+        console.error(`Row ${i+1} error:`, rowErr.message);
       }
     }
     return res.json({ success: true, message: `Imported ${importedCount.success} rows, ${importedCount.skipped} duplikat di-skip, ${importedCount.failed} gagal`, ...importedCount, errorDetails });
@@ -294,26 +298,49 @@ router.post('/upload-json', async (req, res) => {
     const [validStoRows] = await db.query('SELECT sto FROM wilayah_ridar');
     const validStoSet = new Set((validStoRows || []).map(r => r.sto).filter(Boolean));
 
+    console.log('Excel upload - mapping:', mapping);
+    console.log('Excel upload - row count:', rows.length);
+    if (rows.length > 0) console.log('Excel upload - first row:', rows[0]);
 
-    for (const row of rows) {
+    // Helper: ambil value dari row, bisa by index (angka) atau nama (string)
+    const csvColumns = rows.length > 0 ? Object.keys(rows[0]) : [];
+    function getMappedValueJson(row, mapVal) {
+      if (typeof mapVal === 'number') {
+        const colName = csvColumns[mapVal];
+        return colName ? row[colName] : '';
+      } else if (!isNaN(mapVal)) {
+        const idx = Number(mapVal);
+        const colName = csvColumns[idx];
+        return colName ? row[colName] : '';
+      } else {
+        return row[mapVal] || '';
+      }
+    }
+
+    for (const [i, row] of rows.entries()) {
       try {
-        const wonum = (row[mapping.wonum || 'wonum'] || '').toString().trim();
-        if (!wonum) { importedCount.failed++; continue; }
+        const wonum = (getMappedValueJson(row, mapping.wonum || 'wonum') || '').toString().trim();
+        if (!wonum) { 
+          importedCount.failed++; 
+          console.log(`Row ${i+1} WONUM kosong. mapping.wonum=${mapping.wonum}`);
+          continue; 
+        }
 
-        const ticket_id = (row[mapping.ticket_id || 'track id'] || '').toString().trim() || null;
-        let sto = (row[mapping.sto || 'sto'] || '').toString().trim() || null;
-        let created_at = row[mapping.created_at || 'date created'] || null;
-        let tgl_manja = row[mapping.tgl_manja || 'tgl manja'] || null;
+        const ticket_id = (getMappedValueJson(row, mapping.ticket_id || 'track id') || '').toString().trim() || null;
+        let sto = (getMappedValueJson(row, mapping.sto || 'sto') || '').toString().trim() || null;
+        let created_at = getMappedValueJson(row, mapping.created_at || 'date created') || null;
+        let tgl_manja = getMappedValueJson(row, mapping.tgl_manja || 'tgl manja') || null;
         // Konversi serial Excel ke tanggal jika numeric
         if (created_at && !isNaN(created_at)) created_at = excelSerialToDate(Number(created_at));
         if (tgl_manja && !isNaN(tgl_manja)) tgl_manja = excelSerialToDate(Number(tgl_manja));
-        const status_kpro = row[mapping.status_kpro || 'status kpro'] || null;
-        const kendala = row[mapping.kendala || 'errorcode'] || null;
-        const catatan_teknisi = row[mapping.catatan_teknisi || 'catatan teknisi'] || null;
-        const status_akhir = row[mapping.status_akhir || 'progress akhir'] || null;
+        const status_kpro = getMappedValueJson(row, mapping.status_kpro || 'status kpro') || null;
+        const kendala = getMappedValueJson(row, mapping.kendala || 'kendala') || null;
+        const kategori = (getMappedValueJson(row, mapping.kategori || 'kategori') || '').toString().trim() || 'cancel';
+        const catatan_teknisi = getMappedValueJson(row, mapping.catatan_teknisi || 'catatan teknisi') || null;
+        const status_akhir = getMappedValueJson(row, mapping.status_akhir || 'progress akhir') || null;
         const bulan = parseBulanFromTglManja(tgl_manja) || null;
 
-        const isDup = await isDuplicateKendala(wonum, tgl_manja, status_akhir, kendala);
+        const isDup = await isDuplicateKendala(wonum, tgl_manja, status_akhir);
         if (isDup) { importedCount.skipped++; continue; }
 
         if (sto && !validStoSet.has(sto) && STO_LIST.includes(sto)) {
@@ -330,19 +357,23 @@ router.post('/upload-json', async (req, res) => {
         if (!woRows || woRows.length === 0) {
           try {
             await db.query(
-              'INSERT INTO master_wo (wonum, ticket_id, sto, status_daily, created_at, tgl_manja, bulan, kendala, kategori, catatan_teknisi, status_akhir, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, NOW())',
-              [wonum, ticket_id, sto, 'OPEN', created_at || new Date(), tgl_manja || null, bulan, kendala, catatan_teknisi, status_akhir]
+              'INSERT INTO master_wo (wonum, ticket_id, sto, status_kpro, created_at, tgl_manja, bulan, kendala, kategori, catatan_teknisi, status_akhir, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())',
+              [wonum, ticket_id, sto, status_kpro, created_at || null, tgl_manja || null, bulan, kendala, kategori, catatan_teknisi, status_akhir]
             );
             importedCount.success++;
           } catch (e) {
-            if (e.code !== 'ER_DUP_ENTRY') { importedCount.failed++; continue; }
+            if (e.code !== 'ER_DUP_ENTRY') { 
+              importedCount.failed++; 
+              console.error(`Row ${i+1} insert error:`, e.message);
+              continue; 
+            }
           }
         } else {
-          if (ticket_id || sto || status_akhir || bulan || tgl_manja || kendala || catatan_teknisi) {
+          if (ticket_id || sto || status_akhir || bulan || tgl_manja || kendala || catatan_teknisi || kategori !== 'cancel') {
             try {
               await db.query(
-                'UPDATE master_wo SET ticket_id=COALESCE(?, ticket_id), sto=COALESCE(?, sto), tgl_manja=COALESCE(?, tgl_manja), bulan=COALESCE(?, bulan), kendala=COALESCE(?, kendala), catatan_teknisi=COALESCE(?, catatan_teknisi), status_akhir=COALESCE(?, status_akhir), updated_at=NOW() WHERE wonum=?',
-                [ticket_id, sto, tgl_manja, bulan, kendala, catatan_teknisi, status_akhir, wonum]
+                'UPDATE master_wo SET ticket_id=COALESCE(?, ticket_id), sto=COALESCE(?, sto), tgl_manja=COALESCE(?, tgl_manja), bulan=COALESCE(?, bulan), kendala=COALESCE(?, kendala), kategori=COALESCE(?, kategori), catatan_teknisi=COALESCE(?, catatan_teknisi), status_akhir=COALESCE(?, status_akhir), updated_at=NOW() WHERE wonum=?',
+                [ticket_id, sto, tgl_manja, bulan, kendala, kategori, catatan_teknisi, status_akhir, wonum]
               );
               importedCount.success++;
             } catch (e) {
@@ -374,15 +405,15 @@ router.get('/export', async (req, res) => {
         mw.bulan as 'Bulan',
         mw.created_at as 'date created',
         mw.tgl_manja as 'Tgl manja',
-        mw.status_daily as 'Status kpro',
-        mw.kendala as 'Errorcode',
+        mw.status_kpro as 'Status kpro',
+        mw.kendala as 'Kendala',
         mw.kategori as 'Kategori',
         mw.catatan_teknisi as 'Catatan teknisi',
         mw.status_akhir as 'Progress akhir'
       FROM master_wo mw
       ORDER BY mw.created_at DESC
     `);
-    const headers = ['wonum', 'Track id', 'Sto', 'Bulan', 'date created', 'Tgl manja', 'Status kpro', 'Errorcode', 'Kategori', 'Catatan teknisi', 'Progress akhir'];
+    const headers = ['wonum', 'Track id', 'Sto', 'Bulan', 'date created', 'Tgl manja', 'Status kpro', 'Kendala', 'Kategori', 'Catatan teknisi', 'Progress akhir'];
     const csvLines = [headers.join(',')];
     for (const r of rows || []) {
       const line = headers.map(h => {
