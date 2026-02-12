@@ -16,6 +16,8 @@
   </div>
 
   <ul class="menu">
+
+    <!-- Dashboard -->
     <li>
       <a href="/dashboard" data-title="Dashboard">
         <i class="fa-solid fa-gauge-high"></i>
@@ -23,6 +25,7 @@
       </a>
     </li>
 
+    <!-- Kendala Teknik Sistem -->
     <li>
       <a href="/todolist" data-title="Kendala Teknik Sistem">
         <i class="fa-solid fa-gears"></i>
@@ -30,13 +33,15 @@
       </a>
     </li>
 
+    <!-- Daily Housekeeping -->
     <li>
       <a href="/dailyhouse" data-title="Daily Housekeeping">
-        <i class="fa-solid fa-clipboard-list"></i>
+        <i class="fa-solid fa-house-chimney-crack"></i>
         <span class="label">Daily Housekeeping</span>
       </a>
     </li>
 
+    <!-- Kendala Pelanggan -->
     <li>
       <a href="/kendala" data-title="Kendala Pelanggan">
         <i class="fa-solid fa-users"></i>
@@ -66,29 +71,29 @@
         </li>
       </ul>
     </li>
-    
-     <!-- SUMBER DATA with Submenu -->
-  <li class="has-submenu">
-    <a href="#" class="menu-toggle" data-title="Sumber Data" onclick="toggleSubmenu(event)">
-      <i class="fa-solid fa-triangle-exclamation"></i>
-      <span class="label">Sumber Data</span>
-      <i class="fa-solid fa-chevron-down arrow"></i>
-    </a>
-    <ul class="submenu">
-      <li>
-        <a href="/kendala-teknik" data-title="Sumber Kendala Teknik">
-          <i class="fa-solid fa-database"></i>
-          <span class="label">Sumber Kendala Teknik</span>
-        </a>
-      </li>
-      <li>
-        <a href="/wilayah-ridar" data-title="Sumber Wilayah Ridar">
-          <i class="fa-solid fa-map-location-dot"></i>
-          <span class="label">Sumber Wilayah Ridar</span>
-        </a>
-      </li>
-    </ul>
-  </li>
+
+    <!-- Sumber Data (submenu) -->
+    <li class="has-submenu">
+      <a href="#" class="menu-toggle" data-title="Sumber Data" onclick="toggleSubmenu(event)">
+        <i class="fa-solid fa-database"></i>
+        <span class="label">Sumber Data</span>
+        <i class="fa-solid fa-chevron-down arrow"></i>
+      </a>
+      <ul class="submenu">
+        <li>
+          <a href="/kendala-teknik" data-title="Sumber Kendala Teknik">
+            <i class="fa-solid fa-list-check"></i>
+            <span class="label">Sumber Kendala Teknik</span>
+          </a>
+        </li>
+        <li>
+          <a href="/wilayah-ridar" data-title="Sumber Wilayah Ridar">
+            <i class="fa-solid fa-map-location-dot"></i>
+            <span class="label">Sumber Wilayah Ridar</span>
+          </a>
+        </li>
+      </ul>
+    </li>
 
   </ul>
 

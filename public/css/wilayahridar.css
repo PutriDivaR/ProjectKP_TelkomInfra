@@ -1,0 +1,35 @@
+/* ===================================================
+   WILAYAH RIDAR - PAGE STYLES
+   Inherits all base styles from the shared stylesheet.
+   Only page-specific overrides go here.
+   =================================================== */
+
+/* ── STO cell — bold + monospace for easy scanning ── */
+.data-table td.sto-cell {
+  font-weight: 700;
+  font-family: 'Courier New', Courier, monospace;
+  letter-spacing: 0.5px;
+  color: #1a1a1a;
+}
+
+/* ── Readonly STO input hint on edit modal ── */
+#stoInput[readonly] {
+  background: #f5f5f5;
+  color: #888;
+  cursor: not-allowed;
+  border-color: #e0e0e0;
+}
+
+/* ── Row hover: keep consistent with kendalateknik ── */
+.data-table tbody tr:hover {
+  background: #fff5f5;
+}
+
+/* ── Responsive: stack on small screens ── */
+@media (max-width: 600px) {
+  .data-table th,
+  .data-table td {
+    padding: 8px 8px;
+    font-size: 11px;
+  }
+}

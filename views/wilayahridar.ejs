@@ -1,0 +1,117 @@
+<%- include('layout/header') %>
+<%- include('layout/sidebar') %>
+
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="header">
+    <h2>SUMBER DATA - WILAYAH RIDAR</h2>
+    <div class="topbar-right">
+      <span class="admin-label">Admin User</span>
+    </div>
+  </div>
+
+  <!-- SUB HEADER WITH ADD BUTTON -->
+  <div class="sub-header">
+    <h3 class="sub-title">Input Data Wilayah Ridar</h3>
+    <button class="btn-add" onclick="openModal()">
+      <i class="fa-solid fa-plus"></i> Tambah Wilayah Ridar
+    </button>
+  </div>
+
+  <!-- DATA TABLE -->
+  <div class="card">
+    <div style="overflow-x:auto">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width:60px">NO</th>
+            <th style="min-width:120px">STO</th>
+            <th style="min-width:160px">UIC</th>
+            <th style="min-width:160px">PIC</th>
+            <th style="min-width:160px">LEADER</th>
+            <th style="width:120px">AKSI</th>
+          </tr>
+        </thead>
+        <tbody id="dataTable">
+          <tr>
+            <td colspan="6" class="loading-cell">
+              <div class="loading">Loading data...</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ================================================
+     MODAL: FORM WILAYAH RIDAR
+     ================================================ -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOnOverlay(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Tambah Wilayah Ridar</h3>
+      <button class="close-btn" onclick="closeModal()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <form id="wilayahForm" onsubmit="event.preventDefault(); saveData();">
+        <input type="hidden" id="wilayahId">
+
+        <!-- STO -->
+        <div class="form-row">
+          <label>STO <span class="req">*</span></label>
+          <input
+            type="text"
+            id="stoInput"
+            placeholder="Contoh: PBR"
+            required
+            style="text-transform:uppercase">
+          <small>Kode STO unik, tidak boleh duplikat</small>
+        </div>
+
+        <!-- UIC -->
+        <div class="form-row">
+          <label>UIC <span class="req">*</span></label>
+          <input
+            type="text"
+            id="uicInput"
+            placeholder="Contoh: SA SSK"
+            required>
+        </div>
+
+        <!-- PIC -->
+        <div class="form-row">
+          <label>PIC <span class="req">*</span></label>
+          <input
+            type="text"
+            id="picInput"
+            placeholder="Contoh: YELLA"
+            required>
+        </div>
+
+        <!-- LEADER -->
+        <div class="form-row">
+          <label>LEADER <span class="req">*</span></label>
+          <input
+            type="text"
+            id="leaderInput"
+            placeholder="Contoh: DODI KURNIAWAN"
+            required>
+        </div>
+
+      </form>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Batal</button>
+      <button id="saveBtn" class="btn-save" onclick="saveData()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/wilayahridar.js"></script>
+
+<%- include('layout/footer') %>
