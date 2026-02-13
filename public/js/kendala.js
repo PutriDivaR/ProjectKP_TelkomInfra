@@ -29,8 +29,14 @@ document.addEventListener('DOMContentLoaded', function () {
   var modalClose = document.getElementById('modalClose');
   var mdCloseBtn = document.getElementById('md-close-btn');
 
-  function showModal() { if (modal) modal.style.display = 'block'; }
-  function hideModal() { if (modal) modal.style.display = 'none'; }
+  function showModal() {
+    if (modal) modal.classList.add('is-open');
+    document.body.classList.add('modal-open');
+  }
+  function hideModal() {
+    if (modal) modal.classList.remove('is-open');
+    document.body.classList.remove('modal-open');
+  }
 
   if (modalClose) modalClose.addEventListener('click', hideModal);
   if (mdCloseBtn) mdCloseBtn.addEventListener('click', hideModal);
@@ -182,6 +188,51 @@ document.addEventListener('DOMContentLoaded', function () {
         errorMsg.textContent = 'Format tidak valid. Gunakan angka atau \"angka hari\" (contoh: 90 atau 90 hari)';
         errorMsg.style.display = 'block';
       }
+    });
+  });
+});
+
+/* tambahan */
+
+// ============================
+// EXPORT HANDLER
+// ============================
+
+document.addEventListener('DOMContentLoaded', function () {
+  var exportSelect = document.getElementById('exportType');
+  var exportBtn = document.getElementById('btnExport');
+
+  if (exportBtn && exportSelect) {
+    exportBtn.addEventListener('click', function () {
+      var type = exportSelect.value;
+      if (!type) {
+        alert('Pilih format export terlebih dahulu.');
+        return;
+      }
+
+      // Ambil parameter filter yang sedang aktif
+      var params = new URLSearchParams(window.location.search);
+
+      if (type === 'pdf') {
+        window.location.href = '/kendala/export/pdf?' + params.toString();
+      } else if (type === 'excel') {
+        window.location.href = '/kendala/export/excel?' + params.toString();
+      }
+    });
+  }
+});
+
+
+// ============================
+// PAGINATION HELPER (Auto scroll top)
+// ============================
+
+document.addEventListener('DOMContentLoaded', function () {
+  var pageLinks = document.querySelectorAll('.page-link');
+
+  pageLinks.forEach(function (link) {
+    link.addEventListener('click', function () {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   });
 });

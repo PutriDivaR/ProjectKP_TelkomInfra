@@ -9,7 +9,7 @@
   <div class="header">
     <h2>DAILY MODULE</h2>
     <div class="topbar-right">
-      <span class="admin-label">Nama Admin</span>
+      <span class="admin-label"><%= user && user.username ? user.username : 'Nama Admin' %></span>
     </div>
   </div>
 
@@ -35,8 +35,7 @@
           type="text" 
           class="search-input" 
           id="searchInput" 
-          placeholder="Cari Wonum..."
-        >
+          placeholder="Cari Wonum...">
         <button class="btn-clear-search" id="btnClearSearch" onclick="clearSearchDaily()">✕</button>
       </div>
     </div>
@@ -119,7 +118,7 @@
                 <td><%= d.lat || '-' %></td>
                 <td><%= d.lang || '-' %></td>
                 <td><%= d.created_at %></td>
-                <td><button class="btn-detail" data-wonum="<%= d.wonum %>">DETAIL</button></td>
+                <td><button class="btn-detail" data-wonum="<%= d.wonum %>" title="Detail"><i class="fa-solid fa-eye"></i></button></td>
               </tr>
             <% }) %>
           <% } %>

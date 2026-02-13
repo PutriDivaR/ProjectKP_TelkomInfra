@@ -109,11 +109,20 @@ router.get('/:wonum', async (req, res) => {
 
 /**
  * UPDATE DAILY (allowed fields: lat, lang, package_name, status, status_akhir, sto, odp_todolist)
+ * Track changes and create history log
  */
 router.post('/update/:wonum', async (req, res) => {
   try {
     const wonum = req.params.wonum;
     const { lat, lang, package_name, status, status_akhir, sto, odp_todolist, solusi_progress } = req.body;
+
+    // Get current data before update
+    const [oldDataRows] = await db.query('SELECT lat, lang, package_name, status_daily, status_akhir, sto, odp_todolist FROM master_wo WHERE wonum = ?', [wonum]);
+    if (!oldDataRows || oldDataRows.length === 0) {
+      return res.status(404).json({ success: false, message: 'WO tidak ditemukan' });
+    }
+    
+    const oldData = oldDataRows[0];
 
     // Validate sto if provided
     let stoVal = sto || null;
@@ -125,6 +134,26 @@ router.post('/update/:wonum', async (req, res) => {
       }
     }
 
+    // Track changes
+    const changes = [];
+    const fieldMap = {
+      'lat': { old: oldData.lat, new: lat, label: 'Latitude' },
+      'lang': { old: oldData.lang, new: lang, label: 'Longitude' },
+      'package_name': { old: oldData.package_name, new: package_name, label: 'Package Name' },
+      'status_daily': { old: oldData.status_daily, new: status, label: 'Status' },
+      'status_akhir': { old: oldData.status_akhir, new: status_akhir, label: 'Status Akhir' },
+      'sto': { old: oldData.sto, new: stoVal, label: 'STO' },
+      'odp_todolist': { old: oldData.odp_todolist, new: odp_todolist, label: 'ODP Todolist' }
+    };
+
+    for (const [fieldKey, fieldData] of Object.entries(fieldMap)) {
+      const oldVal = fieldData.old === null ? '' : String(fieldData.old).trim();
+      const newVal = fieldData.new === null ? '' : String(fieldData.new).trim();
+      if (oldVal !== newVal) {
+        changes.push(`${fieldData.label}: ${oldVal || '(kosong)'} → ${newVal || '(kosong)'}`);
+      }
+    }
+
     const updateWO = `
       UPDATE master_wo 
       SET lat=?, lang=?, package_name=?, status_daily=?, status_akhir=?, sto=?, odp_todolist=?, updated_at=NOW()
@@ -133,21 +162,23 @@ router.post('/update/:wonum', async (req, res) => {
 
     await db.query(updateWO, [lat, lang, package_name, status, status_akhir, stoVal, odp_todolist, wonum]);
 
-    // ✅ ONLY create log if solusi_progress is provided (manual edit from detail page)
-    if (solusi_progress && solusi_progress.trim()) {
+    // Create history log with changes
+    if (changes.length > 0 || (solusi_progress && solusi_progress.trim())) {
+      const changesSummary = changes.join(' | ');
+      const progressNote = (solusi_progress && solusi_progress.trim()) ? solusi_progress : changesSummary;
       const insertLog = `
         INSERT INTO kendala_teknisi_sistem
         (wonum, activity, activity_teknisi, status_todolist, solusi_progress, created_at, updated_at)
-        VALUES (?, 'Daily Housekeeping', 'Manual Update', ?, ?, NOW(), NOW())
+        VALUES (?, 'Daily Housekeeping', 'Update Field', ?, ?, NOW(), NOW())
       `;
       try { 
-        await db.query(insertLog, [wonum, status_akhir || status, solusi_progress]); 
+        await db.query(insertLog, [wonum, status_akhir || status || 'Updated', progressNote]); 
       } catch (e) { 
         console.warn('log insert failed:', e.message); 
       }
     }
 
-    return res.json({ success: true });
+    return res.json({ success: true, changes });
   } catch (err) {
     console.error('Daily update error', err);
     return res.status(500).json({ success: false, message: err.message });

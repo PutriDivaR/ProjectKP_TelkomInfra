@@ -132,7 +132,8 @@
 
 /* ========== DETAIL DATA KENDALA (EDIT) ========== */
 .detail-card {
-  max-width: 900px;
+  max-width: none;
+  width: 100%;
 }
 
 .detail-two-col {
@@ -360,8 +361,49 @@
 
 .rekap-toolbar {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  gap: 12px;
   margin-bottom: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px;
+  background: #fff;
+}
+
+.filter-form {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filter-field {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.filter-input {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  background: #f8f9fa;
+  font-size: 0.95rem;
+  min-width: 140px;
+}
+
+.filter-input:focus {
+  outline: none;
+  border-color: #e53935;
+  background: #fff;
+}
+
+.export-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
 .search-form {
@@ -422,20 +464,48 @@
 .kendala-table.rekap-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 1000px;
+  min-width: 100%;
+  table-layout: auto;
+}
+
+.kendala-table.rekap-table thead th,
+.kendala-table.rekap-table tbody td {
+  white-space: nowrap;
 }
 
 .kendala-table.rekap-table thead tr {
-  background: #e53935;
+  background: linear-gradient(90deg,#b91c1c 0%,#dc2626 50%,#ef4444 100%);
   color: #fff;
 }
 
 .kendala-table.rekap-table thead th {
   padding: 12px 14px;
   text-align: left;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.875rem;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
+
+
+/* Per-column gradient headers (all red tones to match other pages) */
+.kendala-table.rekap-table thead th:nth-child(1)  { background: linear-gradient(90deg,#b91c1c 0%,#dc2626 50%,#ef4444 100%); }
+.kendala-table.rekap-table thead th:nth-child(2)  { background: linear-gradient(90deg,#b91c1c 0%,#dc2626 50%,#ef4444 100%); }
+.kendala-table.rekap-table thead th:nth-child(3)  { background: linear-gradient(90deg,#b91c1c 0%,#dc2626 50%,#ef4444 100%); }
+.kendala-table.rekap-table thead th:nth-child(4)  { background: linear-gradient(90deg,#b91c1c 0%,#dc2626 50%,#ef4444 100%); }
+.kendala-table.rekap-table thead th:nth-child(5)  { background: linear-gradient(90deg,#b91c1c 0%,#dc2626 50%,#ef4444 100%); }
+.kendala-table.rekap-table thead th:nth-child(6)  { background: linear-gradient(90deg,#b91c1c 0%,#dc2626 50%,#ef4444 100%); }
+.kendala-table.rekap-table thead th:nth-child(7)  { background: linear-gradient(90deg,#b91c1c 0%,#dc2626 50%,#ef4444 100%); }
+.kendala-table.rekap-table thead th:nth-child(8)  { background: linear-gradient(90deg,#b91c1c 0%,#dc2626 50%,#ef4444 100%); }
+.kendala-table.rekap-table thead th:nth-child(9)  { background: linear-gradient(90deg,#b91c1c 0%,#dc2626 50%,#ef4444 100%); }
+.kendala-table.rekap-table thead th:nth-child(10) { background: linear-gradient(90deg,#b91c1c 0%,#dc2626 50%,#ef4444 100%); }
+.kendala-table.rekap-table thead th:nth-child(11) { background: linear-gradient(90deg,#b91c1c 0%,#dc2626 50%,#ef4444 100%); }
+
+/* Ensure header text stays visible and padding remains consistent */
+.kendala-table.rekap-table thead th { color: #fff; padding: 12px 14px; }
+
 
 .kendala-table.rekap-table thead th:first-child {
   border-radius: 12px 0 0 0;
@@ -526,7 +596,7 @@
 }
 
 .kendala-table th {
-  background: #e53935;
+  background: transparent;
   color: white;
   padding: 10px;
 }
@@ -547,33 +617,44 @@
   margin-top: 30px;
   color: #777;
 }
+
+/* Prevent background scroll when modal is open */
+body.modal-open {
+  overflow: hidden;
+}
 /* Modal styles for detail popup */
-.modal {
+#kendalaDetailModal {
   position: fixed;
   z-index: 1200;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0,0,0,0);
-  display: flex;
+  inset: 0;
+  background-color: rgba(0,0,0,0.25);
+  display: none;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 24px;
   box-sizing: border-box;
+  overflow-y: auto;
 }
 
-.modal-content {
+#kendalaDetailModal.is-open {
+  display: flex;
+}
+
+#kendalaDetailModal .modal-content {
   background: #fff;
-  padding: 2.5rem;
+  padding: 1.5rem;
   border-radius: 14px;
-  width: 100%;
-  max-width: 900px;
-  max-height: 90vh;
+  width: min(90vw, 700px);
+  max-height: 70vh;
   overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  border: 1px solid #e53935;
   position: relative;
+  left: auto;
+  top: auto;
+  transform: none;
   animation: slideInModal 0.3s ease-out;
+  margin: 0;
 }
 
 @keyframes slideInModal {
@@ -581,7 +662,7 @@
   to { opacity: 1; transform: scale(1); }
 }
 
-.modal-content h3 {
+#kendalaDetailModal .modal-content h3 {
   margin: 0 0 1.5rem 0;
   font-size: 1.25rem;
   color: #1a1a1a;
@@ -590,7 +671,7 @@
   padding-bottom: 0.75rem;
 }
 
-.modal-close {
+#kendalaDetailModal .modal-close {
   position: absolute;
   right: 16px;
   top: 12px;
@@ -603,27 +684,27 @@
   padding: 0;
 }
 
-.modal-close:hover {
+#kendalaDetailModal .modal-close:hover {
   color: #e53935;
 }
 
-.modal .detail-list {
+#kendalaDetailModal .detail-list {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
 }
 
-.modal .detail-list p {
+#kendalaDetailModal .detail-list p {
   margin: 0;
-  padding: 1rem;
+  padding: 0.75rem;
   background: #f8f9fa;
   border-radius: 8px;
   border-left: 4px solid #e53935;
   color: #333;
 }
 
-.modal .detail-list p strong {
+#kendalaDetailModal .detail-list p strong {
   display: block;
   font-size: 0.75rem;
   color: #666;
@@ -633,12 +714,12 @@
   font-weight: 600;
 }
 
-.modal .detail-list p:last-child,
-.modal .detail-list p:nth-last-child(2) {
+#kendalaDetailModal .detail-list p:last-child,
+#kendalaDetailModal .detail-list p:nth-last-child(2) {
   grid-column: 1 / -1;
 }
 
-.modal .modal-actions {
+#kendalaDetailModal .modal-actions {
   margin-top: 1.5rem;
   padding-top: 1rem;
   border-top: 1px solid #eee;
@@ -648,14 +729,126 @@
   flex-wrap: nowrap;
 }
 
-.modal .modal-actions .btn-input-data {
+#kendalaDetailModal .modal-actions .btn-input-data {
   padding: 12px 28px;
   font-size: 0.95rem;
   white-space: nowrap;
 }
 
-.modal .modal-actions .btn-back {
+#kendalaDetailModal .modal-actions .btn-back {
   padding: 12px 28px;
   font-size: 0.95rem;
   white-space: nowrap;
 }
+
+/* tambahan */
+
+/* ============================= */
+/* FILTER ADVANCED */
+/* ============================= */
+
+.filter-container {
+  background: #fff;
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,.06);
+}
+
+.filter-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+}
+
+.filter-group label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #555;
+}
+
+.filter-group input,
+.filter-group select {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  font-size: 0.9rem;
+}
+
+.btn-filter {
+  background: #e53935;
+  color: #fff;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-filter:hover {
+  background: #c62828;
+}
+
+/* ============================= */
+/* EXPORT BUTTON */
+/* ============================= */
+
+.export-container {
+  margin-left: auto;
+  display: flex;
+  gap: 10px;
+}
+
+.btn-export {
+  background: #1b5e20;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-export:hover {
+  background: #2e7d32;
+}
+
+/* ============================= */
+/* PAGINATION */
+/* ============================= */
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.page-link {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+  text-decoration: none;
+  color: #333;
+  font-size: 0.85rem;
+}
+
+.page-link.active {
+  background: #e53935;
+  color: #fff;
+  border-color: #e53935;
+}
+
+.page-link:hover {
+  background: #f8f9fa;
+}
+
