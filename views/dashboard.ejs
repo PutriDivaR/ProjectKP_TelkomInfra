@@ -9,7 +9,7 @@
         <h1>📊 RIDAR Dashboard</h1>
         <p>Real-time Work Order Monitoring & Analytics</p>
       </div>
-      <div style="display: flex; gap: 12px; align-items: center;">
+      <div class="header-actions">
         <button class="btn-refresh" id="btnRefresh">
           <span class="icon">🔄</span>
           Refresh Data
@@ -30,82 +30,70 @@
       </div>
       
       <div class="filter-content" id="filterContent">
-        <form id="filterForm" class="filter-form">
-          <div class="filter-row">
-            <!-- Search -->
-            <div class="filter-group">
-              <label>🔎 Search WO/Nama</label>
-              <input type="text" name="search" class="filter-input" 
-                     placeholder="WO Number atau Nama Pelanggan" 
-                     value="<%= filters.search %>">
-            </div>
-
-            <!-- STO Filter -->
-            <div class="filter-group">
-              <label>📍 STO</label>
-              <select name="sto_filter" class="filter-select">
-                <option value="">-- Semua STO --</option>
-                <% stoList.forEach(item => { %>
-                  <option value="<%= item.sto %>" <%= filters.sto_filter === item.sto ? 'selected' : '' %>>
-                    <%= item.sto %>
-                  </option>
-                <% }) %>
-              </select>
-            </div>
-
-            <!-- Regional Filter -->
-            <div class="filter-group">
-              <label>🌏 Regional</label>
-              <select name="regional_filter" class="filter-select">
-                <option value="">-- Semua Regional --</option>
-                <% regionalList.forEach(item => { %>
-                  <option value="<%= item.regional %>" <%= filters.regional_filter === item.regional ? 'selected' : '' %>>
-                    <%= item.regional %>
-                  </option>
-                <% }) %>
-              </select>
-            </div>
-
-            <!-- Status Filter -->
-            <div class="filter-group">
-              <label>📊 Status Daily</label>
-              <select name="status_filter" class="filter-select">
-                <option value="">-- Semua Status --</option>
-                <% statusList.forEach(item => { %>
-                  <option value="<%= item.status_daily %>" <%= filters.status_filter === item.status_daily ? 'selected' : '' %>>
-                    <%= item.status_daily %>
-                  </option>
-                <% }) %>
-              </select>
-            </div>
+        <form id="filterForm" class="filter-form filter-form--inline">
+          <!-- STO Filter -->
+          <div class="filter-group">
+            <label>📍 STO</label>
+            <select name="sto_filter" class="filter-select">
+              <option value="">-- Semua STO --</option>
+              <% stoList.forEach(item => { %>
+                <option value="<%= item.sto %>" <%= filters.sto_filter === item.sto ? 'selected' : '' %>>
+                  <%= item.sto %>
+                </option>
+              <% }) %>
+            </select>
           </div>
 
-          <div class="filter-row">
-            <!-- Date From -->
-            <div class="filter-group">
-              <label>📅 Tanggal Dari</label>
-              <input type="date" name="date_from" class="filter-input" 
-                     value="<%= filters.date_from %>">
-            </div>
+          <!-- Regional Filter -->
+          <div class="filter-group">
+            <label>🌏 Regional</label>
+            <select name="regional_filter" class="filter-select">
+              <option value="">-- Semua Regional --</option>
+              <% regionalList.forEach(item => { %>
+                <option value="<%= item.regional %>" <%= filters.regional_filter === item.regional ? 'selected' : '' %>>
+                  <%= item.regional %>
+                </option>
+              <% }) %>
+            </select>
+          </div>
 
-            <!-- Date To -->
-            <div class="filter-group">
-              <label>📅 Tanggal Sampai</label>
-              <input type="date" name="date_to" class="filter-input" 
-                     value="<%= filters.date_to %>">
-            </div>
+          <!-- Status Filter -->
+          <div class="filter-group">
+            <label>📊 Status Daily</label>
+            <select name="status_filter" class="filter-select">
+              <option value="">-- Semua Status --</option>
+              <% statusList.forEach(item => { %>
+                <option value="<%= item.status_daily %>" <%= filters.status_filter === item.status_daily ? 'selected' : '' %>>
+                  <%= item.status_daily %>
+                </option>
+              <% }) %>
+            </select>
+          </div>
 
-            <!-- Filter Buttons -->
-            <div class="filter-group" style="flex: 2;">
-              <label>&nbsp;</label>
-              <div class="filter-buttons">
-                <button type="submit" class="btn-apply-filter">
-                  <span>✓</span> Terapkan Filter
-                </button>
-                <button type="button" class="btn-clear-filter" id="btnClearFilters">
-                  <span>✕</span> Reset
-                </button>
-              </div>
+          <!-- Date From -->
+          <div class="filter-group">
+            <label>📅 Tanggal Dari</label>
+            <input type="date" name="date_from" class="filter-input" 
+                   value="<%= filters.date_from %>">
+          </div>
+
+          <!-- Date To -->
+          <div class="filter-group">
+            <label>📅 Tanggal Sampai</label>
+            <input type="date" name="date_to" class="filter-input" 
+                   value="<%= filters.date_to %>">
+          </div>
+
+          <!-- Filter Buttons -->
+          <div class="filter-group filter-actions">
+            <label>&nbsp;</label>
+            <div class="filter-buttons">
+              <button type="submit" class="btn-apply-filter">
+                <span>✓</span> Terapkan Filter
+              </button>
+              <button type="button" class="btn-clear-filter" id="btnClearFilters">
+                <span>✕</span> Reset
+              </button>
             </div>
           </div>
         </form>
@@ -129,16 +117,13 @@
 
     <!-- ACTIVE FILTERS DISPLAY -->
     <% 
-      const hasActiveFilters = filters.search || filters.sto_filter || filters.regional_filter || 
+      const hasActiveFilters = filters.sto_filter || filters.regional_filter || 
                                filters.status_filter || filters.date_from || filters.date_to;
     %>
     <% if (hasActiveFilters) { %>
     <div class="active-filters">
       <div class="active-filters-title">🏷️ Filter Aktif:</div>
       <div class="active-filters-tags">
-        <% if (filters.search) { %>
-          <span class="filter-tag">Search: <%= filters.search %></span>
-        <% } %>
         <% if (filters.sto_filter) { %>
           <span class="filter-tag">STO: <%= filters.sto_filter %></span>
         <% } %>
@@ -295,7 +280,10 @@
           </div>
           <div class="chart-wrapper">
             <canvas id="chartStatusTodolist" 
-                    data-values='<%= JSON.stringify(statusTodolist) %>'></canvas>
+                    data-values='<%= JSON.stringify(statusTodolist || []) %>'></canvas>
+            <% if ((statusTodolist || []).length === 0) { %>
+              <div class="chart-empty-note">Tidak ada data Status Todolist (cek tabel kendala_teknisi_sistem)</div>
+            <% } %>
           </div>
         </div>
 
@@ -343,7 +331,7 @@
           </div>
         </div>
 
-        <!-- NEW: Completion Rate Trend -->
+        <!-- Completion Rate Trend -->
         <div class="chart-card">
           <div class="chart-title">
             <span class="chart-icon">✅</span>
@@ -371,7 +359,10 @@
           </div>
           <div class="chart-wrapper">
             <canvas id="chartActivityTech" 
-                    data-values='<%= JSON.stringify(activityTech) %>'></canvas>
+                    data-values='<%= JSON.stringify(activityTech || []) %>'></canvas>
+            <% if ((activityTech || []).length === 0) { %>
+              <div class="chart-empty-note">Tidak ada data Activity Teknisi (cek tabel kendala_teknisi_sistem)</div>
+            <% } %>
           </div>
         </div>
 
@@ -413,9 +404,15 @@
             <span>👥</span>
             STO Details with Team Information
           </div>
-          <div class="table-scroll-btn">
-            <button class="btn-scroll-left">←</button>
-            <button class="btn-scroll-right">→</button>
+          <div class="table-controls">
+            <input type="text" class="table-search" placeholder="Cari dalam tabel ini..." title="Pencarian lokal tabel" />
+            <select class="table-perpage" title="Baris per halaman">
+              <option value="10" selected>10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+
           </div>
         </div>
         
@@ -471,6 +468,15 @@
           <div class="table-title">
             <span>📝</span>
             Latest Work Orders
+          </div>
+          <div class="table-controls">
+            <input type="text" class="table-search" placeholder="Cari dalam tabel ini..." title="Pencarian lokal tabel" />
+            <select class="table-perpage" title="Baris per halaman">
+              <option value="10" selected>10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
           </div>
         </div>
         
@@ -535,6 +541,13 @@ document.getElementById('btnToggleFilter')?.addEventListener('click', function()
     content.style.display = 'none';
     icon.textContent = '▼';
   }
+});
+</script>
+
+<!-- Reset Filters Script -->
+<script>
+document.getElementById('btnClearFilters')?.addEventListener('click', function() {
+  window.location.href = '/dashboard';
 });
 </script>
 

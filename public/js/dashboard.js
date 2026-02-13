@@ -1036,13 +1036,17 @@ function initTablePagination() {
   const tables = document.querySelectorAll('[data-paginate]');
   
   tables.forEach(table => {
+    const container = table.closest('.table-container');
     const tbody = table.querySelector('tbody');
     const rows = Array.from(tbody.querySelectorAll('tr'));
-    const perPage = parseInt(table.dataset.perpage || 10);
+    const searchInput = container.querySelector('.table-search');
+    const perPageSelect = container.querySelector('.table-perpage');
+    let perPage = parseInt(table.dataset.perpage || (perPageSelect?.value || 10));
     let currentPage = 1;
-    
-    let totalPages = Math.ceil(rows.length / perPage);
-    
+    let filteredRows = rows.slice();
+
+    let totalPages = Math.max(1, Math.ceil(filteredRows.length / perPage));
+
     // Create pagination controls
     const pager = document.createElement('div');
     pager.className = 'table-pager';
@@ -1057,7 +1061,7 @@ function initTablePagination() {
     pager.appendChild(btnPrev);
     pager.appendChild(numbers);
     pager.appendChild(btnNext);
-    table.closest('.table-container').appendChild(pager);
+    container.appendChild(pager);
 
     function renderNumbers() {
       numbers.innerHTML = '';
@@ -1094,12 +1098,36 @@ function initTablePagination() {
       currentPage = Math.max(1, Math.min(totalPages, page));
       const start = (currentPage - 1) * perPage;
       const end = start + perPage;
-      rows.forEach((row, i) => {
-        row.style.display = (i >= start && i < end) ? '' : 'none';
+      rows.forEach(row => { row.style.display = 'none'; });
+      filteredRows.forEach((row, i) => {
+        if (i >= start && i < end) row.style.display = '';
       });
       btnPrev.disabled = currentPage === 1;
       btnNext.disabled = currentPage === totalPages;
       renderNumbers();
+    }
+
+    function recalcPages() {
+      totalPages = Math.max(1, Math.ceil(filteredRows.length / perPage));
+    }
+
+    // Hook up search
+    if (searchInput) {
+      searchInput.addEventListener('input', () => {
+        const q = searchInput.value.trim().toLowerCase();
+        filteredRows = rows.filter(r => r.innerText.toLowerCase().includes(q));
+        recalcPages();
+        showPage(1);
+      });
+    }
+
+    // Hook up per-page selector
+    if (perPageSelect) {
+      perPageSelect.addEventListener('change', () => {
+        perPage = parseInt(perPageSelect.value) || 10;
+        recalcPages();
+        showPage(1);
+      });
     }
 
     btnPrev.addEventListener('click', () => showPage(currentPage - 1));

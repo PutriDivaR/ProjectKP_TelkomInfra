@@ -69,13 +69,31 @@ router.get('/', async (req, res) => {
       GROUP BY status_daily
     `, queryParams);
 
-    // 3. Status Todolist Distribution
-    const [statusTodolist] = await db.query(`
-      SELECT status_todolist, COUNT(*) as count 
-      FROM kendala_teknisi_sistem 
-      WHERE status_todolist IS NOT NULL
-      GROUP BY status_todolist
-    `);
+    // 3. Status Todolist Distribution (prefer real counts via kt joined to mw with filters; fallback to master_status when empty)
+    let [statusTodolist] = await db.query(`
+      SELECT kt.status_todolist, COUNT(*) AS count
+      FROM kendala_teknisi_sistem kt
+      JOIN master_wo mw ON mw.wonum = kt.wonum
+      ${whereClause}
+      ${whereConditions.length > 0 ? 'AND' : 'WHERE'} kt.status_todolist IS NOT NULL
+      GROUP BY kt.status_todolist
+      ORDER BY count DESC
+    `, queryParams);
+    if (!statusTodolist || statusTodolist.length === 0) {
+      const [fallbackStatus] = await db.query(`
+        SELECT ms.status_code AS status_todolist,
+               COALESCE(kt.count, 0) AS count
+        FROM master_status ms
+        LEFT JOIN (
+          SELECT status_todolist, COUNT(*) AS count
+          FROM kendala_teknisi_sistem
+          WHERE status_todolist IS NOT NULL
+          GROUP BY status_todolist
+        ) kt ON kt.status_todolist = ms.status_code
+        ORDER BY count DESC
+      `);
+      statusTodolist = fallbackStatus;
+    }
 
     // 4. Status HI Distribution
     const [statusHI] = await db.query(`
@@ -120,15 +138,33 @@ router.get('/', async (req, res) => {
       ORDER BY date ASC
     `, queryParams);
 
-    // 8. Activity Teknisi Distribution
-    const [activityTech] = await db.query(`
-      SELECT activity_teknisi, COUNT(*) as count 
-      FROM kendala_teknisi_sistem 
-      WHERE activity_teknisi IS NOT NULL
-      GROUP BY activity_teknisi 
+    // 8. Activity Teknisi Distribution (prefer real counts via kt joined to mw with filters; fallback to master_activity names when empty)
+    let [activityTech] = await db.query(`
+      SELECT kt.activity_teknisi, COUNT(*) AS count
+      FROM kendala_teknisi_sistem kt
+      JOIN master_wo mw ON mw.wonum = kt.wonum
+      ${whereClause}
+      ${whereConditions.length > 0 ? 'AND' : 'WHERE'} kt.activity_teknisi IS NOT NULL AND TRIM(kt.activity_teknisi) <> ''
+      GROUP BY kt.activity_teknisi
       ORDER BY count DESC
       LIMIT 10
-    `);
+    `, queryParams);
+    if (!activityTech || activityTech.length === 0) {
+      const [fallbackActivity] = await db.query(`
+        SELECT COALESCE(kt.activity_teknisi, ma.activity_name) AS activity_teknisi,
+               COALESCE(kt.count, 0) AS count
+        FROM master_activity ma
+        LEFT JOIN (
+          SELECT activity_teknisi, COUNT(*) AS count
+          FROM kendala_teknisi_sistem
+          WHERE activity_teknisi IS NOT NULL AND TRIM(activity_teknisi) <> ''
+          GROUP BY activity_teknisi
+        ) kt ON kt.activity_teknisi = ma.activity_name
+        ORDER BY count DESC
+        LIMIT 10
+      `);
+      activityTech = fallbackActivity;
+    }
 
     // 9. Workfall Table - Status Daily per STO (with filters)
     const [workfallData] = await db.query(`

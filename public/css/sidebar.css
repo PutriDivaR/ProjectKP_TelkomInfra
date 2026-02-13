@@ -168,6 +168,7 @@
   background: #fff5f5;
   border: 1px solid #fc1010;
   transition: all 0.2s ease;
+  position: relative;
 }
 
 .logout-btn i {
@@ -303,6 +304,54 @@ body.sidebar-collapsed .sidebar .user-info {
 
 body.sidebar-collapsed .sidebar .sidebar-footer {
   border-top: none;
+}
+
+/* Hide logout text and center icon when collapsed */
+body.sidebar-collapsed .sidebar .logout-btn span {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+}
+
+body.sidebar-collapsed .sidebar .logout-btn {
+  justify-content: center;
+  padding: 10px 0;
+}
+
+/* Tooltip for logout when collapsed */
+body.sidebar-collapsed .sidebar .logout-btn::after {
+  content: attr(title);
+  position: absolute;
+  left: 80px;
+  background: #1f2937;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(-50%);
+  top: 50%;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 1200;
+}
+
+body.sidebar-collapsed .sidebar .logout-btn::before {
+  content: '';
+  position: absolute;
+  left: 74px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 6px solid transparent;
+  border-right-color: #1f2937;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+body.sidebar-collapsed .sidebar .logout-btn:hover::after,
+body.sidebar-collapsed .sidebar .logout-btn:hover::before {
+  opacity: 1;
 }
 
 body.sidebar-collapsed .sidebar .menu a::after {

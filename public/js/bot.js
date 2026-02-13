@@ -24,21 +24,11 @@ document.addEventListener('DOMContentLoaded', function () {
   // MESSAGE 
   function appendMessage(text, sender = 'bot', options = {}) {
     const msg = document.createElement('div');
-    msg.style.margin = '8px 0';
-    msg.style.display = 'flex';
-    msg.style.justifyContent = sender === 'user' ? 'flex-end' : 'flex-start';
     msg.className = `chat-message ${sender}`;
 
     const bubble = document.createElement('div');
+    bubble.className = `chat-bubble ${sender}`;
     bubble.innerHTML = text;
-    bubble.style.maxWidth = '85%';
-    bubble.style.padding = '10px 14px';
-    bubble.style.borderRadius = sender === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px';
-    bubble.style.background = sender === 'user' ? '#e53935' : '#ffffff';
-    bubble.style.color = sender === 'user' ? '#fff' : '#333';
-    bubble.style.boxShadow = '0 1px 3px rgba(0,0,0,0.12)';
-    bubble.style.lineHeight = '1.6';
-    bubble.style.fontSize = '14px';
 
     msg.appendChild(bubble);
     chatBody.appendChild(msg);
@@ -59,45 +49,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const container = document.createElement('div');
     container.className = 'quick-replies';
-    container.style.display = 'flex';
-    container.style.flexWrap = 'wrap';
-    container.style.gap = '8px';
-    container.style.margin = '8px 0';
-    container.style.paddingLeft = '8px';
 
     replies.forEach(reply => {
       const btn = document.createElement('button');
       btn.textContent = reply.label;
       btn.className = 'quick-reply-btn';
-      btn.style.background = '#ffebee';
-      btn.style.border = '1px solid #e53935';
-      btn.style.color = '#c62828';
-      btn.style.padding = '8px 14px';
-      btn.style.borderRadius = '20px';
-      btn.style.cursor = 'pointer';
-      btn.style.fontSize = '13px';
-      btn.style.fontWeight = '600';
-      btn.style.transition = 'all 0.2s';
-      
-      btn.onmouseover = () => {
-        btn.style.background = '#e53935';
-        btn.style.color = '#fff';
-        btn.style.transform = 'translateY(-2px)';
-        btn.style.boxShadow = '0 4px 8px rgba(229,57,53,0.3)';
-      };
-      btn.onmouseout = () => {
-        btn.style.background = '#ffebee';
-        btn.style.color = '#c62828';
-        btn.style.transform = 'translateY(0)';
-        btn.style.boxShadow = 'none';
-      };
-      
       btn.onclick = () => {
         chatInput.value = reply.value;
         container.remove();
         sendMessage();
       };
-      
       container.appendChild(btn);
     });
 
@@ -108,33 +69,11 @@ document.addEventListener('DOMContentLoaded', function () {
   function showTypingIndicator() {
     const typing = document.createElement('div');
     typing.id = 'typingIndicator';
-    typing.style.display = 'flex';
-    typing.style.justifyContent = 'flex-start';
-    typing.style.margin = '8px 0';
+    typing.className = 'typing-indicator';
 
     const bubble = document.createElement('div');
-    bubble.style.background = '#f5f5f5';
-    bubble.style.padding = '10px 14px';
-    bubble.style.borderRadius = '18px';
+    bubble.className = 'typing-bubble';
     bubble.innerHTML = '<div class="typing-dots"><span>●</span><span>●</span><span>●</span></div>';
-
-    const style = document.createElement('style');
-    style.textContent = `
-      .typing-dots span {
-        animation: typing 1.4s infinite;
-        opacity: 0.3;
-        display: inline-block;
-        margin: 0 2px;
-        color: #e53935;
-      }
-      .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
-      .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-      @keyframes typing {
-        0%, 60%, 100% { opacity: 0.3; }
-        30% { opacity: 1; }
-      }
-    `;
-    document.head.appendChild(style);
 
     typing.appendChild(bubble);
     chatBody.appendChild(typing);
@@ -247,8 +186,12 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
       }
 
+      const replies = (Array.isArray(json.quickReplies) && json.quickReplies.length)
+        ? json.quickReplies
+        : getDefaultNavReplies(keyword, json);
+
       appendMessage(json.message, 'bot', {
-        quickReplies: json.quickReplies
+        quickReplies: replies
       });
 
     } catch (err) {
@@ -256,6 +199,23 @@ document.addEventListener('DOMContentLoaded', function () {
       removeElement(typingIndicator);
       appendMessage('⚠️ Gagal menghubungi server. Periksa koneksi Anda.', 'bot');
     }
+  }
+
+  // Default navigation suggestions when backend doesn't provide any
+  function getDefaultNavReplies(keyword, json) {
+    const base = [
+      { label: '📊 Dashboard', value: '/dashboard' },
+      { label: '⚠️ Kendala Pelanggan', value: '/kendala' },
+      { label: '👷 Kendala Teknisi', value: '/kendalateknik' },
+      { label: '📝 Todolist', value: '/todolist' },
+      { label: '❓ Help', value: '/help' }
+    ];
+    // Slightly contextual suggestions
+    const isWoLike = /\bWO\d+|\d{6,}\b/i.test(keyword || '');
+    if (isWoLike || /Status tiket ditemukan/i.test(json?.message || '')) {
+      base.unshift({ label: '🔍 Detail Tiket', value: '/todolist' });
+    }
+    return base;
   }
 
   async function clearChatHistory() {
@@ -299,7 +259,9 @@ document.addEventListener('DOMContentLoaded', function () {
           }
         });
 
-        appendMessage('<hr style="margin:12px 0;border:none;border-top:1px solid #eee;"><small style="color: #999;">--- Riwayat sebelumnya ---</small>', 'bot');
+  appendMessage('<hr class="chat-history-divider"><small class="chat-history-label">--- Riwayat sebelumnya ---</small>', 'bot');
+  // Tambahkan greeting baru agar tetap muncul setelah refresh tanpa clear
+  showGreeting();
       } else {
         showGreeting();
       }
@@ -330,8 +292,11 @@ document.addEventListener('DOMContentLoaded', function () {
   if (botToggle) {
     botToggle.onclick = () => {
       chatPane.classList.toggle('open');
-      if (chatPane.classList.contains('open') && chatBody.children.length === 0) {
-        loadChatHistory();
+      if (chatPane.classList.contains('open')) {
+        // Always ensure greeting/history are present on open
+        if (chatBody.children.length === 0) {
+          loadChatHistory();
+        }
       }
     };
   }
