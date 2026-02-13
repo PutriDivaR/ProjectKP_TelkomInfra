@@ -1,7 +1,8 @@
 <%- include('layout/header') %>
 <%- include('layout/sidebar') %>
 
-<div class="main">
+<!-- ✅ NAMESPACED: Add .wilayahridar-page class -->
+<div class="main wilayahridar-page">
 
   <!-- TOPBAR -->
   <div class="header">
@@ -48,9 +49,10 @@
 
 <!-- ================================================
      MODAL: FORM WILAYAH RIDAR
+     ✅ NAMESPACED: Use .wilayahridar-modal-overlay
      ================================================ -->
-<div class="modal-overlay" id="modalOverlay" onclick="closeModalOnOverlay(event)">
-  <div class="modal">
+<div class="wilayahridar-modal-overlay" id="modalOverlay" onclick="closeModalOnOverlay(event)">
+  <div class="wilayahridar-modal">
     <div class="modal-header">
       <h3 id="modalTitle">Tambah Wilayah Ridar</h3>
       <button class="close-btn" onclick="closeModal()">&times;</button>

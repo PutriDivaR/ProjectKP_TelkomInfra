@@ -4,7 +4,8 @@
 <!-- ✅ Load SheetJS CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-<div class="main">
+<!-- ✅ NAMESPACED: Add .todolist-page class -->
+<div class="main todolist-page">
 
   <!-- TOPBAR -->
   <div class="header">
@@ -62,7 +63,6 @@
   </div>
 
   <!-- SUMMARY CARDS -->
-  <!-- ✅ CHANGED: card-done → card-complete & Done → COMPLETE -->
   <div class="summary-cards">
     <div class="summary-card card-complete">
       <div class="summary-label">COMPLETE</div>
@@ -110,7 +110,7 @@
       </table>
     </div>
     
-    <!-- ✅ PAGINATION CONTAINER -->
+    <!-- PAGINATION CONTAINER -->
     <div id="paginationContainer" class="pagination-container"></div>
   </div>
 
@@ -119,9 +119,11 @@
 
 <!-- ================================================
      MODAL: DETAIL DATA KENDALA STO
+     ✅ NAMESPACED: Use .todolist-modal-overlay
+     ✅ ODP INPUTAN BISA DIEDIT
      ================================================ -->
-<div class="modal-overlay" id="modalOverlay" onclick="closeModalOnOverlay(event)">
-  <div class="modal">
+<div class="todolist-modal-overlay" id="modalOverlay" onclick="closeModalOnOverlay(event)">
+  <div class="todolist-modal">
     <div class="modal-header">
       <h3>Detail Data Kendala STO</h3>
       <button class="close-btn" onclick="closeModal()">&times;</button>
@@ -129,6 +131,7 @@
 
     <div class="modal-body">
       <input type="hidden" id="editId">
+      <input type="hidden" id="progressRaw">
 
       <!-- ROW 1: WONUM | ODP INPUTAN -->
       <div class="modal-row">
@@ -138,7 +141,7 @@
         </div>
         <div class="modal-col">
           <label>ODP INPUTAN</label>
-          <input type="text" id="odpInputan" readonly>
+          <input type="text" id="odpInputan" placeholder="Masukkan ODP Inputan">
         </div>
       </div>
 
@@ -234,8 +237,9 @@
 
 <!-- ================================================
      LOADING OVERLAY
+     ✅ NAMESPACED: Use .todolist-loading-overlay
      ================================================ -->
-<div class="loading-overlay" id="loadingOverlay">
+<div class="todolist-loading-overlay" id="loadingOverlay">
   <div class="loading-content">
     <div class="loading-spinner"></div>
     <div class="loading-text" id="loadingText">Memproses data...</div>

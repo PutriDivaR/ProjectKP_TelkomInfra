@@ -1,187 +1,47 @@
 /* ===================================================
-   KENDALA TEKNIK - STYLES (FIXED & IMPROVED)
-   Red theme matching Figma design
+   TODOLIST - NAMESPACED CSS
+   Prefix: .todolist-page & .todolist-modal-*
+   Tidak ada collision dengan halaman lain
    =================================================== */
 
-/* Reset & Base */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+/* ══════════════════════════════════════════════
+   PAGE-SPECIFIC STYLES (TODOLIST ONLY)
+   ══════════════════════════════════════════════ */
+
+.todolist-page {
+  /* Base page styles - only affects todolist page */
 }
 
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: #f0f2f5;
-  color: #333;
-}
+/* ══════════════════════════════════════════════
+   ACTION BAR (TODOLIST SPECIFIC)
+   ══════════════════════════════════════════════ */
 
-/* ===== SIDEBAR ===== */
-.sidebar {
-  width: 220px;
-  height: 100vh;
-  background: #2c3e50;
-  color: #fff;
-  position: fixed;
-  top: 0;
-  left: 0;
-  padding: 20px 16px;
-  box-shadow: 2px 0 6px rgba(0,0,0,0.12);
-  z-index: 100;
-  overflow-y: auto;
-}
-
-.sidebar h3 {
-  margin: 0 0 20px 0;
-  font-size: 17px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #34495e;
-}
-
-.sidebar a {
-  color: #ecf0f1;
-  text-decoration: none;
-  display: block;
-  margin: 6px 0;
-  padding: 10px 12px;
-  border-radius: 6px;
-  font-size: 13.5px;
-  transition: all 0.25s ease;
-}
-
-.sidebar a.active,
-.sidebar a:hover {
-  background: #e53935;
-  color: #fff;
-}
-
-/* ===== MAIN CONTENT ===== */
-.main {
-  margin-left: 240px;
-  padding: 0;
-  min-height: 100vh;
-  background: #f0f2f5;
-}
-
-/* ===== TOPBAR ===== */
-.topbar, .header {
+.todolist-page .action-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #fff;
-  padding: 16px 28px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-  border-bottom: 1px solid #eee;
-}
-
-.topbar h2, .header h2 {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 600;
-  color: #1a1a1a;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.topbar-right .admin-label {
-  font-size: 13px;
-  color: #555;
-  font-weight: 500;
-}
-
-/* ===== SUB HEADER ===== */
-.sub-header {
-  background: #fff;
-  padding: 14px 28px;
-  border-bottom: 1px solid #eee;
-  display: flex;
-  align-items: center;
-}
-
-.sub-header-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.sub-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #e53935;
-  margin: 0;
-} 
-
-/* ===== ACTION BAR ===== */
-.action-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px 28px;
+  padding: 12px 28px;
   background: #fff;
   border-bottom: 1px solid #eee;
   gap: 12px;
 }
 
-.action-left {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
+.todolist-page .action-left { 
+  display: flex; 
+  gap: 10px; 
 }
 
-.action-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+.todolist-page .action-right { 
+  display: flex; 
+  align-items: center; 
+  gap: 8px; 
 }
 
-/* Upload / Export Buttons */
-.btn-upload {
+.todolist-page .btn-upload {
   background: #e53935;
   color: #fff;
   border: none;
-  padding: 9px 20px;
-  border-radius: 5px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  box-shadow: 0 2px 4px rgba(229,57,53,0.25);
-}
-
-.btn-upload:hover {
-  background: #d32f2f;
-  box-shadow: 0 3px 8px rgba(229,57,53,0.35);
-}
-
-.btn-export {
-  background: #fff;
-  color: #e53935;
-  border: 1.5px solid #e53935;
-  padding: 9px 20px;
-  border-radius: 5px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.btn-export:hover {
-  background: #fef5f5;
-}
-
-/* Delete Buttons */
-.btn-delete-selected {
-  background: #fff;
-  color: #ff5722;
-  border: 1.5px solid #ff5722;
-  padding: 9px 20px;
+  padding: 8px 18px;
   border-radius: 5px;
   font-size: 13px;
   font-weight: 600;
@@ -189,12 +49,54 @@ body {
   transition: all 0.2s;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
+  box-shadow: 0 2px 4px rgba(229,57,53,0.25);
 }
-.btn-delete-selected:hover { 
+
+.todolist-page .btn-upload:hover {
+  background: #d32f2f;
+  box-shadow: 0 3px 8px rgba(229,57,53,0.35);
+}
+
+.todolist-page .btn-export {
+  background: #fff;
+  color: #e53935;
+  border: 1.5px solid #e53935;
+  padding: 8px 18px;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.todolist-page .btn-export:hover { 
+  background: #fef5f5; 
+}
+
+.todolist-page .btn-delete-selected {
+  background: #fff;
+  color: #ff5722;
+  border: 1.5px solid #ff5722;
+  padding: 8px 18px;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.todolist-page .btn-delete-selected:hover { 
   background: #fff3f0; 
 }
-.btn-delete-selected:disabled {
+
+.todolist-page .btn-delete-selected:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   background: #f5f5f5;
@@ -202,11 +104,11 @@ body {
   border-color: #ddd;
 }
 
-.btn-delete-all {
+.todolist-page .btn-delete-all {
   background: #fff;
   color: #d32f2f;
   border: 1.5px solid #d32f2f;
-  padding: 9px 20px;
+  padding: 8px 18px;
   border-radius: 5px;
   font-size: 13px;
   font-weight: 600;
@@ -214,47 +116,26 @@ body {
   transition: all 0.2s;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
-.btn-delete-all:hover { 
+
+.todolist-page .btn-delete-all:hover { 
   background: #ffebee; 
 }
 
-/* Filter */
-.filter-label {
-  font-size: 13px;
-  color: #666;
-  font-weight: 500;
-}
+/* ══════════════════════════════════════════════
+   SEARCH BAR (TODOLIST SPECIFIC)
+   ══════════════════════════════════════════════ */
 
-.filter-select {
-  padding: 8px 32px 8px 12px;
-  border: 1.5px solid #ddd;
-  border-radius: 5px;
-  font-size: 13px;
-  color: #444;
-  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E") no-repeat right 10px center;
-  appearance: none;
-  cursor: pointer;
-  transition: border-color 0.2s;
-  min-width: 150px;
-}
-
-.filter-select:focus {
-  outline: none;
-  border-color: #e53935;
-}
-
-/* Search Bar */
-.search-container {
+.todolist-page .search-container {
   display: flex;
   align-items: center;
   gap: 8px;
   position: relative;
 }
 
-.search-input {
-  padding: 8px 32px 8px 12px;
+.todolist-page .search-input {
+  padding: 7px 32px 7px 12px;
   border: 1.5px solid #ddd;
   border-radius: 5px;
   font-size: 13px;
@@ -264,16 +145,16 @@ body {
   min-width: 200px;
 }
 
-.search-input:focus {
+.todolist-page .search-input:focus {
   outline: none;
   border-color: #e53935;
 }
 
-.search-input::placeholder {
+.todolist-page .search-input::placeholder {
   color: #999;
 }
 
-.btn-clear-search {
+.todolist-page .btn-clear-search {
   position: absolute;
   right: 8px;
   background: none;
@@ -286,250 +167,109 @@ body {
   transition: color 0.2s;
 }
 
-.btn-clear-search:hover {
+.todolist-page .btn-clear-search:hover {
   color: #e53935;
 }
 
-/* ===== SUMMARY CARDS ===== */
-.summary-cards {
+/* ══════════════════════════════════════════════
+   SUMMARY CARDS (TODOLIST SPECIFIC)
+   ══════════════════════════════════════════════ */
+
+.todolist-page .summary-cards {
   display: flex;
-  gap: 16px;
-  padding: 18px 28px;
+  gap: 14px;
+  padding: 16px 28px;
   background: #fff;
   border-bottom: 1px solid #eee;
 }
 
-.summary-card {
+.todolist-page .summary-card {
   flex: 1;
   border-radius: 8px;
-  padding: 16px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  padding: 12px 16px;
   border: 1px solid transparent;
 }
 
-.summary-label {
-  font-size: 12px;
+.todolist-page .summary-label {
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
+  margin-bottom: 4px;
 }
 
-.summary-value {
-  font-size: 28px;
+.todolist-page .summary-value {
+  font-size: 24px;
   font-weight: 700;
   line-height: 1;
 }
 
-/* ✅ CHANGED: card-done → card-complete */
-.card-complete {
-  background: #e8f5e9;
-  border-color: #a5d6a7;
-}
-.card-complete .summary-label { color: #2e7d32; }
-.card-complete .summary-value { color: #2e7d32; }
-
-.card-ogp {
-  background: #fff3e0;
-  border-color: #ffcc80;
-}
-.card-ogp .summary-label { color: #ef6c00; }
-.card-ogp .summary-value { color: #ef6c00; }
-
-.card-pindah {
-  background: #ede7f6;
-  border-color: #ce93d8;
-}
-.card-pindah .summary-label { color: #6a1b9a; }
-.card-pindah .summary-value { color: #6a1b9a; }
-
-.card-closed {
-  background: #e3f2fd;
-  border-color: #90caf9;
-}
-.card-closed .summary-label { color: #1565c0; }
-.card-closed .summary-value { color: #1565c0; }
-
-/* ===== DATA TABLE CARD ===== */
-.card {
-  background: #fff;
-  margin: 18px 28px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  overflow: hidden;
-  border: 1px solid #e8e8e8;
+.todolist-page .card-complete { 
+  background: #e8f5e9; 
+  border-color: #a5d6a7; 
 }
 
-/* ===== DATA TABLE (IMPROVED) ===== */
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-  min-width: 1200px;
+.todolist-page .card-complete .summary-label,
+.todolist-page .card-complete .summary-value { 
+  color: #2e7d32; 
 }
 
-.data-table thead {
-  background: #e53935;
-  color: #fff;
+.todolist-page .card-ogp { 
+  background: #fff3e0; 
+  border-color: #ffcc80; 
 }
 
-.data-table th {
-  font-weight: 600;
-  padding: 15px 18px;
-  text-align: center;
-  font-size: 11.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  white-space: nowrap;
-  border-right: 1px solid rgba(255,255,255,0.15);
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  vertical-align: middle;
+.todolist-page .card-ogp .summary-label,
+.todolist-page .card-ogp .summary-value { 
+  color: #ef6c00; 
 }
 
-.data-table th:last-child { border-right: none; }
-
-/* Column widths - Better proportions */
-.col-select     { width: 50px; }
-.col-no         { width: 70px; }
-.col-wonum      { width: 150px; }
-.col-odp        { width: 180px; }
-.col-activity   { min-width: 220px; max-width: 350px; }
-.col-update     { width: 200px; }
-.col-status     { width: 130px; }
-.col-aksi       { width: 110px; }
-
-.data-table td {
-  padding: 15px 18px;
-  text-align: center;
-  border-bottom: 1px solid #eeeeee;
-  color: #444;
-  vertical-align: middle;
-  font-size: 13px;
-  line-height: 1.5;
+.todolist-page .card-pindah { 
+  background: #ede7f6; 
+  border-color: #ce93d8; 
 }
 
-/* Activity column - Left aligned with word wrap */
-.data-table td.td-activity {
-  text-align: left;
-  font-weight: 500;
-  color: #1a1a1a;
-  white-space: normal;
-  word-wrap: break-word;
-  line-height: 1.6;
+.todolist-page .card-pindah .summary-label,
+.todolist-page .card-pindah .summary-value { 
+  color: #6a1b9a; 
 }
 
-.data-table tbody tr {
-  transition: background 0.15s;
+.todolist-page .card-closed { 
+  background: #e3f2fd; 
+  border-color: #90caf9; 
 }
 
-.data-table tbody tr:hover {
-  background: #fff5f5;
+.todolist-page .card-closed .summary-label,
+.todolist-page .card-closed .summary-value { 
+  color: #1565c0; 
 }
 
-.data-table tbody tr:last-child td {
-  border-bottom: none;
-}
+/* ══════════════════════════════════════════════
+   MODAL OVERLAY - NAMESPACED
+   ══════════════════════════════════════════════ */
 
-/* ── CHECKBOX STYLING ── */
-.data-table input[type="checkbox"] {
-  width: 17px;
-  height: 17px;
-  cursor: pointer;
-  accent-color: #e53935;
-}
-
-.data-table thead input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-}
-
-/* ── ROW HOVER WITH SELECTION ── */
-.data-table tbody tr:has(input[type="checkbox"]:checked) {
-  background: #fff5f5;
-}
-
-.data-table tbody tr:has(input[type="checkbox"]:checked):hover {
-  background: #ffebee;
-}
-
-/* ===== STATUS BADGE ===== */
-.status-badge {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 10.5px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
-}
-
-.status-completed { background: #e8f5e9; color: #2e7d32; }
-.status-ogp       { background: #fff3e0; color: #ef6c00; }
-.status-open      { background: #e3f2fd; color: #1565c0; }
-.status-pindah    { background: #f3e5f5; color: #6a1b9a; }
-.status-default   { background: #f5f5f5; color: #666; }
-
-/* ===== ACTION BUTTON (row click) ===== */
-.btn-detail {
-  background: #e53935;
-  border: none;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 7px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-transform: uppercase;
-  box-shadow: 0 2px 4px rgba(229,57,53,0.2);
-}
-
-.btn-detail:hover {
-  background: #d32f2f;
-  box-shadow: 0 3px 6px rgba(229,57,53,0.3);
-  transform: translateY(-1px);
-}
-
-/* ===== LOADING ===== */
-.loading-cell {
-  text-align: center !important;
-  padding: 48px 20px !important;
-  color: #999;
-  font-size: 13px;
-}
-
-.loading {
-  display: inline-block;
-  animation: pulse 1.6s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50%      { opacity: 0.4; }
-}
-
-/* ===== MODAL OVERLAY ===== */
-.modal-overlay {
+.todolist-modal-overlay {
   display: none;
   position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.48);
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.48);
   z-index: 1000;
   align-items: center;
   justify-content: center;
 }
 
-.modal-overlay.active {
+.todolist-modal-overlay.active {
   display: flex;
 }
 
-/* ===== MODAL ===== */
-.modal {
+/* ══════════════════════════════════════════════
+   MODAL CONTAINER - NAMESPACED
+   ══════════════════════════════════════════════ */
+
+.todolist-modal {
   background: #fff;
   border-radius: 8px;
   width: 92%;
@@ -537,19 +277,28 @@ body {
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 12px 48px rgba(0,0,0,0.28);
-  animation: slideUp 0.25s ease;
+  animation: todolistSlideUp 0.25s ease;
 }
 
-@keyframes slideUp {
-  from { transform: translateY(28px); opacity: 0; }
-  to   { transform: translateY(0);    opacity: 1; }
+@keyframes todolistSlideUp {
+  from {
+    transform: translateY(28px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
-/* Modal Header */
-.modal-header {
+/* ══════════════════════════════════════════════
+   MODAL HEADER - SCOPED
+   ══════════════════════════════════════════════ */
+
+.todolist-modal .modal-header {
   background: #e53935;
   color: #fff;
-  padding: 14px 20px;
+  padding: 13px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -558,19 +307,20 @@ body {
   z-index: 10;
 }
 
-.modal-header h3 {
+.todolist-modal .modal-header h3 {
   margin: 0;
-  font-size: 14.5px;
+  font-size: 14px;
   font-weight: 600;
 }
 
-.close-btn {
+.todolist-modal .close-btn {
   background: none;
   border: none;
   color: #fff;
-  font-size: 26px;
+  font-size: 24px;
   cursor: pointer;
-  width: 28px; height: 28px;
+  width: 26px;
+  height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -579,108 +329,124 @@ body {
   line-height: 1;
 }
 
-.close-btn:hover { background: rgba(255,255,255,0.2); }
-
-/* Modal Body */
-.modal-body {
-  padding: 20px 24px 10px;
+.todolist-modal .close-btn:hover {
+  background: rgba(255,255,255,0.2);
 }
 
-/* Modal Row (2-col grid) */
-.modal-row {
+/* ══════════════════════════════════════════════
+   MODAL BODY - SCOPED
+   ══════════════════════════════════════════════ */
+
+.todolist-modal .modal-body {
+  padding: 18px 22px 8px;
+}
+
+/* ══════════════════════════════════════════════
+   MODAL ROWS - SCOPED
+   ══════════════════════════════════════════════ */
+
+.todolist-modal .modal-row {
   display: flex;
-  gap: 16px;
-  margin-bottom: 14px;
+  gap: 14px;
+  margin-bottom: 12px;
 }
 
-.modal-col {
+.todolist-modal .modal-col {
   flex: 1;
   display: flex;
   flex-direction: column;
 }
 
-.modal-col-full {
+.todolist-modal .modal-col-full {
   flex: 1;
   width: 100%;
 }
 
-.modal-col label {
-  font-size: 10.5px;
+.todolist-modal .modal-col label {
+  font-size: 10px;
   font-weight: 700;
   color: #555;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
 }
 
-.modal-col .req { color: #e53935; }
+.todolist-modal .modal-col .req {
+  color: #e53935;
+}
 
-/* Modal Inputs */
-.modal-col input,
-.modal-col select {
+/* ══════════════════════════════════════════════
+   MODAL INPUTS - SCOPED
+   ══════════════════════════════════════════════ */
+
+.todolist-modal .modal-col input,
+.todolist-modal .modal-col select {
   width: 100%;
-  padding: 8px 11px;
+  padding: 6px 9px;
   border: 1px solid #ddd;
   border-radius: 5px;
-  font-size: 12.5px;
+  font-size: 12px;
   font-family: inherit;
   color: #333;
   background: #fff;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.modal-col input[readonly] {
+.todolist-modal .modal-col input[readonly] {
   background: #f7f7f7;
   color: #555;
   cursor: default;
 }
 
-.modal-col select {
+.todolist-modal .modal-col select {
+  -webkit-appearance: none;
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 10px center;
-  padding-right: 30px;
+  background-position: right 9px center;
+  padding-right: 28px;
   cursor: pointer;
 }
 
-.modal-col input:focus,
-.modal-col select:focus {
+.todolist-modal .modal-col input:focus,
+.todolist-modal .modal-col select:focus {
   outline: none;
   border-color: #e53935;
   box-shadow: 0 0 0 2.5px rgba(229,57,53,0.12);
 }
 
-/* Modal Footer */
-.modal-footer {
-  padding: 14px 24px 18px;
+/* ══════════════════════════════════════════════
+   MODAL FOOTER - SCOPED
+   ══════════════════════════════════════════════ */
+
+.todolist-modal .modal-footer {
+  padding: 12px 22px 16px;
   display: flex;
   justify-content: flex-end;
   gap: 10px;
 }
 
-.btn-done {
+.todolist-modal .btn-done {
   background: #e53935;
   color: #fff;
   border: none;
-  padding: 9px 26px;
+  padding: 7px 22px;
   border-radius: 5px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 5px;
 }
 
-.btn-done:hover { background: #d32f2f; }
+.todolist-modal .btn-done:hover {
+  background: #d32f2f;
+}
 
-.btn-cancel {
+.todolist-modal .btn-cancel {
   background: #fff;
   color: #666;
   border: 1px solid #ddd;
-  padding: 9px 22px;
+  padding: 7px 18px;
   border-radius: 5px;
   font-size: 13px;
   font-weight: 500;
@@ -688,10 +454,15 @@ body {
   transition: all 0.2s;
 }
 
-.btn-cancel:hover { background: #f5f5f5; }
+.todolist-modal .btn-cancel:hover {
+  background: #f5f5f5;
+}
 
-/* ===== LOADING OVERLAY ===== */
-.loading-overlay {
+/* ══════════════════════════════════════════════
+   LOADING OVERLAY - NAMESPACED
+   ══════════════════════════════════════════════ */
+
+.todolist-loading-overlay {
   display: none;
   position: fixed;
   top: 0;
@@ -704,11 +475,11 @@ body {
   justify-content: center;
 }
 
-.loading-overlay.active {
+.todolist-loading-overlay.active {
   display: flex;
 }
 
-.loading-content {
+.todolist-loading-overlay .loading-content {
   background: #fff;
   border-radius: 12px;
   padding: 40px 60px;
@@ -717,51 +488,51 @@ body {
   min-width: 320px;
 }
 
-.loading-spinner {
+.todolist-loading-overlay .loading-spinner {
   width: 60px;
   height: 60px;
   border: 5px solid #f3f3f3;
   border-top: 5px solid #e53935;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: todolistSpin 1s linear infinite;
   margin: 0 auto 20px;
 }
 
-@keyframes spin {
+@keyframes todolistSpin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
-.loading-text {
+.todolist-loading-overlay .loading-text {
   font-size: 16px;
   font-weight: 600;
   color: #333;
   margin-bottom: 8px;
 }
 
-.loading-subtext {
+.todolist-loading-overlay .loading-subtext {
   font-size: 13px;
   color: #666;
 }
 
-.loading-progress {
+.todolist-loading-overlay .loading-progress {
   margin-top: 16px;
   font-size: 14px;
   color: #e53935;
   font-weight: 600;
 }
 
-/* ===================================================
-   PAGINATION STYLES
-   =================================================== */
+/* ══════════════════════════════════════════════
+   PAGINATION - NAMESPACED
+   ══════════════════════════════════════════════ */
 
-.pagination-container {
+.todolist-page .pagination-container {
   padding: 20px;
   border-top: 1px solid #e0e0e0;
   background: #fafafa;
 }
 
-.pagination {
+.todolist-page .pagination {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -769,19 +540,19 @@ body {
   gap: 15px;
 }
 
-.pagination-info {
+.todolist-page .pagination-info {
   font-size: 14px;
   color: #666;
   font-weight: 500;
 }
 
-.pagination-buttons {
+.todolist-page .pagination-buttons {
   display: flex;
   gap: 5px;
   align-items: center;
 }
 
-.pagination-btn {
+.todolist-page .pagination-btn {
   padding: 8px 12px;
   border: 1px solid #ddd;
   background: white;
@@ -793,48 +564,39 @@ body {
   min-width: 40px;
 }
 
-.pagination-btn:hover:not(:disabled) {
+.todolist-page .pagination-btn:hover:not(:disabled) {
   background: #f5f5f5;
-  border-color: #e53935;
-  color: #e53935;
+  border-color: #c62828;
+  color: #c62828;
 }
 
-.pagination-btn:disabled {
+.todolist-page .pagination-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   background: #f9f9f9;
 }
 
-.pagination-btn.page-number {
-  font-weight: 500;
-}
-
-.pagination-btn.active {
-  background: #e53935;
+.todolist-page .pagination-btn.active {
+  background: #c62828;
   color: white;
-  border-color: #e53935;
+  border-color: #c62828;
   font-weight: 600;
 }
 
-.pagination-btn.active:hover {
-  background: #d32f2f;
-  border-color: #d32f2f;
-}
-
-.pagination-rows {
+.todolist-page .pagination-rows {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.pagination-rows label {
+.todolist-page .pagination-rows label {
   font-size: 14px;
   color: #666;
   font-weight: 500;
 }
 
-.rows-per-page-select {
-  padding: 7px 11px;
+.todolist-page .rows-per-page-select {
+  padding: 6px 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 14px;
@@ -843,64 +605,53 @@ body {
   transition: border-color 0.2s;
 }
 
-.rows-per-page-select:focus {
+.todolist-page .rows-per-page-select:focus {
   outline: none;
-  border-color: #e53935;
+  border-color: #c62828;
 }
 
-.rows-per-page-select:hover {
-  border-color: #999;
-}
+/* ══════════════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════════════ */
 
-/* ===== SCROLLBAR ===== */
-::-webkit-scrollbar       { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: #f1f1f1; }
-::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #aaa; }
-
-/* ===== RESPONSIVE ===== */
 @media (max-width: 900px) {
-  .sidebar { transform: translateX(-100%); }
-  .main { margin-left: 0; }
-
-  .action-bar {
+  .todolist-page .action-bar {
     flex-direction: column;
     align-items: flex-start;
-    gap: 10px;
   }
 
-  .summary-cards {
+  .todolist-page .summary-cards {
     flex-wrap: wrap;
+  }
+
+  .todolist-page .summary-card {
+    flex: 1 1 calc(50% - 10px);
+  }
+
+  .todolist-modal {
+    width: 96%;
+  }
+
+  .todolist-modal .modal-row {
+    flex-direction: column;
     gap: 10px;
   }
 
-  .summary-card { flex: 1 1 calc(50% - 10px); }
-
-  .card { margin: 12px 14px; }
-
-  .modal { width: 96%; max-width: 100%; }
-  .modal-row { flex-direction: column; gap: 10px; }
-  
-  .pagination {
+  .todolist-page .pagination {
     flex-direction: column;
     align-items: stretch;
   }
-  
-  .pagination-info {
+
+  .todolist-page .pagination-info {
     text-align: center;
   }
-  
-  .pagination-buttons {
+
+  .todolist-page .pagination-buttons {
     justify-content: center;
     flex-wrap: wrap;
   }
-  
-  .pagination-rows {
+
+  .todolist-page .pagination-rows {
     justify-content: center;
   }
-}
-
-/* Smooth scroll behavior */
-html {
-  scroll-behavior: smooth;
 }

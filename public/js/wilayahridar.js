@@ -1,22 +1,15 @@
 /* ===================================================
-   WILAYAH RIDAR - CLIENT JAVASCRIPT
-   Master Wilayah Management
+   WILAYAH RIDAR - NAMESPACED JAVASCRIPT
+   Updated selectors untuk namespaced CSS
    =================================================== */
 
-// Global variable
 let editingId = null;
 
-// ──────────────────────────────────────
-// INIT - Load data saat halaman dimuat
-// ──────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function () {
   console.log('DOM Loaded - Wilayah Ridar');
   loadDataFromDatabase();
 });
 
-// ──────────────────────────────────────
-// LOAD DATA FROM API
-// ──────────────────────────────────────
 function loadDataFromDatabase() {
   console.log('Loading data from database...');
 
@@ -39,9 +32,6 @@ function loadDataFromDatabase() {
     });
 }
 
-// ──────────────────────────────────────
-// DISPLAY DATA TO TABLE
-// ──────────────────────────────────────
 function displayData(data) {
   const tableBody = document.getElementById('dataTable');
 
@@ -85,9 +75,6 @@ function displayData(data) {
   console.log('✅ Table rendered with', data.length, 'rows');
 }
 
-// ──────────────────────────────────────
-// ESCAPE HTML (prevent XSS)
-// ──────────────────────────────────────
 function escapeHtml(text) {
   if (text == null) return '-';
   const div = document.createElement('div');
@@ -95,11 +82,9 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-// ──────────────────────────────────────
-// OPEN MODAL (for add new)
-// ──────────────────────────────────────
+// ✅ UPDATED: Use namespaced selector
 function openModal() {
-  const modalOverlay = document.getElementById('modalOverlay');
+  const modalOverlay = document.querySelector('.wilayahridar-modal-overlay');
   const modalTitle   = document.getElementById('modalTitle');
   const saveBtn      = document.getElementById('saveBtn');
   const form         = document.getElementById('wilayahForm');
@@ -109,17 +94,14 @@ function openModal() {
     return;
   }
 
-  // Reset
   form.reset();
   document.getElementById('wilayahId').value = '';
   editingId = null;
 
-  // Update modal UI
   modalTitle.textContent = 'Tambah Wilayah Ridar';
   saveBtn.textContent    = 'Simpan';
   saveBtn.disabled       = false;
 
-  // Unlock STO field for new entries
   document.getElementById('stoInput').removeAttribute('readonly');
 
   modalOverlay.classList.add('active');
@@ -129,11 +111,9 @@ function openModal() {
   }, 100);
 }
 
-// ──────────────────────────────────────
-// CLOSE MODAL
-// ──────────────────────────────────────
+// ✅ UPDATED: Use namespaced selector
 function closeModal() {
-  const modalOverlay = document.getElementById('modalOverlay');
+  const modalOverlay = document.querySelector('.wilayahridar-modal-overlay');
   const form         = document.getElementById('wilayahForm');
 
   if (modalOverlay) modalOverlay.classList.remove('active');
@@ -148,16 +128,12 @@ function closeModalOnOverlay(event) {
   }
 }
 
-// ──────────────────────────────────────
-// SAVE DATA (add or update)
-// ──────────────────────────────────────
 function saveData() {
   const sto    = document.getElementById('stoInput').value.trim().toUpperCase();
   const uic    = document.getElementById('uicInput').value.trim();
   const pic    = document.getElementById('picInput').value.trim();
   const leader = document.getElementById('leaderInput').value.trim();
 
-  // Validasi
   if (!sto) {
     alert('STO wajib diisi!');
     document.getElementById('stoInput').focus();
@@ -221,9 +197,6 @@ function saveData() {
     });
 }
 
-// ──────────────────────────────────────
-// EDIT DATA
-// ──────────────────────────────────────
 function editData(sto) {
   console.log('✏️ Editing data with STO:', sto);
 
@@ -244,15 +217,16 @@ function editData(sto) {
         document.getElementById('picInput').value    = d.pic    || '';
         document.getElementById('leaderInput').value = d.leader || '';
 
-        // Lock STO field on edit to prevent changing unique key
         document.getElementById('stoInput').setAttribute('readonly', true);
 
         document.getElementById('modalTitle').textContent = 'Edit Wilayah Ridar';
         document.getElementById('saveBtn').textContent    = 'Update';
         document.getElementById('saveBtn').disabled       = false;
-        document.getElementById('modalOverlay').classList.add('active');
+        
+        // ✅ UPDATED: Use namespaced selector
+        document.querySelector('.wilayahridar-modal-overlay').classList.add('active');
 
-        editingId = d.sto;  // STO is the key
+        editingId = d.sto;
 
         setTimeout(() => {
           document.getElementById('uicInput').focus();
@@ -267,9 +241,6 @@ function editData(sto) {
     });
 }
 
-// ──────────────────────────────────────
-// DELETE DATA
-// ──────────────────────────────────────
 function deleteData(sto) {
   if (!confirm(`Apakah Anda yakin ingin menghapus STO "${sto}"?\n\nData yang dihapus tidak dapat dikembalikan.`)) {
     return;
@@ -298,9 +269,6 @@ function deleteData(sto) {
     });
 }
 
-// ──────────────────────────────────────
-// SHOW ERROR
-// ──────────────────────────────────────
 function showError(message) {
   const tableBody = document.getElementById('dataTable');
 
@@ -319,11 +287,9 @@ function showError(message) {
   console.error('❌ Error:', message);
 }
 
-// ──────────────────────────────────────
-// KEYBOARD SHORTCUTS
-// ──────────────────────────────────────
+// ✅ UPDATED: Use namespaced selector
 document.addEventListener('keydown', function (e) {
-  const modalOverlay = document.getElementById('modalOverlay');
+  const modalOverlay = document.querySelector('.wilayahridar-modal-overlay');
   const isModalOpen  = modalOverlay && modalOverlay.classList.contains('active');
 
   if (e.key === 'Escape' && isModalOpen) {

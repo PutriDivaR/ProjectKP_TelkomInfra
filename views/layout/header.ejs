@@ -3,16 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
- 
-
+  <title><%= typeof title !== 'undefined' ? title : 'RIDAR Monitor' %></title>
+  
+  <!-- 2. Page-Specific Styles -->
   <link rel="stylesheet" href="/css/dashboard.css">
   <link rel="stylesheet" href="/css/kendalateknik.css">
-  <link rel="stylesheet" href="/css/todolist.css">
-  <link rel="stylesheet" href="/css/sidebar.css">
   <link rel="stylesheet" href="/css/bot.css">
   <link rel="stylesheet" href="/css/kendala.css">
   <link rel="stylesheet" href="/css/daily.css">
+  <link rel="stylesheet" href="/css/todolist.css">
   <link rel="stylesheet" href="/css/wilayahridar.css">
+  <!-- 3. CRITICAL: Modal Fix - MUST BE LAST CSS FILE -->
+
+  <link rel="stylesheet" href="/css/sidebar.css">
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">

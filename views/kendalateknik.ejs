@@ -1,7 +1,8 @@
 <%- include('layout/header') %>
 <%- include('layout/sidebar') %>
 
-<div class="main">
+<!-- ✅ NAMESPACED: Add .kendalateknik-page class -->
+<div class="main kendalateknik-page">
 
   <!-- TOPBAR -->
   <div class="header">
@@ -48,9 +49,10 @@
 
 <!-- ================================================
      MODAL: FORM KENDALA TEKNIK
+     ✅ NAMESPACED: Use .kendalateknik-modal-overlay
      ================================================ -->
-<div class="modal-overlay" id="modalOverlay" onclick="closeModalOnOverlay(event)">
-  <div class="modal">
+<div class="kendalateknik-modal-overlay" id="modalOverlay" onclick="closeModalOnOverlay(event)">
+  <div class="kendalateknik-modal">
     <div class="modal-header">
       <h3 id="modalTitle">Tambah Kendala Teknik</h3>
       <button class="close-btn" onclick="closeModal()">&times;</button>

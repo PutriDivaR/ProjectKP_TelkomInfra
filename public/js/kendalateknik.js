@@ -1,36 +1,31 @@
 /* ===================================================
-   KENDALA TEKNIK - CLIENT JAVASCRIPT
-   Master Activity Management
+   KENDALA TEKNIK - NAMESPACED JAVASCRIPT
+   Fix: editData membaca dari DOM (tidak perlu GET by ID)
    =================================================== */
 
-// Global variable
 let editingId = null;
 
-// ──────────────────────────────────────
-// INIT - Load data saat halaman dimuat
-// ──────────────────────────────────────
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('DOM Loaded - Kendala Teknik');
+// Cache data yang sudah di-load dari server
+let cachedData = [];
+
+document.addEventListener('DOMContentLoaded', function () {
+  console.log('DOM Loaded - Kendala Teknik (Master Activity)');
   loadDataFromDatabase();
 });
 
-// ──────────────────────────────────────
-// LOAD DATA FROM API
-// ──────────────────────────────────────
 function loadDataFromDatabase() {
   console.log('Loading data from database...');
-  
+
   fetch('/api/kendala-teknik')
     .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       return response.json();
     })
     .then(result => {
       console.log('✅ Data received:', result);
       if (result.success) {
-        displayData(result.data);
+        cachedData = result.data || [];
+        displayData(cachedData);
       } else {
         showError('Gagal memuat data: ' + (result.message || 'Unknown error'));
       }
@@ -41,17 +36,14 @@ function loadDataFromDatabase() {
     });
 }
 
-// ──────────────────────────────────────
-// DISPLAY DATA TO TABLE
-// ──────────────────────────────────────
 function displayData(data) {
   const tableBody = document.getElementById('dataTable');
-  
+
   if (!tableBody) {
     console.error('❌ Table body element not found!');
     return;
   }
-  
+
   if (!data || data.length === 0) {
     tableBody.innerHTML = `
       <tr>
@@ -63,17 +55,17 @@ function displayData(data) {
     `;
     return;
   }
-  
+
   tableBody.innerHTML = '';
-  
+
   data.forEach((item, index) => {
     const row = document.createElement('tr');
     row.innerHTML = `
       <td>${index + 1}</td>
-      <td style="text-align:left">${escapeHtml(item.activity_name || '-')}</td>
-      <td><span class="status-badge status-${getStatusClass(item.status_default)}">${escapeHtml(item.status_default || '-')}</span></td>
+      <td style="text-align:left; font-weight:500;">${escapeHtml(item.activity_name || '-')}</td>
+      <td>${statusBadge(item.status_default)}</td>
       <td>${escapeHtml(item.progress_default || '-')}</td>
-      <td style="text-align:left" title="${escapeHtml(item.solusi_default || '-')}">${truncateText(item.solusi_default, 60)}</td>
+      <td style="text-align:left;">${escapeHtml(item.solusi_default || '-')}</td>
       <td>
         <div class="action-icons">
           <button class="action-btn" onclick="editData(${item.id})" title="Edit">✏️</button>
@@ -83,36 +75,22 @@ function displayData(data) {
     `;
     tableBody.appendChild(row);
   });
-  
+
   console.log('✅ Table rendered with', data.length, 'rows');
 }
 
-// ──────────────────────────────────────
-// GET STATUS CLASS (for badge color)
-// ──────────────────────────────────────
-function getStatusClass(status) {
-  const statusMap = {
-    'COMPLETED': 'completed',
-    'OGP': 'ogp',
-    'OPEN': 'open',
-    'PINDAH LOKER': 'pindah'
+function statusBadge(status) {
+  const statusUpper = (status || '').toUpperCase();
+  const classMap = {
+    'COMPLETED':    'status-completed',
+    'OGP':          'status-ogp',
+    'OPEN':         'status-open',
+    'PINDAH LOKER': 'status-pindah'
   };
-  return statusMap[status] || 'default';
+  const cls = classMap[statusUpper] || 'status-default';
+  return `<span class="status-badge ${cls}">${escapeHtml(status || '-')}</span>`;
 }
 
-// ──────────────────────────────────────
-// TRUNCATE TEXT
-// ──────────────────────────────────────
-function truncateText(text, maxLength) {
-  if (!text) return '-';
-  const escaped = escapeHtml(text);
-  if (escaped.length <= maxLength) return escaped;
-  return escaped.substring(0, maxLength) + '...';
-}
-
-// ──────────────────────────────────────
-// ESCAPE HTML (prevent XSS)
-// ──────────────────────────────────────
 function escapeHtml(text) {
   if (text == null) return '-';
   const div = document.createElement('div');
@@ -120,54 +98,39 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-// ──────────────────────────────────────
-// OPEN MODAL (for add new)
-// ──────────────────────────────────────
 function openModal() {
-  const modalOverlay = document.getElementById('modalOverlay');
-  const modalTitle = document.getElementById('modalTitle');
-  const saveBtn = document.getElementById('saveBtn');
-  const form = document.getElementById('activityForm');
-  
+  const modalOverlay = document.querySelector('.kendalateknik-modal-overlay');
+  const modalTitle   = document.getElementById('modalTitle');
+  const saveBtn      = document.getElementById('saveBtn');
+  const form         = document.getElementById('activityForm');
+
   if (!modalOverlay || !modalTitle || !saveBtn || !form) {
     console.error('❌ Modal elements not found!');
     return;
   }
-  
-  // Reset form
+
   form.reset();
   document.getElementById('activityId').value = '';
   editingId = null;
-  
-  // Update modal
+
   modalTitle.textContent = 'Tambah Kendala Teknik';
-  saveBtn.textContent = 'Simpan';
-  saveBtn.disabled = false;
-  
-  // Show modal
+  saveBtn.textContent    = 'Simpan';
+  saveBtn.disabled       = false;
+
   modalOverlay.classList.add('active');
-  
-  // Focus first input
+
   setTimeout(() => {
     document.getElementById('activityName').focus();
   }, 100);
 }
 
-// ──────────────────────────────────────
-// CLOSE MODAL
-// ──────────────────────────────────────
 function closeModal() {
-  const modalOverlay = document.getElementById('modalOverlay');
-  const form = document.getElementById('activityForm');
-  
-  if (modalOverlay) {
-    modalOverlay.classList.remove('active');
-  }
-  
-  if (form) {
-    form.reset();
-  }
-  
+  const modalOverlay = document.querySelector('.kendalateknik-modal-overlay');
+  const form         = document.getElementById('activityForm');
+
+  if (modalOverlay) modalOverlay.classList.remove('active');
+  if (form)         form.reset();
+
   editingId = null;
 }
 
@@ -177,153 +140,119 @@ function closeModalOnOverlay(event) {
   }
 }
 
-// ──────────────────────────────────────
-// SAVE DATA (add or update)
-// ──────────────────────────────────────
 function saveData() {
-  const activityName = document.getElementById('activityName').value.trim();
-  const statusDefault = document.getElementById('statusDefault').value.trim();
+  const activityName    = document.getElementById('activityName').value.trim();
+  const statusDefault   = document.getElementById('statusDefault').value.trim();
   const progressDefault = document.getElementById('progressDefault').value.trim();
-  const solusiDefault = document.getElementById('solusiDefault').value.trim();
-  
-  // Validasi
+  const solusiDefault   = document.getElementById('solusiDefault').value.trim();
+
   if (!activityName) {
     alert('Activity Name wajib diisi!');
     document.getElementById('activityName').focus();
     return;
   }
-  
   if (!statusDefault) {
     alert('Status wajib dipilih!');
     document.getElementById('statusDefault').focus();
     return;
   }
-  
   if (!progressDefault) {
     alert('Progress wajib diisi!');
     document.getElementById('progressDefault').focus();
     return;
   }
-  
-  // Validasi progress maksimal 1
-  const progress = parseFloat(progressDefault);
-  if (isNaN(progress)) {
-    alert('Progress harus berupa angka!');
-    document.getElementById('progressDefault').focus();
-    return;
-  }
-  
-  if (progress > 1) {
-    alert('Progress maksimal adalah 1!');
-    document.getElementById('progressDefault').focus();
-    return;
-  }
-  
-  if (progress < 0) {
-    alert('Progress minimal adalah 0!');
-    document.getElementById('progressDefault').focus();
-    return;
-  }
-  
   if (!solusiDefault) {
     alert('Solusi/Progress wajib diisi!');
     document.getElementById('solusiDefault').focus();
     return;
   }
-  
-  // Prepare data
+
+  const progress = parseFloat(progressDefault);
+  if (isNaN(progress) || progress < 0 || progress > 1) {
+    alert('Progress harus berupa angka antara 0 dan 1!');
+    document.getElementById('progressDefault').focus();
+    return;
+  }
+
   const data = {
-    activity_name: activityName,
-    status_default: statusDefault,
+    activity_name:    activityName,
+    status_default:   statusDefault,
     progress_default: progress,
-    solusi_default: solusiDefault
+    solusi_default:   solusiDefault
   };
-  
-  // Determine URL and method
-  const url = editingId ? `/api/kendala-teknik/${editingId}` : '/api/kendala-teknik';
+
+  const url    = editingId ? `/api/kendala-teknik/${editingId}` : '/api/kendala-teknik';
   const method = editingId ? 'PUT' : 'POST';
-  
+
   console.log('💾 Saving data:', { url, method, data });
-  
-  // Disable button to prevent double submission
-  const saveBtn = document.getElementById('saveBtn');
-  const originalText = saveBtn.textContent;
-  saveBtn.disabled = true;
+
+  const saveBtn  = document.getElementById('saveBtn');
+  const origText = saveBtn.textContent;
+  saveBtn.disabled    = true;
   saveBtn.textContent = 'Menyimpan...';
-  
+
   fetch(url, {
-    method: method,
-    headers: {
-      'Content-Type': 'application/json'
-    },
+    method,
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   })
-  .then(response => {
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return response.json();
-  })
-  .then(result => {
-    console.log('✅ Save result:', result);
-    
-    if (result.success) {
-      alert(result.message || 'Data berhasil disimpan!');
-      closeModal();
-      loadDataFromDatabase(); // Reload table
-    } else {
-      alert(result.message || 'Gagal menyimpan data');
-      saveBtn.disabled = false;
-      saveBtn.textContent = originalText;
-    }
-  })
-  .catch(error => {
-    console.error('❌ Error saving data:', error);
-    alert('Terjadi kesalahan saat menyimpan data: ' + error.message);
-    saveBtn.disabled = false;
-    saveBtn.textContent = originalText;
-  });
-}
-
-// ──────────────────────────────────────
-// EDIT DATA
-// ──────────────────────────────────────
-function editData(id) {
-  console.log('✏️ Editing data with ID:', id);
-  
-  fetch(`/api/kendala-teknik/${id}`)
     .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       return response.json();
     })
     .then(result => {
-      console.log('✅ Edit data received:', result);
-      
-      if (result.success && result.data) {
-        const data = result.data;
-        
-        // Fill form
-        document.getElementById('activityId').value = data.id;
-        document.getElementById('activityName').value = data.activity_name || '';
-        document.getElementById('statusDefault').value = data.status_default || '';
-        document.getElementById('progressDefault').value = data.progress_default || '';
-        document.getElementById('solusiDefault').value = data.solusi_default || '';
-        
-        // Update modal
-        document.getElementById('modalTitle').textContent = 'Edit Kendala Teknik';
-        document.getElementById('saveBtn').textContent = 'Update';
-        document.getElementById('modalOverlay').classList.add('active');
-        
-        editingId = id;
-        
-        // Focus first input
-        setTimeout(() => {
-          document.getElementById('activityName').focus();
-        }, 100);
+      console.log('✅ Save result:', result);
+
+      if (result.success) {
+        alert(result.message || 'Data berhasil disimpan!');
+        closeModal();
+        loadDataFromDatabase();
       } else {
-        alert('Data tidak ditemukan');
+        alert(result.message || 'Gagal menyimpan data');
+        saveBtn.disabled    = false;
+        saveBtn.textContent = origText;
+      }
+    })
+    .catch(error => {
+      console.error('❌ Error saving data:', error);
+      alert('Terjadi kesalahan saat menyimpan data: ' + error.message);
+      saveBtn.disabled    = false;
+      saveBtn.textContent = origText;
+    });
+}
+
+// ✅ FIX UTAMA: Ambil data dari cachedData (tidak perlu request GET by ID)
+// Ini menghilangkan error 404 karena endpoint GET /api/kendala-teknik/:id mungkin tidak ada
+function editData(id) {
+  console.log('✏️ Editing data with ID:', id);
+
+  // Cari data di cache yang sudah di-load sebelumnya
+  const item = cachedData.find(d => d.id == id);
+
+  if (item) {
+    // Data ditemukan di cache, langsung buka modal
+    populateEditModal(item);
+    return;
+  }
+
+  // Fallback: jika tidak ada di cache, coba fetch ulang semua data dulu
+  console.warn('⚠️ Data tidak ada di cache, mencoba reload...');
+  fetch('/api/kendala-teknik')
+    .then(response => {
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      return response.json();
+    })
+    .then(result => {
+      if (result.success && result.data) {
+        cachedData = result.data;
+        const found = cachedData.find(d => d.id == id);
+        if (found) {
+          populateEditModal(found);
+        } else {
+          alert('Data tidak ditemukan (ID: ' + id + ')');
+        }
+      } else {
+        alert('Gagal memuat data untuk edit');
       }
     })
     .catch(error => {
@@ -332,81 +261,88 @@ function editData(id) {
     });
 }
 
-// ──────────────────────────────────────
-// DELETE DATA
-// ──────────────────────────────────────
-function deleteData(id) {
-  if (!confirm('Apakah Anda yakin ingin menghapus data ini?\n\nData yang dihapus tidak dapat dikembalikan.')) {
-    return;
-  }
-  
-  console.log('🗑️ Deleting data with ID:', id);
-  
-  fetch(`/api/kendala-teknik/${id}`, {
-    method: 'DELETE'
-  })
-  .then(response => {
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return response.json();
-  })
-  .then(result => {
-    console.log('✅ Delete result:', result);
-    
-    if (result.success) {
-      alert(result.message || 'Data berhasil dihapus!');
-      loadDataFromDatabase(); // Reload table
-    } else {
-      alert(result.message || 'Gagal menghapus data');
-    }
-  })
-  .catch(error => {
-    console.error('❌ Error deleting data:', error);
-    alert('Terjadi kesalahan saat menghapus data: ' + error.message);
-  });
+// Helper: isi form modal dengan data yang akan di-edit
+function populateEditModal(d) {
+  document.getElementById('activityId').value      = d.id;
+  document.getElementById('activityName').value    = d.activity_name   || '';
+  document.getElementById('statusDefault').value   = d.status_default  || '';
+  document.getElementById('progressDefault').value = d.progress_default || '';
+  document.getElementById('solusiDefault').value   = d.solusi_default  || '';
+
+  document.getElementById('modalTitle').textContent = 'Edit Kendala Teknik';
+  document.getElementById('saveBtn').textContent    = 'Update';
+  document.getElementById('saveBtn').disabled       = false;
+
+  document.querySelector('.kendalateknik-modal-overlay').classList.add('active');
+
+  editingId = d.id;
+
+  setTimeout(() => {
+    document.getElementById('activityName').focus();
+  }, 100);
+
+  console.log('✅ Modal populated for edit, ID:', d.id);
 }
 
-// ──────────────────────────────────────
-// SHOW ERROR
-// ──────────────────────────────────────
+function deleteData(id) {
+  if (!confirm(`Apakah Anda yakin ingin menghapus data ini?\n\nData yang dihapus tidak dapat dikembalikan.`)) {
+    return;
+  }
+
+  console.log('🗑️ Deleting data with ID:', id);
+
+  fetch(`/api/kendala-teknik/${id}`, { method: 'DELETE' })
+    .then(response => {
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      return response.json();
+    })
+    .then(result => {
+      console.log('✅ Delete result:', result);
+
+      if (result.success) {
+        alert(result.message || 'Data berhasil dihapus!');
+        loadDataFromDatabase();
+      } else {
+        alert(result.message || 'Gagal menghapus data');
+      }
+    })
+    .catch(error => {
+      console.error('❌ Error deleting data:', error);
+      alert('Terjadi kesalahan saat menghapus data: ' + error.message);
+    });
+}
+
 function showError(message) {
   const tableBody = document.getElementById('dataTable');
-  
+
   if (tableBody) {
     tableBody.innerHTML = `
       <tr>
-        <td colspan="6" class="loading-cell" style="color: #e53935;">
+        <td colspan="6" class="loading-cell" style="color:#e53935;">
           ⚠️ ${escapeHtml(message)}
           <br><br>
-          <small style="color: #666;">Pastikan server backend sudah berjalan dan database sudah terkoneksi dengan benar.</small>
+          <small style="color:#666;">Pastikan server backend sudah berjalan dan database sudah terkoneksi dengan benar.</small>
         </td>
       </tr>
     `;
   }
-  
+
   console.error('❌ Error:', message);
 }
 
-// ──────────────────────────────────────
-// KEYBOARD SHORTCUTS
-// ──────────────────────────────────────
-document.addEventListener('keydown', function(e) {
-  const modalOverlay = document.getElementById('modalOverlay');
-  const isModalOpen = modalOverlay && modalOverlay.classList.contains('active');
-  
-  // ESC to close modal
+document.addEventListener('keydown', function (e) {
+  const modalOverlay = document.querySelector('.kendalateknik-modal-overlay');
+  const isModalOpen  = modalOverlay && modalOverlay.classList.contains('active');
+
   if (e.key === 'Escape' && isModalOpen) {
     closeModal();
   }
-  
-  // Ctrl+S or Cmd+S to save (when modal is open)
+
   if ((e.ctrlKey || e.metaKey) && e.key === 's' && isModalOpen) {
     e.preventDefault();
     saveData();
   }
-  
-  // Ctrl+N or Cmd+N to open add modal (when modal is closed)
+
   if ((e.ctrlKey || e.metaKey) && e.key === 'n' && !isModalOpen) {
     e.preventDefault();
     openModal();
