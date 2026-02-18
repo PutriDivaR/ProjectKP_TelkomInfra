@@ -1,7 +1,7 @@
-// Dashboard JavaScript - Modern Charts & Interactions with Filters & Export
+// Script dashboard: chart, filter, ekspor
 document.addEventListener('DOMContentLoaded', function() {
   
-  // Initialize all charts
+  // Inisialisasi chart
   initStatusDailyChart();
   initStatusTodolistChart();
   initStatusHIChart();
@@ -13,28 +13,28 @@ document.addEventListener('DOMContentLoaded', function() {
   // initSegmentChart(); // removed
   initTTDChart();
   
-  // Apply progress widths from data attributes
+  // Set lebar progress dari data
   initProgressFillWidths();
   
-  // Refresh button
+  // Tombol refresh
   const btnRefresh = document.getElementById('btnRefresh');
   if (btnRefresh) {
     btnRefresh.addEventListener('click', refreshDashboard);
   }
   
-  // Filter form handling
+  // Submit filter
   const filterForm = document.getElementById('filterForm');
   if (filterForm) {
     filterForm.addEventListener('submit', handleFilterSubmit);
   }
 
-  // Clear filters button
+  // Reset filter
   const btnClearFilters = document.getElementById('btnClearFilters');
   if (btnClearFilters) {
     btnClearFilters.addEventListener('click', clearFilters);
   }
 
-  // Export buttons
+  // Tombol ekspor
   const btnExportPDF = document.getElementById('btnExportPDF');
   if (btnExportPDF) {
     btnExportPDF.addEventListener('click', exportToPDF);
@@ -45,14 +45,14 @@ document.addEventListener('DOMContentLoaded', function() {
     btnExportExcel.addEventListener('click', exportToExcel);
   }
   
-  // Table pagination
+  // Paginasi tabel
   initTablePagination();
   
-  // Table horizontal scroll buttons
+  // Tombol scroll tabel
   initTableScrollButtons();
 });
 
-// Helper: aggregate top N items, rest as 'Lainnya'
+// Util: agregasi top-N
 function aggregateTopN(data, labelKey, countKey, topN = 10, othersLabel = 'Lainnya') {
   const items = Array.isArray(data) ? data.slice() : [];
   items.sort((a, b) => Number(b[countKey] || 0) - Number(a[countKey] || 0));
@@ -65,7 +65,7 @@ function aggregateTopN(data, labelKey, countKey, topN = 10, othersLabel = 'Lainn
   return top;
 }
 
-// Chart Color Palettes
+// Palet warna chart
 const colorPalette = {
   primary: ['#dc2626', '#ef4444', '#f87171', '#fca5a5'],
   success: ['#10b981', '#34d399', '#6ee7b7', '#a7f3d0'],
@@ -79,7 +79,7 @@ const colorPalette = {
   ]
 };
 
-// 1. Status Daily Pie Chart
+// Chart Status Daily (pie)
 function initStatusDailyChart() {
   const ctx = document.getElementById('chartStatusDaily');
   if (!ctx) return;
@@ -123,7 +123,7 @@ function initStatusDailyChart() {
   });
 }
 
-// 2. Status Todolist Bar Chart
+// Chart Status Todolist (bar)
 function initStatusTodolistChart() {
   const ctx = document.getElementById('chartStatusTodolist');
   if (!ctx) return;
@@ -172,7 +172,7 @@ function initStatusTodolistChart() {
   });
 }
 
-// 3. Status HI Chart
+// Chart Status HI
 function initStatusHIChart() {
   const ctx = document.getElementById('chartStatusHI');
   if (!ctx) return;
@@ -212,7 +212,7 @@ function initStatusHIChart() {
   });
 }
 
-// 4. Top STO Chart
+// Chart Top STO
 function initTopSTOChart() {
   const ctx = document.getElementById('chartTopSTO');
   if (!ctx) return;
@@ -256,7 +256,7 @@ function initTopSTOChart() {
   });
 }
 
-// 5. Daily Trend Chart
+// Chart Tren Harian
 function initDailyTrendChart() {
   const ctx = document.getElementById('chartDailyTrend');
   if (!ctx) return;
@@ -314,7 +314,7 @@ function initDailyTrendChart() {
   });
 }
 
-// 6. NEW - Completion Rate Trend Chart
+// Chart Tren Completion (%)
 function initCompletionTrendChart() {
   const ctx = document.getElementById('chartCompletionTrend');
   if (!ctx) return;
@@ -383,7 +383,7 @@ function initCompletionTrendChart() {
   });
 }
 
-// 7. Activity Tech Chart
+// Chart Aktivitas Teknisi
 function initActivityTechChart() {
   const ctx = document.getElementById('chartActivityTech');
   if (!ctx) return;
@@ -427,7 +427,7 @@ function initActivityTechChart() {
   });
 }
 
-// 8. Package Distribution Chart
+// Chart Distribusi Paket
 function initPackageChart() {
   const ctx = document.getElementById('chartPackage');
   if (!ctx) return;
@@ -471,9 +471,9 @@ function initPackageChart() {
   });
 }
 
-// Segment chart removed
+// (Segment chart dihapus)
 
-// 10. NEW - TTD KB Distribution Chart
+// Chart Distribusi TTD KB
 function initTTDChart() {
   const ctx = document.getElementById('chartTTD');
   if (!ctx) return;
@@ -522,7 +522,7 @@ function initTTDChart() {
   });
 }
 
-// Filter Form Handler
+// Submit filter
 function handleFilterSubmit(e) {
   e.preventDefault();
   const form = e.target;
@@ -538,12 +538,12 @@ function handleFilterSubmit(e) {
   window.location.href = '/dashboard?' + params.toString();
 }
 
-// Clear Filters
+// Reset filter
 function clearFilters() {
   window.location.href = '/dashboard';
 }
 
-// ============ EXPORT TO PDF - PROFESSIONAL VERSION ============
+// Ekspor PDF
 async function exportToPDF() {
   const btn = document.getElementById('btnExportPDF');
   const originalText = btn.innerHTML;
@@ -551,17 +551,17 @@ async function exportToPDF() {
   btn.disabled = true;
 
   try {
-    // Import jsPDF and html2canvas
+    // Inisialisasi jsPDF
     const { jsPDF } = window.jspdf;
     
-    // Create new PDF document
+    // Buat dokumen PDF
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
     const margin = 15;
     let yPosition = margin;
 
-    // Get current date
+    // Tanggal laporan
     const now = new Date();
     const dateStr = now.toLocaleDateString('id-ID', { 
       year: 'numeric', 
@@ -573,9 +573,9 @@ async function exportToPDF() {
       minute: '2-digit' 
     });
 
-    // ============ PAGE 1: COVER & KPI ============
+    // Halaman 1: Sampul & KPI
     
-    // Header/Cover
+    // Header PDF
     pdf.setFillColor(220, 38, 38);
     pdf.rect(0, 0, pageWidth, 50, 'F');
     
@@ -591,7 +591,7 @@ async function exportToPDF() {
 
     yPosition = 60;
 
-    // Get active filters
+    // Filter aktif
     const urlParams = new URLSearchParams(window.location.search);
     const hasFilters = urlParams.toString().length > 0;
     
@@ -617,14 +617,14 @@ async function exportToPDF() {
       yPosition += 20;
     }
 
-    // KPI Cards
+    // KPI
     pdf.setTextColor(0, 0, 0);
     pdf.setFontSize(14);
     pdf.setFont(undefined, 'bold');
     pdf.text('KEY PERFORMANCE INDICATORS', margin, yPosition);
     yPosition += 10;
 
-    // Get KPI values from page
+    // Ambil KPI dari halaman
     const kpiCards = document.querySelectorAll('.kpi-card');
     const kpiData = [];
     kpiCards.forEach(card => {
@@ -636,7 +636,7 @@ async function exportToPDF() {
       }
     });
 
-    // Draw KPI boxes
+    // Cetak KPI
     const kpiBoxWidth = (pageWidth - 2 * margin - 10) / 3;
     const kpiBoxHeight = 25;
     
@@ -672,14 +672,14 @@ async function exportToPDF() {
 
     yPosition += Math.ceil(kpiData.length / 3) * (kpiBoxHeight + 5) + 15;
 
-    // ============ WORKFALL TABLE ============
+    // Tabel workfall
     pdf.setFontSize(12);
     pdf.setFont(undefined, 'bold');
     pdf.setTextColor(0, 0, 0);
     pdf.text('WORK STATUS DISTRIBUTION BY STO', margin, yPosition);
     yPosition += 8;
 
-    // Get workfall data from table
+    // Ambil data tabel
     const workfallTable = document.querySelector('.table-work-full');
     if (workfallTable) {
       const headers = ['STO', 'Startwork', 'Complete', 'Workfail', 'Total', 'Completion %'];
@@ -705,7 +705,7 @@ async function exportToPDF() {
         }
       });
 
-      // Draw full table (auto-paginates across pages)
+      // Cetak tabel
       pdf.autoTable({
         startY: yPosition,
         head: [headers],
@@ -728,7 +728,7 @@ async function exportToPDF() {
         showHead: 'everyPage'
       });
 
-      // Add total row on last page
+      // Tambah baris total
       const lastTr = trs[trs.length - 1];
       const lastTds = lastTr.querySelectorAll('td');
       if (lastTds.length >= 5) {
@@ -755,11 +755,11 @@ async function exportToPDF() {
           margin: { left: margin, right: margin }
         });
 
-        // After finishing all table content, add charts on a new page
+  // Halaman chart
         pdf.addPage();
         yPosition = margin;
 
-        // Charts Page Header
+  // Header chart
         pdf.setFillColor(220, 38, 38);
         pdf.rect(0, 0, pageWidth, 15, 'F');
         pdf.setTextColor(255, 255, 255);
@@ -769,7 +769,7 @@ async function exportToPDF() {
 
         yPosition = 25;
 
-        // Capture charts as images (placed after tables)
+        // Gambar chart
         const charts = [
           { id: 'chartStatusDaily', title: 'Status Daily Distribution' },
           { id: 'chartTopSTO', title: 'Top 10 STO by WO Count' },
@@ -789,7 +789,7 @@ async function exportToPDF() {
             const x = margin + col * (imgWidth + 10);
             const y = yPosition + row * (imgHeight + 15);
 
-            // Title
+            // Judul chart
             pdf.setTextColor(0, 0, 0);
             pdf.setFontSize(9);
             pdf.setFont(undefined, 'bold');
@@ -802,7 +802,7 @@ async function exportToPDF() {
       }
     }
 
-    // Footer on all pages
+    // Footer halaman
     const pageCount = pdf.internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       pdf.setPage(i);
@@ -817,7 +817,7 @@ async function exportToPDF() {
       );
     }
 
-    // Save PDF
+    // Simpan PDF
     const filename = `RIDAR_Dashboard_${now.toISOString().split('T')[0]}.pdf`;
     pdf.save(filename);
 
@@ -832,7 +832,7 @@ async function exportToPDF() {
   }
 }
 
-// ============ EXPORT TO EXCEL - PROFESSIONAL VERSION ============
+// Ekspor Excel
 async function exportToExcel() {
   const btn = document.getElementById('btnExportExcel');
   const originalText = btn.innerHTML;
@@ -840,7 +840,7 @@ async function exportToExcel() {
   btn.disabled = true;
 
   try {
-    // Get current filter parameters
+    // Ambil filter aktif
     const urlParams = new URLSearchParams(window.location.search);
     const response = await fetch('/dashboard/export/excel?' + urlParams.toString());
     
@@ -854,10 +854,10 @@ async function exportToExcel() {
       throw new Error(result.error || 'Export failed');
     }
 
-    // Create workbook
+    // Buat workbook
     const wb = XLSX.utils.book_new();
     
-    // ============ SHEET 1: SUMMARY (KPI & WORKFALL) ============
+    // Sheet Summary (KPI + Workfall)
     const summaryData = [];
     
     // Header
@@ -866,7 +866,7 @@ async function exportToExcel() {
     summaryData.push([`Tanggal Laporan: ${new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`]);
     summaryData.push([]);
 
-    // Active filters
+    // Filter aktif
     if (urlParams.toString().length > 0) {
       summaryData.push(['FILTER AKTIF:']);
       if (urlParams.get('search')) summaryData.push(['Search', urlParams.get('search')]);
@@ -890,7 +890,7 @@ async function exportToExcel() {
     });
     summaryData.push([]);
 
-    // Workfall Table
+    // Tabel workfall
     summaryData.push(['WORK STATUS DISTRIBUTION BY STO']);
     summaryData.push(['STO', 'Startwork', 'Complete', 'Workfail', 'Total', 'Completion %']);
     
@@ -914,7 +914,7 @@ async function exportToExcel() {
 
     const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
 
-    // Style summary sheet
+    // Atur kolom
     wsSummary['!cols'] = [
       { wch: 25 },
       { wch: 15 },
@@ -926,7 +926,7 @@ async function exportToExcel() {
 
     XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
 
-    // ============ SHEET 2: DETAILED DATA ============
+  // Sheet Detail
     const data = result.data;
     
     const detailedData = data.map(row => ({
@@ -948,7 +948,7 @@ async function exportToExcel() {
 
     const wsDetailed = XLSX.utils.json_to_sheet(detailedData);
 
-    // Auto-size columns for detailed sheet
+    // Lebar kolom otomatis
     const detailedCols = [
       { wch: 15 },  // WO Number
       { wch: 25 },  // Nama
@@ -969,10 +969,10 @@ async function exportToExcel() {
 
     XLSX.utils.book_append_sheet(wb, wsDetailed, 'Detailed Data');
 
-    // Generate filename
+  // Nama file
     const filename = `RIDAR_Data_${new Date().toISOString().split('T')[0]}.xlsx`;
 
-    // Write and download
+  // Unduh file
     XLSX.writeFile(wb, filename);
     
     showToast('Data berhasil di-export ke Excel!', 'success');
@@ -986,7 +986,7 @@ async function exportToExcel() {
   }
 }
 
-// Refresh Dashboard
+// Refresh dashboard via API
 async function refreshDashboard() {
   const btn = document.getElementById('btnRefresh');
   const icon = btn.querySelector('.icon');
@@ -1019,7 +1019,7 @@ async function refreshDashboard() {
   }
 }
 
-// Toast Notification
+// Toast notifikasi
 function showToast(message, type = 'info') {
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
@@ -1031,7 +1031,7 @@ function showToast(message, type = 'info') {
   }, 3000);
 }
 
-// Table Pagination
+// Paginasi tabel
 function initTablePagination() {
   const tables = document.querySelectorAll('[data-paginate]');
   
@@ -1136,7 +1136,7 @@ function initTablePagination() {
   });
 }
 
-// Table Horizontal Scroll Buttons
+// Tombol scroll tabel
 function initTableScrollButtons() {
   const containers = document.querySelectorAll('.table-scroll');
   
@@ -1154,7 +1154,7 @@ function initTableScrollButtons() {
   });
 }
 
-// Apply widths to progress bars
+// Atur lebar progress
 function initProgressFillWidths() {
   const fills = document.querySelectorAll('.progress-fill[data-width]');
   fills.forEach(el => {

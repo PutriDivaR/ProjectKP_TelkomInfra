@@ -135,7 +135,11 @@ function renderTable(data) {
       <td class="td-activity">${esc(row.activity)}</td>
       <td>${esc(row.update_status_deen)}</td>
       <td>${statusBadge(row.status_todolist)}</td>
-      <td><button class="btn-detail" onclick="openDetail(${row.id})">DETAIL</button></td>
+      <td>
+        <button class="btn-detail" title="Lihat Detail" onclick="openDetail(${row.id})">
+          <i class="fa-solid fa-eye"></i>
+        </button>
+      </td>
     `;
     tbody.appendChild(tr);
   });

@@ -1,16 +1,4 @@
-/* ===================================================
-   TODOLIST - NAMESPACED CSS
-   Prefix: .todolist-page & .todolist-modal-*
-   Tidak ada collision dengan halaman lain
-   =================================================== */
 
-/* ══════════════════════════════════════════════
-   PAGE-SPECIFIC STYLES (TODOLIST ONLY)
-   ══════════════════════════════════════════════ */
-
-.todolist-page {
-  /* Base page styles - only affects todolist page */
-}
 
 /* ══════════════════════════════════════════════
    ACTION BAR (TODOLIST SPECIFIC)
@@ -242,6 +230,50 @@
 .todolist-page .card-closed .summary-label,
 .todolist-page .card-closed .summary-value { 
   color: #1565c0; 
+}
+
+/* ══════════════════════════════════════════════
+   STATUS BADGES (match summary card colors)
+   ══════════════════════════════════════════════ */
+
+.todolist-page .status-badge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.todolist-page .status-open {
+  background: #e3f2fd;
+  color: #1565c0;
+  border: 1px solid #90caf9;
+}
+
+.todolist-page .status-ogp {
+  background: #fff3e0;
+  color: #ef6c00;
+  border: 1px solid #ffcc80;
+}
+
+.todolist-page .status-pindah {
+  background: #ede7f6;
+  color: #6a1b9a;
+  border: 1px solid #ce93d8;
+}
+
+.todolist-page .status-completed {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+}
+
+.todolist-page .status-default {
+  background: #f5f5f5;
+  color: #555;
+  border: 1px solid #ddd;
 }
 
 /* ══════════════════════════════════════════════
@@ -608,6 +640,33 @@
 .todolist-page .rows-per-page-select:focus {
   outline: none;
   border-color: #c62828;
+}
+
+/* ══════════════════════════════════════════════
+   ACTION BUTTONS (eye detail) - NAMESPACED
+   ══════════════════════════════════════════════ */
+
+.todolist-page .btn-detail {
+  background: linear-gradient(180deg, #ff5252 0%, #e53935 100%);
+  color: #fff;
+  border: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 6px 14px rgba(229,57,53,0.35);
+}
+
+.todolist-page .btn-detail i {
+  color: #fff; /* white eye */
+  font-size: 16px;
+}
+
+.todolist-page .btn-detail:hover { 
+  filter: brightness(0.95);
 }
 
 /* ══════════════════════════════════════════════
