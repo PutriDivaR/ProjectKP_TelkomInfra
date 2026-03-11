@@ -8,7 +8,7 @@ Dokumen ini menjelaskan arsitektur, alur data (alur cerita), skema database, API
 
 ## Ringkas Fitur
 
-- Autentikasi (login/register/logout) berbasis session
+- Autentikasi (login/logout) berbasis session — pendaftaran dinonaktifkan; akun disediakan oleh perusahaan
 - Dashboard KPI dan analitik dengan filter (STO, regional, status, rentang tanggal, pencarian)
 - Daily Housekeeping: daftar/ubah detail WO dan pencatatan riwayat perubahan
 - Todolist (Kendala Teknik Sistem): CRUD, impor dari Excel/CSV, sinkron dengan master_wo
@@ -42,8 +42,8 @@ Struktur utama:
 ## Alur Cerita (Data Flow End‑to‑End)
 
 1) Pengguna autentikasi
-   - Mengakses `/login` untuk masuk. Kredensial diverifikasi terhadap tabel `users` (password tersimpan hash bcrypt). Session user diset pada `req.session.user`.
-   - `/register` untuk membuat akun baru (validasi kuat: panjang, konfirmasi, cek duplikasi). Password di-hash.
+  - Mengakses `/login` untuk masuk. Kredensial diverifikasi terhadap tabel `users` (password tersimpan hash bcrypt). Session user diset pada `req.session.user`.
+  - Pendaftaran self-registration dinonaktifkan; akun disediakan oleh perusahaan/administrator.
 
 2) Dashboard
    - Setelah login, root `/` mengarahkan ke `/dashboard`.
@@ -121,9 +121,9 @@ Aplikasi akan berjalan di `http://localhost:3000`.
 ## Rute Utama (Backend)
 
 - Auth
-  - `GET /login`, `GET /register`
+ - Auth
+  - `GET /login`
   - `POST /api/auth/login` — login (session)
-  - `POST /api/auth/register` — buat akun (bcrypt)
   - `POST /api/auth/logout` atau `GET /logout`
   - `GET /api/auth/me` — info session user
 
@@ -184,7 +184,7 @@ Aplikasi akan berjalan di `http://localhost:3000`.
 
 ## Halaman Frontend (Views)
 
-- `views/login.ejs`, `views/register.ejs` — autentikasi
+- `views/login.ejs` — autentikasi (pendaftaran dinonaktifkan)
 - `views/dashboard.ejs` — KPI, charts, tabel ringkasan; filter STO/Regional/Status/Date/Search
 - `views/dailyhouse.ejs`, `views/detail.ejs` — daftar WO & detail/log
 - `views/todolist.ejs` — daftar kendala teknisi sistem; aksi batch delete/import
@@ -210,7 +210,7 @@ Asset frontend berada di `public/` (CSS dan JS per halaman: dashboard.js/css, da
 
 1) Pastikan database `ridar_dummydiva` sudah di‑import dari `ridar_dummydashboard.sql`.
 2) Jalankan server, akses `http://localhost:3000/login`.
-3) Login akun contoh atau daftar akun baru.
+3) Login dengan akun yang disediakan oleh perusahaan/administrator.
 4) Buka `/dashboard` untuk melihat metrik.
 5) Telusuri `/dailyhouse`, `/todolist`, `/kendala`, `/datakendala` untuk fitur lengkap.
 
@@ -237,7 +237,7 @@ TRID adalah aplikasi berbasis Node.js + Express dengan view engine EJS, database
 - Modul Kendala Pelanggan untuk input dan rekap kendala (status HI, TTIC, TTD KB) dengan validasi.
 - Modul Kendala Teknik (Todolist) dan Master Activity untuk normalisasi aktivitas teknisi dan progress.
 - Bot Status Assistant untuk cek status WO/Ticket ID, statistik riwayat, dan info STO.
-- Autentikasi berbasis session (login/register/logout).
+- Autentikasi berbasis session (login/logout) — pendaftaran dinonaktifkan; akun disediakan oleh perusahaan.
 
 ## Arsitektur dan Alur Kerja
 
@@ -254,7 +254,7 @@ TRID adalah aplikasi berbasis Node.js + Express dengan view engine EJS, database
             - /kendala-teknik & /api/kendala-teknik (src/routes/kendalateknik.routes.js)
             - /todolist & /api/todolist (src/routes/todolist.routes.js)
             - /api/bot (src/routes/bot.routes.js)
-            - /login /register /api/auth/* (src/routes/auth.routes.js)
+            - /login /api/auth/* (src/routes/auth.routes.js) (pendaftaran dinonaktifkan)
         |
         v
 [MySQL (src/config/db.js)] <--> Tables: master_wo, kendala_pelanggan,
@@ -272,7 +272,7 @@ TRID adalah aplikasi berbasis Node.js + Express dengan view engine EJS, database
 Berikut alur kerja utama sistem, ditulis agar dapat dipahami tanpa membuka seluruh kode sumber.
 
 ### Autentikasi & Akses
-- Pengguna mengakses `/login` atau `/register` (render oleh `auth.routes.js`).
+-- Pengguna mengakses `/login` (render oleh `auth.routes.js`). Pendaftaran self-registration dinonaktifkan.
 - Login: `POST /api/auth/login` memverifikasi username/password (bcrypt). Jika valid, menyetel `req.session.user`.
 - Guard: Middleware `requireAuth` di `src/app.js` hanya mengizinkan akses modul inti jika sesi ada; jika tidak, redirect ke `/login`.
 - Alur awal: GET `/` → jika sudah login, redirect `/dashboard`; jika belum, redirect `/login`.
@@ -393,7 +393,6 @@ views/
   kendala.ejs
   kendalateknik.ejs
   login.ejs
-  register.ejs
   todolist.ejs
   layout/
     bot.ejs
@@ -433,8 +432,8 @@ SQL awal: `ridar_db(verdiv).sql` dan seed wilayah: `scripts/seed-wilayah-ridar-s
 ## Fitur Utama
 
 ### 1) Autentikasi
-- Halaman: `views/login.ejs`, `views/register.ejs`
-- API: `POST /api/auth/login`, `POST /api/auth/register`, `POST /api/auth/logout`, `GET /api/auth/me`
+- Halaman: `views/login.ejs` (pendaftaran dinonaktifkan)
+- API: `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`
 - Session guard (`requireAuth`) meneruskan user ke `/dashboard` ketika login, atau `/login` jika belum.
 
 ### 2) Dashboard
@@ -488,8 +487,8 @@ SQL awal: `ridar_db(verdiv).sql` dan seed wilayah: `scripts/seed-wilayah-ridar-s
 ## Daftar Endpoint (Ringkasan)
 
 ### Auth (`src/routes/auth.routes.js`)
-- GET `/login`, GET `/register`
-- POST `/api/auth/login`, POST `/api/auth/register`
+- GET `/login`
+- POST `/api/auth/login`
 - POST `/api/auth/logout`, GET `/logout`
 - GET `/api/auth/me`
 
@@ -603,7 +602,7 @@ npm start
 ```
 
 Akses: http://localhost:3000
-- Register akun (menu Register) → Login → otomatis redirect ke `/dashboard`.
+- Pendaftaran akun self-service dinonaktifkan; gunakan akun yang disediakan oleh perusahaan/administrator. Setelah login, pengguna diarahkan ke `/dashboard`.
 
 ## Keamanan & Konfigurasi
 - Password user di-hash dengan bcrypt.
@@ -628,7 +627,7 @@ ISC (lihat `package.json`).
 - Kendala Pelanggan: `src/routes/kendala.routes.js`, `views/kendala.ejs`, `public/js/kendala.js`
 - Todolist/Kendala Teknik: `src/routes/todolist.routes.js`, `src/routes/kendalateknik.routes.js`, `views/todolist.ejs`, `views/kendalateknik.ejs`
 - Bot: `src/routes/bot.routes.js`, `public/js/bot.js`, `views/layout/bot.ejs`
-- Auth: `src/routes/auth.routes.js`, `views/login.ejs`, `views/register.ejs`, `public/js/auth.js`
+- Auth: `src/routes/auth.routes.js`, `views/login.ejs`, `public/js/auth.js` (pendaftaran dinonaktifkan)
 
 ---
 Dokumen ini dirancang sebagai README komprehensif untuk memudahkan setup, pemahaman arsitektur, serta operasi harian TRID – RIDAR. Untuk pengembangan lanjutan, pertimbangkan penambahan test otomatis, store session terpusat, dan konfigurasi environment untuk DB agar tidak hard-coded.

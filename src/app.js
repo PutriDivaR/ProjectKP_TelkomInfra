@@ -53,7 +53,7 @@ function requireAuth(req, res, next) {
 // ROUTES
 // ════════════════════════════════════════════
 
-// Auth (login / register / logout)
+// Auth (login/logout)
 const authRoutes = require('./routes/auth.routes');
 app.use('/', authRoutes);
 

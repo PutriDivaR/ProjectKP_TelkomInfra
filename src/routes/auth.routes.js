@@ -13,14 +13,7 @@ router.get('/login', (req, res) => {
   });
 });
 
-// ============================================================
-// REGISTER PAGE
-// ============================================================
-router.get('/register', (req, res) => {
-  res.render('register', {
-    title: 'Create Account - TODO LIST TIP TA RIDAR'
-  });
-});
+
 
 // ============================================================
 // LOGIN API
@@ -84,78 +77,7 @@ router.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// ============================================================
-// REGISTER API
-// ============================================================
-router.post('/api/auth/register', async (req, res) => {
-  const { username, password, confirmPassword } = req.body;
 
-  // Validation
-  if (!username || !password || !confirmPassword) {
-    return res.status(400).json({
-      success: false,
-      message: 'All fields are required'
-    });
-  }
-
-  if (password !== confirmPassword) {
-    return res.status(400).json({
-      success: false,
-      message: 'Passwords do not match'
-    });
-  }
-
-  if (password.length < 6) {
-    return res.status(400).json({
-      success: false,
-      message: 'Password must be at least 6 characters'
-    });
-  }
-
-  try {
-    // Check if username already exists
-    const [existing] = await db.query(
-      'SELECT id FROM users WHERE username = ?',
-      [username]
-    );
-
-    if (existing.length > 0) {
-      return res.status(409).json({
-        success: false,
-        message: 'Username already exists'
-      });
-    }
-
-    // Hash password
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-    // Insert new user
-    const [result] = await db.query(
-      'INSERT INTO users (username, password, created_at, updated_at) VALUES (?, ?, NOW(), NOW())',
-      [username, hashedPassword]
-    );
-
-    console.log(`✅ New user registered: ${username} (ID: ${result.insertId})`);
-
-    res.status(201).json({
-      success: true,
-      message: 'Account created successfully',
-      user: {
-        id: result.insertId,
-        username: username
-      }
-    });
-
-  } catch (err) {
-    console.error('❌ Registration error:', err);
-    res.status(500).json({
-      success: false,
-      message: 'Server error during registration',
-      error: err.message
-    });
-  }
-});
 
 // ============================================================
 // LOGOUT

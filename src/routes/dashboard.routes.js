@@ -69,6 +69,16 @@ router.get('/', async (req, res) => {
       GROUP BY status_daily
     `, queryParams);
 
+    // Normalize status labels to consistent Title Case to avoid case/whitespace mismatches
+    for (let i = 0; i < statusDaily.length; i++) {
+      const s = statusDaily[i];
+      if (s && s.status_daily) {
+        const normalized = String(s.status_daily).trim().toLowerCase();
+        // Convert to Title Case without spaces (e.g., 'complete', 'startwork', 'workfail')
+        statusDaily[i].status_daily = normalized.charAt(0).toUpperCase() + normalized.slice(1);
+      }
+    }
+
     // 3. Status Todolist Distribution (prefer real counts via kt joined to mw with filters; fallback to master_status when empty)
     let [statusTodolist] = await db.query(`
       SELECT kt.status_todolist, COUNT(*) AS count
