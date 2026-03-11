@@ -845,11 +845,24 @@ async function exportToExcel() {
     const response = await fetch('/dashboard/export/excel?' + urlParams.toString());
     
     if (!response.ok) {
+      // Try to parse JSON error if possible
+      const ct = response.headers.get('content-type') || '';
+      if (ct.indexOf('application/json') !== -1) {
+        const err = await response.json();
+        throw new Error(err.message || `HTTP ${response.status}`);
+      }
       throw new Error(`HTTP ${response.status}`);
     }
 
+    // Some servers may return HTML (login page) on auth redirect; guard against that
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.indexOf('application/json') === -1) {
+      const text = await response.text();
+      throw new Error('Server returned non-JSON response during export. First chars: ' + text.slice(0, 120));
+    }
+
     const result = await response.json();
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Export failed');
     }
