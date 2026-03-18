@@ -44,6 +44,49 @@ const normalizeDate = (value) => {
   return date;
 };
 
+const isValidDate = (value) => {
+  if (!value) return false;
+  const date = new Date(value);
+  return !Number.isNaN(date.getTime());
+};
+
+const buildInputDateTime = (row) => {
+  const hasTanggalInput = isValidDate(row && row.tanggal_input);
+  const hasCreatedAt = isValidDate(row && row.created_at);
+
+  if (hasTanggalInput && hasCreatedAt) {
+    const tanggalInput = new Date(row.tanggal_input);
+    const createdAt = new Date(row.created_at);
+    return new Date(
+      tanggalInput.getFullYear(),
+      tanggalInput.getMonth(),
+      tanggalInput.getDate(),
+      createdAt.getHours(),
+      createdAt.getMinutes(),
+      createdAt.getSeconds(),
+      createdAt.getMilliseconds()
+    );
+  }
+
+  if (hasCreatedAt) return new Date(row.created_at);
+  if (hasTanggalInput) return new Date(row.tanggal_input);
+  return null;
+};
+
+const buildLastUpdatedDateTime = (row) => {
+  const hasUpdatedAt = isValidDate(row && row.updated_at);
+  const hasCreatedAt = isValidDate(row && row.created_at);
+
+  if (!hasUpdatedAt) return null;
+  if (!hasCreatedAt) return new Date(row.updated_at);
+
+  const updatedAt = new Date(row.updated_at);
+  const createdAt = new Date(row.created_at);
+  if (updatedAt.getTime() <= createdAt.getTime() + 1000) return null;
+
+  return updatedAt;
+};
+
 const applyFilters = (rows, filters) => {
   const qLower = (filters.q || '').toLowerCase();
   const status = filters.status || '';
@@ -63,7 +106,7 @@ const applyFilters = (rows, filters) => {
     if (ttic && (row.ttic || '') !== ttic) return false;
 
     if (dateFilter) {
-      const rowDate = normalizeDate(row.tanggal_input || row.updated_at || row.created_at);
+      const rowDate = normalizeDate(row.tanggal_input || row.created_at);
       if (!rowDate) return false;
       if (rowDate.getTime() !== dateFilter.getTime()) return false;
     }
@@ -104,7 +147,16 @@ router.get('/', async (req, res) => {
     ORDER BY kp.created_at DESC
   `);
 
-  const data = allData;
+  const data = allData.map((row) => {
+    const inputDateTime = buildInputDateTime(row);
+    const lastUpdatedDateTime = buildLastUpdatedDateTime(row);
+
+    return {
+      ...row,
+      input_datetime: inputDateTime,
+      last_updated_at: lastUpdatedDateTime
+    };
+  });
 
   const countProgress = data.filter(d => d.status_hi === 'PROGRESS').length;
   const countReject = data.filter(d => d.status_hi === 'REJECT').length;
@@ -331,13 +383,20 @@ router.get('/edit/:id', async (req, res) => {
     WHERE kp.id = ?
   `, [req.params.id]);
 
+  const rawKendala = rows && rows[0] ? rows[0] : null;
+  const kendala = rawKendala ? {
+    ...rawKendala,
+    input_datetime: buildInputDateTime(rawKendala),
+    last_updated_at: buildLastUpdatedDateTime(rawKendala)
+  } : null;
+
   let listSto = STO_LIST;
   // Daftar STO sudah lengkap di hardcoded STO_LIST
 
   res.render('kendala', {
     title: 'Detail Data Kendala',
     mode: 'edit',
-    kendala: rows[0],
+    kendala,
     listSto,
     errorMsg: req.query.msg ? decodeURIComponent(req.query.msg) : ''
   });
@@ -412,33 +471,109 @@ router.get('/export/excel', async (req, res) => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Kendala Pelanggan');
 
+    // Set column widths
     worksheet.columns = [
-      { header: 'WONUM', key: 'wonum', width: 16 },
-      { header: 'TICKET ID', key: 'ticket_id', width: 16 },
-      { header: 'STATUS HI', key: 'status_hi', width: 12 },
-      { header: 'STO', key: 'sto', width: 10 },
-      { header: 'TTD KB', key: 'ttd_kb', width: 10 },
-      { header: 'TTIC', key: 'ttic', width: 12 },
-      { header: 'KETERANGAN', key: 'keterangan', width: 30 },
-      { header: 'INPUT DATE', key: 'input_date', width: 18 },
-      { header: 'NAMA TEKNISI', key: 'nama_teknis', width: 16 }
+      { width: 16 },
+      { width: 16 },
+      { width: 12 },
+      { width: 10 },
+      { width: 10 },
+      { width: 12 },
+      { width: 30 },
+      { width: 18 },
+      { width: 16 }
     ];
 
+    // Border style
+    const borderStyle = {
+      top: { style: 'thin', color: { argb: 'FF000000' } },
+      left: { style: 'thin', color: { argb: 'FF000000' } },
+      bottom: { style: 'thin', color: { argb: 'FF000000' } },
+      right: { style: 'thin', color: { argb: 'FF000000' } }
+    };
+
+    // Row 1: Title
+    const titleRow = worksheet.addRow(['LAPORAN KENDALA PELANGGAN']);
+    worksheet.mergeCells('A1:I1');
+    titleRow.font = {
+      bold: true,
+      size: 14,
+      color: { argb: 'FF0066CC' }
+    };
+    titleRow.alignment = {
+      horizontal: 'center',
+      vertical: 'center',
+      wrapText: true
+    };
+    titleRow.height = 28;
+
+    // Row 2: Empty
+    worksheet.addRow([]);
+
+    // Row 3: Header
+    const headerRow = worksheet.addRow(['WONUM', 'TICKET ID', 'STATUS HI', 'STO', 'TTD KB', 'TTIC', 'KETERANGAN', 'INPUT DATE', 'NAMA TEKNISI']);
+    headerRow.font = {
+      bold: true,
+      color: { argb: 'FFFFFFFF' },
+      size: 11
+    };
+    headerRow.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF0066CC' }
+    };
+    headerRow.eachCell((cell) => {
+      cell.alignment = {
+        horizontal: 'center',
+        vertical: 'center',
+        wrapText: true
+      };
+      cell.border = borderStyle;
+    });
+    headerRow.height = 25;
+
+    // Data rows
     rows.forEach((row) => {
       const rawDate = row.updated_at || row.created_at || row.tanggal_input || null;
       const dateStr = rawDate ? new Date(rawDate).toLocaleString('id-ID') : '-';
-      worksheet.addRow({
-        wonum: row.wonum || '-',
-        ticket_id: row.ticket_id || '-',
-        status_hi: row.status_hi || '-',
-        sto: row.sto || '-',
-        ttd_kb: row.ttd_kb || '-',
-        ttic: row.ttic || '-',
-        keterangan: row.keterangan || '-',
-        input_date: dateStr,
-        nama_teknis: row.nama_teknis || '-'
+      
+      const dataRow = worksheet.addRow([
+        row.wonum || '-',
+        row.ticket_id || '-',
+        row.status_hi || '-',
+        row.sto || '-',
+        row.ttd_kb || '-',
+        row.ttic || '-',
+        row.keterangan || '-',
+        dateStr,
+        row.nama_teknis || '-'
+      ]);
+
+      dataRow.eachCell((cell, colNumber) => {
+        cell.border = borderStyle;
+        cell.alignment = {
+          horizontal: 'left',
+          vertical: 'center',
+          wrapText: true
+        };
+
+        // Center alignment for specific columns
+        if ([1, 3, 4, 5, 6].includes(colNumber)) {
+          cell.alignment = {
+            horizontal: 'center',
+            vertical: 'center',
+            wrapText: true
+          };
+        }
       });
+
+      dataRow.height = 20;
     });
+
+    // Freeze header row
+    worksheet.views = [
+      { state: 'frozen', ySplit: 3 }
+    ];
 
     res.setHeader(
       'Content-Type',
@@ -600,6 +735,279 @@ router.get('/export/excel', async (req, res) => {
 
   await workbook.xlsx.write(res);
   res.end();
+});
+
+// ============================
+// UPLOAD JSON (Excel/CSV Import)
+// ============================
+router.post('/upload-json', async (req, res) => {
+  try {
+    const rows = req.body.rows || [];
+    const mapping = req.body.mapping || {};
+    
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return res.status(400).json({ success: false, message: 'No rows provided' });
+    }
+
+    const importedCount = { success: 0, failed: 0, skipped: 0 };
+    const [validStoRows] = await db.query('SELECT sto FROM wilayah_ridar');
+    const validStoSet = new Set((validStoRows || []).map(r => r.sto).filter(Boolean));
+
+    const normalizeKey = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    const fieldAliases = {
+      wonum: ['wonum', 'wonumber', 'wono', 'workordernumber', 'nomororder', 'noorder', 'nomorwo', 'wo'],
+      sto: ['sto', 'witel', 'site', 'lokasi', 'wilayah'],
+      tanggal_input: ['tanggalinput', 'inputdate', 'tglinput', 'tanggal', 'date', 'createdate'],
+      ttd_kb: ['ttdkb', 'ttd', 'ttdkbhari', 'durasi', 'hari'],
+      status_hi: ['statushi', 'status', 'statuskendala', 'hi'],
+      ttic: ['ttic', 'sla', 'durasittic'],
+      keterangan: ['keterangan', 'kendala', 'deskripsi', 'problem', 'catatan'],
+      nama_teknis: ['namateknis', 'namateknisi', 'teknisi', 'pic', 'petugas']
+    };
+
+    const csvColumns = rows.length > 0 ? Object.keys(rows[0]) : [];
+    const detectMappingFromColumns = () => {
+      const guessed = {};
+      Object.entries(fieldAliases).forEach(([field, aliases]) => {
+        let selected = '';
+        for (const col of csvColumns) {
+          const nCol = normalizeKey(col);
+          if (aliases.includes(nCol)) {
+            selected = col;
+            break;
+          }
+        }
+        if (!selected) {
+          for (const col of csvColumns) {
+            const nCol = normalizeKey(col);
+            if (aliases.some((a) => nCol.includes(a) || a.includes(nCol))) {
+              selected = col;
+              break;
+            }
+          }
+        }
+        if (selected) guessed[field] = selected;
+      });
+      return guessed;
+    };
+
+    const autoMapping = detectMappingFromColumns();
+    const effectiveMapping = {
+      ...autoMapping,
+      ...Object.fromEntries(Object.entries(mapping || {}).filter(([, v]) => String(v || '').trim() !== ''))
+    };
+
+    const formatDateYMD = (dateObj) => {
+      const y = dateObj.getFullYear();
+      const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const d = String(dateObj.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    };
+
+    const normalizeImportedDate = (value) => {
+      if (value === null || value === undefined || String(value).trim() === '') return null;
+
+      if (value instanceof Date && !Number.isNaN(value.getTime())) {
+        return formatDateYMD(value);
+      }
+
+      if (typeof value === 'number' && Number.isFinite(value)) {
+        const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+        const converted = new Date(excelEpoch.getTime() + Math.round(value * 86400000));
+        if (!Number.isNaN(converted.getTime())) return formatDateYMD(converted);
+      }
+
+      const raw = String(value).trim();
+      const dmy = raw.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
+      if (dmy) {
+        const day = Number(dmy[1]);
+        const month = Number(dmy[2]);
+        const year = Number(dmy[3].length === 2 ? `20${dmy[3]}` : dmy[3]);
+        const converted = new Date(year, month - 1, day);
+        if (!Number.isNaN(converted.getTime())) return formatDateYMD(converted);
+      }
+
+      const parsed = new Date(raw);
+      if (!Number.isNaN(parsed.getTime())) return formatDateYMD(parsed);
+
+      return null;
+    };
+
+    const normalizeStatusHi = (value) => {
+      const normalized = String(value || '').trim().toUpperCase();
+      if (!normalized) return 'PROGRESS';
+      if (['PROGRESS', 'PROCESS', 'ON PROGRESS', 'ONPROGRESS'].includes(normalized)) return 'PROGRESS';
+      if (['REJECT', 'REJECTED'].includes(normalized)) return 'REJECT';
+      if (['CLOSED', 'CLOSE', 'DONE', 'SELESAI'].includes(normalized)) return 'CLOSED';
+      return 'PROGRESS';
+    };
+
+    console.log('Excel upload - mapping manual:', mapping);
+    console.log('Excel upload - mapping auto:', autoMapping);
+    console.log('Excel upload - mapping final:', effectiveMapping);
+    console.log('Excel upload - row count:', rows.length);
+    if (rows.length > 0) console.log('Excel upload - first row:', rows[0]);
+
+    // Helper: ambil value dari row berdasarkan mapping
+    function getMappedValue(row, mapVal) {
+      const rowKeys = Object.keys(row || {});
+
+      if (typeof mapVal === 'number') {
+        const colName = csvColumns[mapVal];
+        return colName ? row[colName] : '';
+      } else if (!isNaN(mapVal)) {
+        const idx = Number(mapVal);
+        const colName = csvColumns[idx];
+        return colName ? row[colName] : '';
+      } else {
+        if (row[mapVal] !== undefined && row[mapVal] !== null) return row[mapVal];
+        const wanted = normalizeKey(mapVal);
+        for (const key of rowKeys) {
+          if (normalizeKey(key) === wanted) return row[key];
+        }
+        return '';
+      }
+    }
+
+    if (!effectiveMapping.wonum) {
+      return res.status(400).json({
+        success: false,
+        message: 'Kolom WONUM tidak terdeteksi otomatis. Mohon pastikan ada kolom WONUM/WO/No Order.'
+      });
+    }
+
+    for (const [i, row] of rows.entries()) {
+      try {
+        // Validasi WONUM
+        const wonumRaw = (getMappedValue(row, effectiveMapping.wonum || 'wonum') || '').toString().trim();
+        const wonum = wonumRaw.toUpperCase();
+        if (!wonum) {
+          importedCount.failed++;
+          console.log(`Row ${i+1} WONUM kosong`);
+          continue;
+        }
+
+        // Validasi format WONUM harus WO+10 digit
+        const wonumRegex = /^WO\d{10}$/;
+        if (!wonumRegex.test(wonum)) {
+          importedCount.failed++;
+          console.log(`Row ${i+1} WONUM format invalid: ${wonum}`);
+          continue;
+        }
+
+        // Cek duplikat WONUM
+        const [existingWonum] = await db.query(
+          'SELECT wonum FROM kendala_pelanggan WHERE wonum = ?',
+          [wonum]
+        );
+        if (existingWonum && existingWonum.length > 0) {
+          importedCount.skipped++;
+          console.log(`Row ${i+1} WONUM sudah ada: ${wonum}`);
+          continue;
+        }
+
+        // Ambil data dari mapping
+        let sto = (getMappedValue(row, effectiveMapping.sto || 'sto') || '').toString().trim().toUpperCase() || null;
+        const tanggalInputRaw = getMappedValue(row, effectiveMapping.tanggal_input || 'tanggal_input');
+        const tanggal_input = normalizeImportedDate(tanggalInputRaw);
+        const ttd_kb_raw = getMappedValue(row, effectiveMapping.ttd_kb || 'ttd_kb') || null;
+        const status_hi = normalizeStatusHi(getMappedValue(row, effectiveMapping.status_hi || 'status_hi'));
+        const ttic = (getMappedValue(row, effectiveMapping.ttic || 'ttic') || '').toString().trim() || null;
+        const keterangan = (getMappedValue(row, effectiveMapping.keterangan || 'keterangan') || '').toString().trim() || null;
+        const nama_teknis = (getMappedValue(row, effectiveMapping.nama_teknis || 'nama_teknis') || '').toString().trim() || null;
+
+        // Format TTD KB
+        const ttdKbFormatted = ttd_kb_raw ? formatTtdKb(ttd_kb_raw) : null;
+        if (ttd_kb_raw && !ttdKbFormatted) {
+          importedCount.failed++;
+          console.log(`Row ${i+1} TTD KB format invalid: ${ttd_kb_raw}`);
+          continue;
+        }
+
+        // Insert STO jika belum ada
+        if (sto && !validStoSet.has(sto) && STO_LIST.includes(sto)) {
+          try {
+            await db.query('INSERT INTO wilayah_ridar (sto) VALUES (?)', [sto]);
+            validStoSet.add(sto);
+          } catch (e) {
+            if (e.code !== 'ER_DUP_ENTRY') {
+              console.error(`Insert wilayah_ridar error:`, e.message);
+            }
+          }
+        }
+        if (sto && !validStoSet.has(sto)) {
+          sto = null;
+        }
+
+        // Cek atau buat di master_wo
+        const [existingMasterWo] = await db.query(
+          'SELECT sto FROM master_wo WHERE wonum = ?',
+          [wonum]
+        );
+        let woExists = existingMasterWo && existingMasterWo.length > 0;
+        
+        if (!woExists) {
+          // Generate Ticket ID
+          const generateTicketId = () => {
+            const randomNum = Math.floor(100000000 + Math.random() * 900000000);
+            return `ID${randomNum}`;
+          };
+          const ticketIdVal = generateTicketId();
+          
+          try {
+            await db.query(
+              `INSERT INTO master_wo (wonum, ticket_id, sto, status_daily, created_at, updated_at) VALUES (?, ?, ?, 'OPEN', NOW(), NOW())`,
+              [wonum, ticketIdVal, sto]
+            );
+          } catch (err) {
+            if (err.code === 'ER_BAD_FIELD_ERROR' || (err.message && err.message.includes('Unknown column'))) {
+              try {
+                await db.query(
+                  `INSERT INTO master_wo (wonum, sto, status_daily, created_at, updated_at) VALUES (?, ?, 'OPEN', NOW(), NOW())`,
+                  [wonum, sto]
+                );
+              } catch (err2) {
+                console.error('Insert master_wo error:', err2.message);
+                importedCount.failed++;
+                continue;
+              }
+            } else if (err.code !== 'ER_DUP_ENTRY') {
+              console.error('Insert master_wo error:', err.message);
+              importedCount.failed++;
+              continue;
+            }
+          }
+        }
+
+        // Insert ke kendala_pelanggan
+        const uniqueId = Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 10000);
+        
+        try {
+          await db.query(
+            `INSERT INTO kendala_pelanggan
+             (id, wonum, tanggal_input, sto, ttd_kb, status_hi, ttic, keterangan, nama_teknis, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+            [uniqueId, wonum, tanggal_input || null, sto, ttdKbFormatted || null, status_hi, ttic, keterangan, nama_teknis]
+          );
+          importedCount.success++;
+        } catch (err) {
+          console.error(`Insert kendala_pelanggan error (row ${i+1}):`, err.message);
+          importedCount.failed++;
+        }
+
+      } catch (err) {
+        console.error(`Row ${i+1} error:`, err.message);
+        importedCount.failed++;
+      }
+    }
+
+    const message = `Import selesai: ${importedCount.success} berhasil, ${importedCount.skipped} skip, ${importedCount.failed} gagal`;
+    return res.json({ success: true, message, ...importedCount });
+  } catch (err) {
+    console.error('Upload JSON error:', err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 // ============================
