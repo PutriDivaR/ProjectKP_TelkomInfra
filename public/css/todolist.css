@@ -245,6 +245,41 @@
 }
 
 /* ══════════════════════════════════════════════
+   ✅ BUTTON ICON DETAIL - MODERN STYLE
+   ══════════════════════════════════════════════ */
+
+.btn-icon-detail {
+  background: #e53935;
+  color: #fff;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  box-shadow: 0 2px 4px rgba(229, 57, 53, 0.2);
+}
+
+.btn-icon-detail:hover {
+  background: #d32f2f;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(229, 57, 53, 0.3);
+}
+
+.btn-icon-detail:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(229, 57, 53, 0.2);
+}
+
+.btn-icon-detail i {
+  pointer-events: none;
+}
+
+/* ══════════════════════════════════════════════
    MODAL OVERLAY - NAMESPACED
    ══════════════════════════════════════════════ */
 
