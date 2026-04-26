@@ -1,4 +1,231 @@
 # TRID – Aplikasi Pelaporan & Tugas RIDAR
+# TRID — Telkom RIDAR ID
+
+Sistem TRID (Telkom RIDAR ID) adalah aplikasi monitoring dan manajemen pekerjaan teknisi serta kendala pelanggan untuk wilayah RIDAR. Aplikasi ini menyatukan data master WO, housekeeping harian (daily), todolist aktivitas teknisi, rekap kendala pelanggan, wilayah STO, dan bot pengecekan cepat menjadi satu dashboard yang terintegrasi.
+
+Dokumen ini menjelaskan arsitektur, alur data (alur cerita), skema database, API routes, halaman frontend, serta langkah instalasi dan penggunaan end‑to‑end.
+
+
+## Ringkas Fitur
+
+- Autentikasi (login/logout) berbasis session — pendaftaran dinonaktifkan; akun disediakan oleh perusahaan
+- Dashboard KPI dan analitik dengan filter (STO, regional, status, rentang tanggal, pencarian)
+- Daily Housekeeping: daftar/ubah detail WO dan pencatatan riwayat perubahan
+- Todolist (Kendala Teknik Sistem): CRUD, impor dari Excel/CSV, sinkron dengan master_wo
+- Rekap Kendala Pelanggan: input, edit, filter/paginate, ekspor Excel/PDF
+- Data Kendala (gabungan teknik & sistem): upload/preview CSV/Excel, pemetaan kolom, de‑duplikasi
+- Master data: Activity teknisi (default status/progress/solusi), Wilayah RIDAR (STO/UIC/PIC/Leader), Status master
+- Bot API: endpoint untuk pencarian cepat status tiket/WO dan pelaporan log
+
+
+## Arsitektur Aplikasi
+
+- Platform: Node.js + Express
+- View engine: EJS
+- Session: express-session
+- Database: MariaDB/MySQL (mysql2/promise)
+- Upload/Parsing: multer, csv-parser
+- Ekspor: exceljs, pdfkit, xlsx
+- Frontend: EJS views + static assets di `public/`
+
+Struktur utama:
+
+- `src/app.js` — konfigurasi Express, middleware, session, routing
+- `src/server.js` — entrypoint server, menjalankan pada port 3000
+- `src/config/db.js` — koneksi pool database (mysql2/promise)
+- `src/routes/*.routes.js` — modul rute untuk setiap fitur
+- `views/*.ejs` — template halaman
+- `public/css|js|img` — aset frontend
+- `uploads/` — direktori sementara upload file
+
+
+## Alur Cerita (Data Flow End‑to‑End)
+
+1) Pengguna autentikasi
+  - Mengakses `/login` untuk masuk. Kredensial diverifikasi terhadap tabel `users` (password tersimpan hash bcrypt). Session user diset pada `req.session.user`.
+  - Pendaftaran self-registration dinonaktifkan; akun disediakan oleh perusahaan/administrator.
+
+2) Dashboard
+   - Setelah login, root `/` mengarahkan ke `/dashboard`.
+   - Dashboard melakukan agregasi dari `master_wo` (total WO, distribusi status harian, tren harian 30 hari, completion rate), join ke `kendala_teknisi_sistem` (distribusi status todolist, aktivitas teknisi), `kendala_pelanggan` (status HI, TTIC, TTD), dan `wilayah_ridar` (UIC/PIC/Leader). Filter query (`sto_filter`, `regional_filter`, `status_filter`, `date_from`, `date_to`, `search`) mempengaruhi semua KPI.
+
+3) Daily Housekeeping
+   - Halaman `/dailyhouse` menampilkan daftar WO dari `master_wo` dengan pagination dan filter tanggal.
+   - Detail WO `/dailyhouse/:wonum` memperlihatkan record WO dan riwayat dari `kendala_teknisi_sistem` untuk WO terkait.
+   - Update WO `/dailyhouse/update/:wonum` mengubah field (lat, lang, package_name, status_daily, status_akhir, sto, odp_todolist). Setiap perubahan akan dicatat sebagai log ke `kendala_teknisi_sistem` dengan activity “Daily Housekeeping”.
+
+4) Todolist (Kendala Teknik Sistem)
+   - `/todolist` menampilkan seluruh entry dari `kendala_teknisi_sistem` termasuk mapping ke `master_activity` dan `wilayah_ridar`.
+   - API `GET /api/todolist` / `GET /api/todolist/:id` / `PUT /api/todolist/:id` / `DELETE` tersedia untuk manipulasi data.
+   - Import todolist `POST /api/todolist/import` menerima array rows (Excel/CSV yang diubah ke JSON di frontend), melakukan:
+     - Sinkronisasi `master_wo` (insert/update `wonum` dan `odp_inputan` bila perlu)
+     - Upsert `kendala_teknisi_sistem` berdasar `wonum`
+     - Transaksi, batching besar, dan timeout session agar stabil
+
+5) Rekap Kendala Pelanggan
+   - `/kendala` menampilkan rekap dari `kendala_pelanggan` join `master_wo` (ticket_id) dengan filter (q, status, sto, ttic, date) dan pagination.
+   - `/kendala/input` — form input kendala pelanggan dengan validasi ketat WONUM (format `WO\d{10}`), STO whitelist, format TTD KB (contoh: “90 Hari”).
+   - Saat simpan, jika `master_wo` belum punya record untuk `wonum`, sistem otomatis menyisipkan minimal kolom (termasuk `ticket_id` acak “IDXXXXXXXXX” bila tersedia), lalu menulis `kendala_pelanggan`.
+   - `/kendala/edit/:id` — edit kendala; perubahan disimpan ke `kendala_pelanggan`.
+   - Ekspor Excel/PDF disiapkan dari data hasil filter.
+
+6) Data Kendala (Teknik & Sistem)
+   - `/datakendala` menggabungkan listing dari `master_wo` untuk tampilan tab Teknik/Sistem.
+   - Upload CSV `/datakendala/upload` dan preview `/datakendala/upload-preview` mendukung pemetaan kolom dinamis, validasi STO, konversi tanggal (serial Excel → ISO), serta de‑duplikasi berdasarkan kombinasi `wonum + tgl_manja + status_akhir`.
+   - Upload JSON `/datakendala/upload-json` (hasil baca Excel di frontend) memakai logika serupa.
+
+7) Wilayah RIDAR & Master Activity
+   - API master: `GET /api/wilayah-ridar` dan `GET /api/master-activity` untuk mengisi dropdown dan default (status, progress, solusi) saat update todolist.
+   - Bila upload menemukan STO baru yang valid (ada di whitelist), sistem berusaha memasukkan ke `wilayah_ridar` agar konsisten.
+
+8) Bot API
+   - Endpoint berada di `/api/bot` (lihat `src/routes/bot.routes.js`). Bot menampung log di tabel `bot_logs` (input_type, input_value, result_status, response_message, command_used, dll) dan melakukan lookup cepat terhadap WO atau perintah (misal `/help`, `/cek`).
+
+
+## Instalasi & Menjalankan
+
+Prasyarat:
+- Node.js 18+ (disarankan)
+- MariaDB/MySQL 10.4+ (atau kompatibel)
+
+1) Clone repository dan install dependencies
+
+```powershell
+git clone https://github.com/PutriDivaR/ProjectKP_TelkomInfra.git
+cd ProjectKP_TelkomInfra
+npm install
+```
+
+2) Konfigurasi Database
+
+- Buat database MariaDB/MySQL bernama `ridar_dummydiva`.
+- Import file SQL: `ridar_dummydashboard.sql` ke database tersebut (berisi tabel: `master_wo`, `kendala_pelanggan`, `kendala_teknisi_sistem`, `users`, `wilayah_ridar`, `master_activity`, `master_status`, `bot_logs`).
+- Ubah kredensial DB bila perlu di `src/config/db.js`.
+
+3) Variabel Lingkungan (opsional)
+
+- `SESSION_SECRET` — secret session; default: `telkom-dev-secret`.
+- Kredensial DB bisa di-hardcode (sekarang) atau diatur via dotenv jika Anda menyesuaikan `src/config/db.js`.
+
+4) Jalankan aplikasi
+
+```powershell
+npm run start
+# atau selama pengembangan
+npm run dev
+```
+
+Aplikasi akan berjalan di `http://localhost:3000`.
+
+
+## Rute Utama (Backend)
+
+- Auth
+ - Auth
+  - `GET /login`
+  - `POST /api/auth/login` — login (session)
+  - `POST /api/auth/logout` atau `GET /logout`
+  - `GET /api/auth/me` — info session user
+
+- Dashboard
+  - `GET /dashboard` — tampilan KPI & analitik dengan filter
+  - `GET /dashboard/api/refresh` — refresh ringan (totalWO, statusDaily)
+  - `GET /dashboard/export/excel` — ekspor data gabungan sesuai filter
+
+- Daily Housekeeping
+  - `GET /dailyhouse` — list WO (pagination)
+  - `GET /dailyhouse/:wonum` — detail WO dan log
+  - `POST /dailyhouse/update/:wonum` — update WO dan auto‑log perubahan
+  - `GET /dailyhouse/api/status` — daftar status harian default
+  - `GET /dailyhouse/api/status-akhir` — daftar status akhir preset
+
+- Todolist (Kendala Teknik Sistem)
+  - `GET /todolist` — halaman
+  - `GET /api/todolist` — list
+  - `GET /api/todolist/:id` — detail
+  - `PUT /api/todolist/:id` — update (menggunakan default dari `master_activity` jika tidak diisi)
+  - `DELETE /api/todolist/:id`, `POST /api/todolist/delete-selected`, `DELETE /api/todolist/delete-all`
+  - `POST /api/todolist/import` — import batch (sinkronisasi `master_wo` + upsert `kendala_teknisi_sistem`)
+  - Master: `GET /api/master-activity`, `GET /api/wilayah-ridar`
+
+- Rekap Kendala Pelanggan
+  - `GET /kendala` — list + filter/paginate
+  - `GET /kendala/input` — form input
+  - `POST /kendala/input` — simpan; validasi WONUM, STO, TTD KB
+  - `GET /kendala/edit/:id` — detail/edit
+  - `POST /kendala/edit/:id` — update
+  - `GET /kendala/export/excel` — ekspor Excel
+  - `GET /kendala/export/pdf` — ekspor PDF (bila diaktifkan di route)
+
+- Data Kendala (Teknik & Sistem)
+  - `GET /datakendala` — tab “teknik”/“sistem” dari `master_wo`
+  - Upload CSV: `POST /datakendala/upload` + `POST /datakendala/upload-preview`
+  - Upload JSON (Excel): `POST /datakendala/upload-json`
+  - Export CSV: `GET /datakendala/export`
+
+- Bot
+  - `POST /api/bot/...` — endpoint sesuai implementasi bot; log di `bot_logs`
+
+
+## Skema Database (Ringkas)
+
+- `master_wo` — data WO utama: wonum, nama, lang, lat, package_name, ticket_id, regional, sto, status_daily, status_akhir, odp_inputan, bulan, tgl_manja, status_kpro, kendala, kategori, catatan_teknisi, created_at, updated_at
+- `kendala_teknisi_sistem` — aktivitas teknisi/log perubahan: wonum, activity/activity_teknisi/status_todolist, solusi_progress, segment_alpro, sto, timestamps
+- `kendala_pelanggan` — input kendala pelanggan: wonum, tanggal_input, sto, ttd_kb (durasi hari), status_hi, ttic, keterangan, nama_teknis, timestamps
+- `users` — autentikasi: username, password (bcrypt), timestamps
+- `wilayah_ridar` — master STO: sto, uic, pic, leader, timestamps
+- `master_activity` — master aktivitas teknisi: activity_name, status_default, progress_default, solusi_default
+- `master_status` — daftar status todolist
+- `bot_logs` — logging bot
+- Isi `master_wo` kini memuat banyak field integrasi untuk daily/todolist/kendala
+- `wilayah_ridar` berisi mapping STO beserta UIC/PIC/Leader
+- `users` memuat akun sample (catatan: pastikan hash bcrypt; jangan gunakan password plain)
+
+
+## Halaman Frontend (Views)
+
+- `views/login.ejs` — autentikasi (pendaftaran dinonaktifkan)
+- `views/dashboard.ejs` — KPI, charts, tabel ringkasan; filter STO/Regional/Status/Date/Search
+- `views/dailyhouse.ejs`, `views/detail.ejs` — daftar WO & detail/log
+- `views/todolist.ejs` — daftar kendala teknisi sistem; aksi batch delete/import
+- `views/kendala.ejs` — rekap, input, edit kendala pelanggan
+- `views/datakendala.ejs` — gabungan teknik & sistem; upload/preview/mapping
+- Layout: `views/layout/header.ejs`, `views/layout/sidebar.ejs`, `views/layout/footer.ejs`, `views/layout/bot.ejs`
+
+Asset frontend berada di `public/` (CSS dan JS per halaman: dashboard.js/css, daily.js/css, todolist.js/css, kendala.js/css, datakendala.js/css, wilayahridar.js/css, dll).
+
+
+## Best Practices & Catatan Implementasi
+
+- Authentication guard: semua rute inti (dashboard, daily, todolist, kendala, datakendala, wilayah, kendala teknik) dilindungi oleh middleware `requireAuth` (redirect ke `/login`).
+- DB pool: gunakan `mysql2/promise` pool dengan `waitForConnections=true`, `connectionLimit=10`. Fungsi `checkConnection()` akan log “db connect” saat startup.
+- Import besar: gunakan batching (500–1000 row), transaksi, dan penyesuaian `wait_timeout` saat perlu.
+- Validasi STO: whitelist STO dan sinkronisasi otomatis ke `wilayah_ridar` agar konsisten.
+- Formatting TTD KB: input angka atau “X hari” akan dinormalisasi menjadi “X Hari”.
+- Logging perubahan: setiap update daily akan menulis ringkasan perubahan ke `kendala_teknisi_sistem`.
+- Ekspor: gunakan endpoint export untuk menyiapkan CSV/Excel sesuai kebutuhan; PDF via `pdfkit` tersedia bila diaktifkan.
+
+
+## Cara Cepat Mencoba
+
+1) Pastikan database `ridar_dummydiva` sudah di‑import dari `ridar_dummydashboard.sql`.
+2) Jalankan server, akses `http://localhost:3000/login`.
+3) Login dengan akun yang disediakan oleh perusahaan/administrator.
+4) Buka `/dashboard` untuk melihat metrik.
+5) Telusuri `/dailyhouse`, `/todolist`, `/kendala`, `/datakendala` untuk fitur lengkap.
+
+
+## Troubleshooting
+
+- “db error”: cek kredensial di `src/config/db.js` dan bahwa database `ridar_dummydiva` aktif.
+- Session tidak tersimpan: set `SESSION_SECRET` dan pastikan cookie tidak diblokir browser.
+- Import CSV/Excel gagal: cek mapping kolom, pastikan wonum ada dan format tanggal valid. Gunakan preview untuk memverifikasi header.
+- Ekspor tidak muncul: periksa hak akses folder dan response headers.
+
+
+## Lisensi
+
+ISC. Lihat `package.json` untuk detail.
 
 Laporan teknis komprehensif untuk sistem web TRID yang digunakan tim RIDAR (TIP TA) dalam memantau Work Order (WO), mengelola kendala pelanggan dan kendala teknisi, serta menyajikan dashboard analitik dengan impor/ekspor data.
 
@@ -10,7 +237,7 @@ TRID adalah aplikasi berbasis Node.js + Express dengan view engine EJS, database
 - Modul Kendala Pelanggan untuk input dan rekap kendala (status HI, TTIC, TTD KB) dengan validasi.
 - Modul Kendala Teknik (Todolist) dan Master Activity untuk normalisasi aktivitas teknisi dan progress.
 - Bot Status Assistant untuk cek status WO/Ticket ID, statistik riwayat, dan info STO.
-- Autentikasi berbasis session (login/register/logout).
+- Autentikasi berbasis session (login/logout) — pendaftaran dinonaktifkan; akun disediakan oleh perusahaan.
 
 ## Arsitektur dan Alur Kerja
 
@@ -27,7 +254,7 @@ TRID adalah aplikasi berbasis Node.js + Express dengan view engine EJS, database
             - /kendala-teknik & /api/kendala-teknik (src/routes/kendalateknik.routes.js)
             - /todolist & /api/todolist (src/routes/todolist.routes.js)
             - /api/bot (src/routes/bot.routes.js)
-            - /login /register /api/auth/* (src/routes/auth.routes.js)
+            - /login /api/auth/* (src/routes/auth.routes.js) (pendaftaran dinonaktifkan)
         |
         v
 [MySQL (src/config/db.js)] <--> Tables: master_wo, kendala_pelanggan,
@@ -45,7 +272,7 @@ TRID adalah aplikasi berbasis Node.js + Express dengan view engine EJS, database
 Berikut alur kerja utama sistem, ditulis agar dapat dipahami tanpa membuka seluruh kode sumber.
 
 ### Autentikasi & Akses
-- Pengguna mengakses `/login` atau `/register` (render oleh `auth.routes.js`).
+-- Pengguna mengakses `/login` (render oleh `auth.routes.js`). Pendaftaran self-registration dinonaktifkan.
 - Login: `POST /api/auth/login` memverifikasi username/password (bcrypt). Jika valid, menyetel `req.session.user`.
 - Guard: Middleware `requireAuth` di `src/app.js` hanya mengizinkan akses modul inti jika sesi ada; jika tidak, redirect ke `/login`.
 - Alur awal: GET `/` → jika sudah login, redirect `/dashboard`; jika belum, redirect `/login`.
@@ -166,7 +393,6 @@ views/
   kendala.ejs
   kendalateknik.ejs
   login.ejs
-  register.ejs
   todolist.ejs
   layout/
     bot.ejs
@@ -206,8 +432,8 @@ SQL awal: `ridar_db(verdiv).sql` dan seed wilayah: `scripts/seed-wilayah-ridar-s
 ## Fitur Utama
 
 ### 1) Autentikasi
-- Halaman: `views/login.ejs`, `views/register.ejs`
-- API: `POST /api/auth/login`, `POST /api/auth/register`, `POST /api/auth/logout`, `GET /api/auth/me`
+- Halaman: `views/login.ejs` (pendaftaran dinonaktifkan)
+- API: `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`
 - Session guard (`requireAuth`) meneruskan user ke `/dashboard` ketika login, atau `/login` jika belum.
 
 ### 2) Dashboard
@@ -261,8 +487,8 @@ SQL awal: `ridar_db(verdiv).sql` dan seed wilayah: `scripts/seed-wilayah-ridar-s
 ## Daftar Endpoint (Ringkasan)
 
 ### Auth (`src/routes/auth.routes.js`)
-- GET `/login`, GET `/register`
-- POST `/api/auth/login`, POST `/api/auth/register`
+- GET `/login`
+- POST `/api/auth/login`
 - POST `/api/auth/logout`, GET `/logout`
 - GET `/api/auth/me`
 
@@ -376,7 +602,7 @@ npm start
 ```
 
 Akses: http://localhost:3000
-- Register akun (menu Register) → Login → otomatis redirect ke `/dashboard`.
+- Pendaftaran akun self-service dinonaktifkan; gunakan akun yang disediakan oleh perusahaan/administrator. Setelah login, pengguna diarahkan ke `/dashboard`.
 
 ## Keamanan & Konfigurasi
 - Password user di-hash dengan bcrypt.
@@ -401,7 +627,7 @@ ISC (lihat `package.json`).
 - Kendala Pelanggan: `src/routes/kendala.routes.js`, `views/kendala.ejs`, `public/js/kendala.js`
 - Todolist/Kendala Teknik: `src/routes/todolist.routes.js`, `src/routes/kendalateknik.routes.js`, `views/todolist.ejs`, `views/kendalateknik.ejs`
 - Bot: `src/routes/bot.routes.js`, `public/js/bot.js`, `views/layout/bot.ejs`
-- Auth: `src/routes/auth.routes.js`, `views/login.ejs`, `views/register.ejs`, `public/js/auth.js`
+- Auth: `src/routes/auth.routes.js`, `views/login.ejs`, `public/js/auth.js` (pendaftaran dinonaktifkan)
 
 ---
 Dokumen ini dirancang sebagai README komprehensif untuk memudahkan setup, pemahaman arsitektur, serta operasi harian TRID – RIDAR. Untuk pengembangan lanjutan, pertimbangkan penambahan test otomatis, store session terpusat, dan konfigurasi environment untuk DB agar tidak hard-coded.

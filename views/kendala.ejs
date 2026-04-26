@@ -32,6 +32,10 @@
     <div class="rekap-card">
       <div class="rekap-card-header">
         <a href="/kendala/input" class="btn-input-data"><i class="fa-solid fa-plus"></i> Input Data</a>
+        <button class="btn-upload" id="btnUploadKendala">
+          <i class="fa-solid fa-upload"></i> Upload/Import
+        </button>
+        <input type="file" id="uploadFileKendala" accept=".xlsx,.xls,.xlsm" style="display:none" />
       </div>
       <hr class="rekap-divider">
       <div class="rekap-summary">
@@ -132,7 +136,7 @@
             </tr>
           <% } else { %>
             <% list.forEach((d, i) => { %>
-              <tr data-id="<%= d.id %>" data-wonum="<%= d.wonum %>" data-ticket_id="<%= d.ticket_id || '' %>" data-status_hi="<%= d.status_hi || '' %>" data-sto="<%= d.sto || '' %>" data-ttd_kb="<%= d.ttd_kb || '' %>" data-ttic="<%= d.ttic || '' %>" data-keterangan="<%= (d.keterangan || '').replace(/"/g, '&quot;') %>" data-created_at="<%= d.created_at ? new Date(d.created_at).toISOString() : '' %>" data-updated_at="<%= d.updated_at ? new Date(d.updated_at).toISOString() : '' %>" data-nama_teknis="<%= d.nama_teknis || '' %>">
+              <tr data-id="<%= d.id %>" data-wonum="<%= d.wonum %>" data-ticket_id="<%= d.ticket_id || '' %>" data-status_hi="<%= d.status_hi || '' %>" data-sto="<%= d.sto || '' %>" data-ttd_kb="<%= d.ttd_kb || '' %>" data-ttic="<%= d.ttic || '' %>" data-keterangan="<%= (d.keterangan || '').replace(/"/g, '&quot;') %>" data-tanggal_input="<%= d.tanggal_input ? new Date(d.tanggal_input).toISOString() : '' %>" data-created_at="<%= d.created_at ? new Date(d.created_at).toISOString() : '' %>" data-updated_at="<%= d.updated_at ? new Date(d.updated_at).toISOString() : '' %>" data-input_date_display="<%= d.input_datetime ? new Date(d.input_datetime).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'medium' }).replace(/\./g, '-') : '-' %>" data-last_updated_display="<%= d.last_updated_at ? new Date(d.last_updated_at).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'medium' }).replace(/\./g, '-') : '-' %>" data-nama_teknis="<%= d.nama_teknis || '' %>">
                 <td><%= (currentPage - 1) * (perPage || 50) + i + 1 %></td>
 
                 <td><%= d.wonum %></td>
@@ -140,7 +144,7 @@
                 <td><%= d.sto || '-' %></td>
                 <td><%= d.ttd_kb || '-' %></td>
                 <td><%= d.ttic || '-' %></td>
-                <td><%= d.updated_at ? new Date(d.updated_at).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'medium' }).replace(/\./g, '-') : (d.created_at ? new Date(d.created_at).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'medium' }).replace(/\./g, '-') : '-') %></td>
+                <td><%= d.input_datetime ? new Date(d.input_datetime).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'medium' }).replace(/\./g, '-') : '-' %></td>
                 <td>
                   <button type="button" class="btn-view btn-detail" title="Detail"><i class="fa-solid fa-eye"></i></button>
                   <button type="button" class="btn-delete" title="Hapus"><i class="fa-solid fa-trash"></i></button>
@@ -335,8 +339,12 @@
             </select>
           </div>
           <div class="detail-field">
-            <label>Last Updated :</label>
-            <input type="text" class="detail-input" value="<%= kendala.updated_at ? new Date(kendala.updated_at).toLocaleString('id-ID') : (kendala.created_at ? new Date(kendala.created_at).toLocaleString('id-ID') : '-') %>" readonly>
+            <label>Input Date :</label>
+            <input type="text" class="detail-input" value="<%= kendala.input_datetime ? new Date(kendala.input_datetime).toLocaleString('id-ID') : '-' %>" readonly>
+          </div>
+          <div class="detail-field">
+            <label>Last Updated Date :</label>
+            <input type="text" class="detail-input" value="<%= kendala.last_updated_at ? new Date(kendala.last_updated_at).toLocaleString('id-ID') : '-' %>" readonly>
           </div>
         </div>
       </div>
@@ -368,7 +376,8 @@
       <p><strong>TTD KB:</strong> <span id="md-ttd"></span></p>
       <p><strong>TTIC:</strong> <span id="md-ttic"></span></p>
       <p><strong>Keterangan:</strong> <span id="md-keterangan"></span></p>
-      <p><strong>Last Updated:</strong> <span id="md-created"></span></p>
+      <p><strong>Input Date:</strong> <span id="md-input-date"></span></p>
+      <p><strong>Last Updated Date:</strong> <span id="md-last-updated"></span></p>
       <p><strong>Nama Teknisi:</strong> <span id="md-nama"></span></p>
     </div>
     <div class="modal-actions">
@@ -377,5 +386,9 @@
     </div>
   </div>
 </div>
+
+<!-- jsPDF for PDF export (Kendala Pelanggan) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
 <%- include('layout/footer') %>

@@ -480,6 +480,12 @@ table tbody tr:last-child td {
   box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
 }
 
+.status-cancelwork {
+  background: linear-gradient(135deg, #e4e3e3 0%, #ccc6c6 100%);
+  color: #000000;
+  box-shadow: 0 2px 4px rgba(163, 157, 157, 0.2);
+}
+
 /* Progress Bar */
 .progress-container {
   display: flex;

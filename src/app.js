@@ -46,6 +46,10 @@ app.use((req, res, next) => {
 
 function requireAuth(req, res, next) {
   if (req.session?.user) return next();
+  const acceptsJSON = req.xhr || (req.headers.accept && req.headers.accept.indexOf('application/json') !== -1);
+  if (acceptsJSON) {
+    return res.status(401).json({ success: false, message: 'Not authenticated' });
+  }
   return res.redirect('/login');
 }
 
@@ -53,7 +57,7 @@ function requireAuth(req, res, next) {
 // ROUTES
 // ════════════════════════════════════════════
 
-// Auth (login / register / logout)
+// Auth (login/logout)
 const authRoutes = require('./routes/auth.routes');
 app.use('/', authRoutes);
 

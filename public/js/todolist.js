@@ -136,7 +136,7 @@ function renderTable(data) {
       <td>${esc(row.update_status_deen)}</td>
       <td>${statusBadge(row.status_todolist)}</td>
       <td>
-        <button class="btn-icon-detail" onclick="openDetail(${row.id})" title="Lihat Detail">
+        <button class="btn-detail" title="Lihat Detail" onclick="openDetail(${row.id})">
           <i class="fa-solid fa-eye"></i>
         </button>
       </td>
